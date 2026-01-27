@@ -76,11 +76,11 @@ Plans:
   2. User can preview any template before selecting
   3. User can select a template to use as starting point for generation
   4. Selected template pre-fills context for prompt-based customization
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Template definitions + gallery components (types, cards, preview modal)
+- [ ] 04-02-PLAN.md — /templates page + create page integration + verification
 
 ### Phase 5: Render Pipeline
 **Goal**: Users can render animations to MP4 and download them
