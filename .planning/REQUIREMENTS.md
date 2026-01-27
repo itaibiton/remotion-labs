@@ -16,9 +16,9 @@ Validate the core concept: can users go from prompt to video?
 
 ### Generation
 
-- [ ] **GEN-01**: User can enter text prompt describing desired animation
-- [ ] **GEN-02**: User can browse template/inspiration gallery
-- [ ] **GEN-03**: User can select template as starting point
+- [x] **GEN-01**: User can enter text prompt describing desired animation
+- [x] **GEN-02**: User can browse template/inspiration gallery
+- [x] **GEN-03**: User can select template as starting point
 - [ ] **GEN-04**: System validates generated code before rendering
 - [x] **GEN-05**: User sees real-time preview of animation
 
@@ -88,9 +88,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
-| GEN-01 | Phase 2 | Pending |
-| GEN-02 | Phase 4 | Pending |
-| GEN-03 | Phase 4 | Pending |
+| GEN-01 | Phase 2 | Complete |
+| GEN-02 | Phase 4 | Complete |
+| GEN-03 | Phase 4 | Complete |
 | GEN-04 | Phase 2 | Pending |
 | GEN-05 | Phase 3 | Complete |
 | ANIM-01 | Phase 2 | Pending |
@@ -106,4 +106,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2025-01-27*
-*Last updated: 2026-01-27 after roadmap creation*
+*Last updated: 2026-01-28 after Phase 4 completion*

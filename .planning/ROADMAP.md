@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Auth** - Users can securely access their accounts via Clerk
 - [x] **Phase 2: Generation Pipeline** - Users can generate animation code from text prompts
 - [x] **Phase 3: Preview System** - Users can see real-time preview of generated animations
-- [ ] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
+- [x] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
 - [ ] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
 
 ## Phase Details
@@ -79,8 +79,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Template definitions + gallery components (types, cards, preview modal)
-- [ ] 04-02-PLAN.md — /templates page + create page integration + verification
+- [x] 04-01-PLAN.md — Template definitions + gallery components (types, cards, preview modal)
+- [x] 04-02-PLAN.md — /templates page + create page integration + verification
 
 ### Phase 5: Render Pipeline
 **Goal**: Users can render animations to MP4 and download them
@@ -109,7 +109,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 1. Foundation & Auth | 2/2 | ✓ Complete | 2026-01-27 |
 | 2. Generation Pipeline | 3/3 | ✓ Complete | 2026-01-27 |
 | 3. Preview System | 1/1 | ✓ Complete | 2026-01-28 |
-| 4. Templates & Discovery | 0/2 | Not started | - |
+| 4. Templates & Discovery | 2/2 | ✓ Complete | 2026-01-28 |
 | 5. Render Pipeline | 0/3 | Not started | - |
 
 ---
