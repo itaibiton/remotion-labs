@@ -1,0 +1,102 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+
+const EXAMPLE_PROMPTS = [
+  "Animated title that says 'Welcome' with a fade-in effect",
+  "Kinetic typography: 'Think Different' with bold letters scaling in",
+  "Typewriter text revealing 'Hello World' character by character",
+  "Slide up text animation for 'Coming Soon' announcement",
+];
+
+const MAX_CHARS = 2000;
+const WARN_CHARS = 1500;
+
+interface PromptInputProps {
+  onSubmit: (prompt: string) => Promise<void>;
+  isGenerating: boolean;
+  disabled?: boolean;
+}
+
+export function PromptInput({
+  onSubmit,
+  isGenerating,
+  disabled = false,
+}: PromptInputProps) {
+  const [prompt, setPrompt] = useState("");
+
+  const charCount = prompt.length;
+  const isOverLimit = charCount > MAX_CHARS;
+  const isNearLimit = charCount > WARN_CHARS;
+
+  const handleSubmit = useCallback(async () => {
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt || isOverLimit || isGenerating || disabled) {
+      return;
+    }
+    await onSubmit(trimmedPrompt);
+  }, [prompt, isOverLimit, isGenerating, disabled, onSubmit]);
+
+  const handleExampleClick = useCallback((example: string) => {
+    setPrompt(example);
+  }, []);
+
+  const truncateExample = (text: string, maxLength = 35) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
+
+  const isDisabled = isGenerating || disabled;
+  const canSubmit = prompt.trim().length > 0 && !isOverLimit && !isDisabled;
+
+  return (
+    <div className="w-full max-w-2xl mx-auto space-y-4">
+      <div className="relative">
+        <Textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Describe the animation you want to create..."
+          className="min-h-[120px] resize-none pr-4 pb-8"
+          disabled={isDisabled}
+        />
+        <div
+          className={`absolute bottom-2 right-3 text-xs ${
+            isOverLimit
+              ? "text-red-500"
+              : isNearLimit
+                ? "text-yellow-500"
+                : "text-muted-foreground"
+          }`}
+        >
+          {charCount}/{MAX_CHARS}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-sm text-muted-foreground">Try:</span>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLE_PROMPTS.map((example, index) => (
+            <button
+              key={index}
+              onClick={() => handleExampleClick(example)}
+              disabled={isDisabled}
+              className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {truncateExample(example)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Button
+        onClick={handleSubmit}
+        disabled={!canSubmit}
+        className="w-full"
+      >
+        {isGenerating ? "Generating..." : "Generate Animation"}
+      </Button>
+    </div>
+  );
+}
