@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Phase 4 - Templates & Discovery (In Progress)
+**Current focus:** Phase 4 - Templates & Discovery (Complete)
 
 ## Current Position
 
 Phase: 4 of 5 (Templates & Discovery)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-28 - Completed 04-01-PLAN.md
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase complete
+Last activity: 2026-01-28 - Completed 04-02-PLAN.md
 
-Progress: [#######---] 70%
+Progress: [########--] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 5.6 min
-- Total execution time: 45 min
+- Total plans completed: 9
+- Average duration: 5.9 min
+- Total execution time: 53 min
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [#######---] 70%
 | 01-foundation-auth | 2 | 9 min | 4.5 min |
 | 02-generation-pipeline | 3 | 16 min | 5.3 min |
 | 03-preview-system | 1 | 12 min | 12 min |
-| 04-templates-discovery | 1 | 2 min | 2 min |
+| 04-templates-discovery | 2 | 10 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (4 min), 02-03 (8 min), 03-01 (12 min), 04-01 (2 min)
-- Trend: Fast (04-01 quick due to component installation focus)
+- Last 5 plans: 02-03 (8 min), 03-01 (12 min), 04-01 (2 min), 04-02 (8 min)
+- Trend: Consistent execution pace
 
 *Updated after each plan completion*
 
@@ -66,6 +66,8 @@ Recent decisions affecting current work:
 - 8 templates across 4 categories (social, business, creative, minimal)
 - Static color preview in cards for performance
 - PreviewPlayer reuse for animated modal preview
+- Server/client component split for searchParams handling (Next.js 15 pattern)
+- Template context is informational only (v1) - guides user prompt, doesn't pre-fill props
 
 ### Pending Todos
 
@@ -78,9 +80,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-27T23:02:11Z
-Stopped at: Completed 04-01-PLAN.md (Template Gallery Components)
+Last session: 2026-01-28T00:38:00Z
+Stopped at: Completed 04-02-PLAN.md (Templates Page & Navigation)
 Resume file: None
 
 ---
-*Next step: Execute 04-02-PLAN.md (Templates Page & Navigation)*
+*Next step: Plan Phase 5 (Render & Download) - final v1 feature*
