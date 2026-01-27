@@ -20,7 +20,7 @@ Validate the core concept: can users go from prompt to video?
 - [ ] **GEN-02**: User can browse template/inspiration gallery
 - [ ] **GEN-03**: User can select template as starting point
 - [ ] **GEN-04**: System validates generated code before rendering
-- [ ] **GEN-05**: User sees real-time preview of animation
+- [x] **GEN-05**: User sees real-time preview of animation
 
 ### Animation Types
 
@@ -92,7 +92,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEN-02 | Phase 4 | Pending |
 | GEN-03 | Phase 4 | Pending |
 | GEN-04 | Phase 2 | Pending |
-| GEN-05 | Phase 3 | Pending |
+| GEN-05 | Phase 3 | Complete |
 | ANIM-01 | Phase 2 | Pending |
 | OUT-01 | Phase 5 | Pending |
 | INFRA-01 | Phase 5 | Pending |
