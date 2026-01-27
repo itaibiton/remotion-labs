@@ -1,6 +1,7 @@
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { AuthButtons } from "@/components/auth/auth-buttons";
 import { UserMenu } from "@/components/auth/user-menu";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -11,12 +12,9 @@ export default function HomePage() {
         <h1 className="text-xl font-bold">RemotionLab</h1>
         <nav className="flex items-center gap-4">
           <SignedIn>
-            <Link
-              href="/create"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-            >
-              Create Animation
-            </Link>
+            <Button asChild>
+              <Link href="/create">Create Animation</Link>
+            </Button>
             <UserMenu />
           </SignedIn>
           <SignedOut>
@@ -37,12 +35,9 @@ export default function HomePage() {
           <AuthButtons />
         </SignedOut>
         <SignedIn>
-          <Link
-            href="/create"
-            className="px-6 py-3 text-lg font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-          >
-            Start Creating
-          </Link>
+          <Button asChild size="lg">
+            <Link href="/create">Start Creating</Link>
+          </Button>
         </SignedIn>
       </div>
     </main>
