@@ -46,12 +46,12 @@ Plans:
   3. System validates generated code before attempting render
   4. User sees clear error message if generation fails, with retry option
   5. System supports text/typography animation type (kinetic text, animated titles)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Database schema + Convex backend (Claude API action)
+- [ ] 02-02-PLAN.md — Generation UI components (prompt input, status, error)
+- [ ] 02-03-PLAN.md — Integration and human verification
 
 ### Phase 3: Preview System
 **Goal**: Users can see real-time preview of animations before committing to render
