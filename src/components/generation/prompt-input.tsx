@@ -18,12 +18,14 @@ interface PromptInputProps {
   onSubmit: (prompt: string) => Promise<void>;
   isGenerating: boolean;
   disabled?: boolean;
+  placeholder?: string;
 }
 
 export function PromptInput({
   onSubmit,
   isGenerating,
   disabled = false,
+  placeholder = "Describe the animation you want to create...",
 }: PromptInputProps) {
   const [prompt, setPrompt] = useState("");
 
@@ -57,7 +59,7 @@ export function PromptInput({
         <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe the animation you want to create..."
+          placeholder={placeholder}
           className="min-h-[120px] resize-none pr-4 pb-8"
           disabled={isDisabled}
         />
