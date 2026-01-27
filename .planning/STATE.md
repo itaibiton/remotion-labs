@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Phase 3 - Preview System (Complete)
+**Current focus:** Phase 4 - Templates & Discovery (In Progress)
 
 ## Current Position
 
-Phase: 3 of 5 (Preview System)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-01-28 - Completed 03-01-PLAN.md
+Phase: 4 of 5 (Templates & Discovery)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-28 - Completed 04-01-PLAN.md
 
-Progress: [######----] 60%
+Progress: [#######---] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 6.0 min
-- Total execution time: 43 min
+- Total plans completed: 8
+- Average duration: 5.6 min
+- Total execution time: 45 min
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [######----] 60%
 | 01-foundation-auth | 2 | 9 min | 4.5 min |
 | 02-generation-pipeline | 3 | 16 min | 5.3 min |
 | 03-preview-system | 1 | 12 min | 12 min |
+| 04-templates-discovery | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (4 min), 02-02 (4 min), 02-03 (8 min), 03-01 (12 min)
-- Trend: Stable (03-01 longer due to Remotion type compatibility work)
+- Last 5 plans: 02-02 (4 min), 02-03 (8 min), 03-01 (12 min), 04-01 (2 min)
+- Trend: Fast (04-01 quick due to component installation focus)
 
 *Updated after each plan completion*
 
@@ -62,6 +63,9 @@ Recent decisions affecting current work:
 - Markdown code block stripping for LLM JSON responses
 - isMounted pattern for Remotion SSR prevention (cleaner TypeScript than next/dynamic)
 - Custom Player controls for design system consistency
+- 8 templates across 4 categories (social, business, creative, minimal)
+- Static color preview in cards for performance
+- PreviewPlayer reuse for animated modal preview
 
 ### Pending Todos
 
@@ -74,9 +78,9 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:12:00Z
-Stopped at: Completed 03-01-PLAN.md (Preview System)
+Last session: 2026-01-27T23:02:11Z
+Stopped at: Completed 04-01-PLAN.md (Template Gallery Components)
 Resume file: None
 
 ---
-*Next step: Execute Phase 4 (Credit System) or Phase 5 (Render/Download)*
+*Next step: Execute 04-02-PLAN.md (Templates Page & Navigation)*
