@@ -84,26 +84,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| GEN-01 | TBD | Pending |
-| GEN-02 | TBD | Pending |
-| GEN-03 | TBD | Pending |
-| GEN-04 | TBD | Pending |
-| GEN-05 | TBD | Pending |
-| ANIM-01 | TBD | Pending |
-| OUT-01 | TBD | Pending |
-| INFRA-01 | TBD | Pending |
-| INFRA-02 | TBD | Pending |
-| INFRA-03 | TBD | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| GEN-01 | Phase 2 | Pending |
+| GEN-02 | Phase 4 | Pending |
+| GEN-03 | Phase 4 | Pending |
+| GEN-04 | Phase 2 | Pending |
+| GEN-05 | Phase 3 | Pending |
+| ANIM-01 | Phase 2 | Pending |
+| OUT-01 | Phase 5 | Pending |
+| INFRA-01 | Phase 5 | Pending |
+| INFRA-02 | Phase 5 | Pending |
+| INFRA-03 | Phase 2 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14 (awaiting roadmap)
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-01-27*
-*Last updated: 2025-01-27 after initial definition*
+*Last updated: 2026-01-27 after roadmap creation*
