@@ -13,7 +13,7 @@ RemotionLab delivers AI-powered video creation through five phases: establishing
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Auth** - Users can securely access their accounts via Clerk
-- [ ] **Phase 2: Generation Pipeline** - Users can generate animation code from text prompts
+- [x] **Phase 2: Generation Pipeline** - Users can generate animation code from text prompts
 - [ ] **Phase 3: Preview System** - Users can see real-time preview of generated animations
 - [ ] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
 - [ ] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
@@ -49,9 +49,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Database schema + Convex backend (Claude API action)
-- [ ] 02-02-PLAN.md — Generation UI components (prompt input, status, error)
-- [ ] 02-03-PLAN.md — Integration and human verification
+- [x] 02-01-PLAN.md — Database schema + Convex backend (Claude API action)
+- [x] 02-02-PLAN.md — Generation UI components (prompt input, status, error)
+- [x] 02-03-PLAN.md — Integration and human verification
 
 ### Phase 3: Preview System
 **Goal**: Users can see real-time preview of animations before committing to render
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 2/2 | ✓ Complete | 2026-01-27 |
-| 2. Generation Pipeline | 0/3 | Planned | - |
+| 2. Generation Pipeline | 3/3 | ✓ Complete | 2026-01-27 |
 | 3. Preview System | 0/2 | Not started | - |
 | 4. Templates & Discovery | 0/2 | Not started | - |
 | 5. Render Pipeline | 0/3 | Not started | - |
