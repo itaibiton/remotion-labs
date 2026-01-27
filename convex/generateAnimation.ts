@@ -87,10 +87,21 @@ export const generate = action({
       );
     }
 
-    // Parse JSON response
+    // Parse JSON response - handle potential markdown code blocks
     let parsedProps: unknown;
+    let jsonText = textContent.text.trim();
+
+    // Strip markdown code blocks if present
+    if (jsonText.startsWith("```")) {
+      // Remove opening ```json or ``` and closing ```
+      jsonText = jsonText
+        .replace(/^```(?:json)?\s*\n?/, "")
+        .replace(/\n?```\s*$/, "")
+        .trim();
+    }
+
     try {
-      parsedProps = JSON.parse(textContent.text);
+      parsedProps = JSON.parse(jsonText);
     } catch {
       throw new Error(
         "Failed to parse AI response. The AI returned invalid JSON. Please try again with a clearer prompt."

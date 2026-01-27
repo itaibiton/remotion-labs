@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as generateAnimation from "../generateAnimation.js";
+import type * as generations from "../generations.js";
+import type * as lib_validation from "../lib/validation.js";
 import type * as users from "../users.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  generateAnimation: typeof generateAnimation;
+  generations: typeof generations;
+  "lib/validation": typeof lib_validation;
   users: typeof users;
 }>;
 
