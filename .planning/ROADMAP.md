@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 2/2 | ✓ Complete | 2026-01-27 |
-| 2. Generation Pipeline | 0/3 | Not started | - |
+| 2. Generation Pipeline | 0/3 | Planned | - |
 | 3. Preview System | 0/2 | Not started | - |
 | 4. Templates & Discovery | 0/2 | Not started | - |
 | 5. Render Pipeline | 0/3 | Not started | - |
