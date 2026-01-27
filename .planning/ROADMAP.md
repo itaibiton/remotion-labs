@@ -30,11 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can log in with Google or GitHub OAuth
   4. User remains logged in after closing and reopening browser
   5. User can log out from any page
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Project scaffolding + Clerk/Convex provider integration
+- [ ] 01-02-PLAN.md — Auth UI components + middleware + verification
 
 ### Phase 2: Generation Pipeline
 **Goal**: Users can enter text prompts and receive validated animation code
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 0/2 | Not started | - |
+| 1. Foundation & Auth | 0/2 | Planned | - |
 | 2. Generation Pipeline | 0/3 | Not started | - |
 | 3. Preview System | 0/2 | Not started | - |
 | 4. Templates & Discovery | 0/2 | Not started | - |
