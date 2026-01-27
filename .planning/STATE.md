@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Phase 2 - Generation Pipeline
+**Current focus:** Phase 3 - Preview System (Complete)
 
 ## Current Position
 
-Phase: 2 of 5 (Generation Pipeline)
-Plan: 3 of 3 in current phase
+Phase: 3 of 5 (Preview System)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-01-27 - Completed 02-03-PLAN.md
+Last activity: 2026-01-28 - Completed 03-01-PLAN.md
 
-Progress: [#####-----] 50%
+Progress: [######----] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 5.2 min
-- Total execution time: 31 min
+- Total plans completed: 7
+- Average duration: 6.0 min
+- Total execution time: 43 min
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [#####-----] 50%
 |-------|-------|-------|----------|
 | 01-foundation-auth | 2 | 9 min | 4.5 min |
 | 02-generation-pipeline | 3 | 16 min | 5.3 min |
+| 03-preview-system | 1 | 12 min | 12 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (5 min), 02-01 (4 min), 02-02 (4 min), 02-03 (8 min)
-- Trend: Stable (02-03 longer due to human verification checkpoint)
+- Last 5 plans: 02-01 (4 min), 02-02 (4 min), 02-03 (8 min), 03-01 (12 min)
+- Trend: Stable (03-01 longer due to Remotion type compatibility work)
 
 *Updated after each plan completion*
 
@@ -59,6 +60,8 @@ Recent decisions affecting current work:
 - Sonner for toast notifications (lightweight, modern)
 - Step-based progress feedback pattern (analyzing -> generating -> validating)
 - Markdown code block stripping for LLM JSON responses
+- isMounted pattern for Remotion SSR prevention (cleaner TypeScript than next/dynamic)
+- Custom Player controls for design system consistency
 
 ### Pending Todos
 
@@ -67,14 +70,13 @@ None.
 ### Blockers/Concerns
 
 - Research flagged: Claude prompt engineering may need iteration if generation quality <60%
-- Research flagged: Preview-render divergence tolerance unknown (user acceptance TBD)
 - ANTHROPIC_API_KEY required for generation testing (documented in USER-SETUP)
 
 ## Session Continuity
 
-Last session: 2026-01-27T22:38:00Z
-Stopped at: Completed 02-03-PLAN.md (Frontend Integration)
+Last session: 2026-01-28T10:12:00Z
+Stopped at: Completed 03-01-PLAN.md (Preview System)
 Resume file: None
 
 ---
-*Next step: Execute Phase 3 (Preview System)*
+*Next step: Execute Phase 4 (Credit System) or Phase 5 (Render/Download)*
