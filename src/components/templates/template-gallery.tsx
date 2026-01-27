@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TemplateCard } from "@/components/templates/template-card";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { CATEGORIES, getTemplatesByCategory, type CategoryId, type Template } from "@/lib/templates";
 
 export function TemplateGallery() {
+  const router = useRouter();
   const [category, setCategory] = useState<CategoryId>("all");
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
 
@@ -17,8 +19,7 @@ export function TemplateGallery() {
   };
 
   const handleUseTemplate = (template: Template) => {
-    // Will be wired up in Plan 02 to navigate with template data
-    console.log("Use template:", template.id);
+    router.push(`/create?template=${template.id}`);
   };
 
   return (
