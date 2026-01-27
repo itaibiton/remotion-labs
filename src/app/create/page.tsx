@@ -8,6 +8,8 @@ import { UserMenu } from "@/components/auth/user-menu";
 import { PromptInput } from "@/components/generation/prompt-input";
 import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
+import { PreviewPlayer } from "@/components/preview/preview-player";
+import type { TextAnimationProps } from "@/remotion/compositions/TextAnimation";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -20,16 +22,7 @@ interface GenerationError {
 
 interface GenerationResult {
   id: string;
-  animationProps: {
-    text: string;
-    style: string;
-    fontFamily: string;
-    fontSize: number;
-    color: string;
-    backgroundColor?: string;
-    durationInFrames: number;
-    fps: number;
-  };
+  animationProps: TextAnimationProps;
 }
 
 function CreateContent() {
@@ -111,37 +104,26 @@ function CreateContent() {
 
       {/* Success state */}
       {lastGeneration && !isGenerating && !error && (
-        <div className="w-full max-w-2xl mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950/20 dark:border-green-900/50">
-          <h3 className="font-medium text-green-800 dark:text-green-200 mb-3">
-            Animation generated!
-          </h3>
-          <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
-            <p>
-              <span className="font-medium">Text:</span>{" "}
-              {lastGeneration.animationProps.text}
-            </p>
-            <p>
-              <span className="font-medium">Style:</span>{" "}
-              {lastGeneration.animationProps.style}
-            </p>
-            <p>
-              <span className="font-medium">Duration:</span>{" "}
-              {(
-                lastGeneration.animationProps.durationInFrames /
-                lastGeneration.animationProps.fps
-              ).toFixed(1)}
-              s
-            </p>
+        <div className="w-full max-w-2xl mb-6">
+          <PreviewPlayer animationProps={lastGeneration.animationProps} />
+          <div className="mt-4 flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="text-sm text-muted-foreground">
+              <p>
+                <span className="font-medium">Text:</span>{" "}
+                {lastGeneration.animationProps.text}
+              </p>
+              <p>
+                <span className="font-medium">Style:</span>{" "}
+                {lastGeneration.animationProps.style}
+              </p>
+            </div>
+            <button
+              onClick={handleRetry}
+              className="text-sm text-primary underline hover:no-underline"
+            >
+              Regenerate
+            </button>
           </div>
-          <p className="mt-3 text-xs text-green-600 dark:text-green-400">
-            Preview will be available in Phase 3
-          </p>
-          <button
-            onClick={handleRetry}
-            className="mt-3 text-sm text-green-700 dark:text-green-300 underline hover:no-underline"
-          >
-            Regenerate
-          </button>
         </div>
       )}
 
