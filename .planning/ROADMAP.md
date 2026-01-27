@@ -62,11 +62,10 @@ Plans:
   2. Preview plays in browser without requiring render
   3. Preview accurately represents final output (within acceptable tolerance)
   4. User can replay preview as many times as desired
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Remotion Player integration with TextAnimation composition and custom controls
 
 ### Phase 4: Templates & Discovery
 **Goal**: Users can browse pre-made templates and use them as starting points
@@ -109,7 +108,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 2/2 | ✓ Complete | 2026-01-27 |
 | 2. Generation Pipeline | 3/3 | ✓ Complete | 2026-01-27 |
-| 3. Preview System | 0/2 | Not started | - |
+| 3. Preview System | 0/1 | Planned | - |
 | 4. Templates & Discovery | 0/2 | Not started | - |
 | 5. Render Pipeline | 0/3 | Not started | - |
 
