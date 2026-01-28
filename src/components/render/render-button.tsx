@@ -30,7 +30,10 @@ export function RenderButton({
     try {
       const result = await startRender({
         generationId,
-        animationProps,
+        animationProps: {
+          ...animationProps,
+          fps: 30 as const, // Enforce literal type for Convex action
+        },
       });
       toast.success("Render started!");
       onRenderStarted(result.renderJobId as Id<"renders">);

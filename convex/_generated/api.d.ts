@@ -13,6 +13,7 @@ import type * as generations from "../generations.js";
 import type * as lib_renderLimits from "../lib/renderLimits.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as renders from "../renders.js";
+import type * as triggerRender from "../triggerRender.js";
 import type * as userQuotas from "../userQuotas.js";
 import type * as users from "../users.js";
 
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   "lib/renderLimits": typeof lib_renderLimits;
   "lib/validation": typeof lib_validation;
   renders: typeof renders;
+  triggerRender: typeof triggerRender;
   userQuotas: typeof userQuotas;
   users: typeof users;
 }>;
