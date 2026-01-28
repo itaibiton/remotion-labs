@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v1.1 Full Code Generation - Phase 6 (Code Generation & Safe Execution)
+**Current focus:** v1.1 Full Code Generation - Phase 6 Complete
 
 ## Current Position
 
 Phase: 6 - Code Generation & Safe Execution
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-01-28 - Completed 06-02-PLAN.md (Code Executor & DynamicCode)
+Plan: 3 of 3 complete
+Status: Phase complete
+Last activity: 2026-01-28 - Completed 06-03-PLAN.md (Generation Pipeline Integration)
 
-Progress: [======================------] 78% (v1.0 complete, 06-01/02 complete, 06-03 + Phase 7-8 pending)
+Progress: [========================----] 83% (v1.0 complete, Phase 6 complete, Phase 7-8 pending)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 5.1 min
-- Total execution time: 76 min
+- Total execution time: 81 min
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [======================------] 78% (v1.0 complete, 06-01/02 complete, 
 | 03-preview-system | 1 | 12 min | 12 min |
 | 04-templates-discovery | 2 | 10 min | 5 min |
 | 05-render-pipeline | 4 | 17 min | 4.3 min |
-| 06-code-generation-safe-execution | 2 | 6 min | 3 min |
+| 06-code-generation-safe-execution | 3 | 11 min | 3.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (2 min), 05-04 (8 min), 06-01 (3 min), 06-02 (3 min)
+- Last 5 plans: 05-04 (8 min), 06-01 (3 min), 06-02 (3 min), 06-03 (5 min)
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -89,6 +89,9 @@ Recent decisions affecting current work:
 - MyComposition naming convention for generated components
 - Fresh execution scope per call prevents state leakage
 - Meta-composition pattern (code as inputProps) for single Lambda bundle
+- Inline validation in Convex action (bundler compatibility)
+- Metadata via comments (// DURATION, // FPS extraction)
+- TemplatePlayer for legacy props-based templates
 
 ### Pending Todos
 
@@ -101,14 +104,15 @@ None.
 - AWS credentials required for Remotion Lambda (documented in 05-USER-SETUP)
 - AWS Lambda setup pending - code integration complete but not tested with Lambda
 - Phase 6: Function constructor security needs adversarial testing before production
+- Render pipeline needs update to use DynamicCode composition on Lambda
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:44:21Z
-Stopped at: Completed 06-02-PLAN.md (Code Executor & DynamicCode)
+Last session: 2026-01-28T10:51:34Z
+Stopped at: Completed 06-03-PLAN.md (Generation Pipeline Integration)
 Resume file: None
 
-Next step: Execute 06-03-PLAN.md (Generation Pipeline Integration)
+Next step: Plan Phase 7 (Render Integration for Code Generation)
 
 ---
-*Phase 6 Plan 2 complete - validation + execution sandbox ready*
+*Phase 6 complete - full code generation pipeline operational*
