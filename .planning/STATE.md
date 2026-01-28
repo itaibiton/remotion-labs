@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v1.1 Full Code Generation - unlocking unlimited animation possibilities
+**Current focus:** v1.1 Full Code Generation - Phase 6 (Code Generation & Safe Execution)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-01-28 - Milestone v1.1 started
+Phase: 6 - Code Generation & Safe Execution
+Plan: Not started (awaiting plan creation)
+Status: Roadmap complete, ready for planning
+Last activity: 2026-01-28 - v1.1 roadmap created
 
-Progress: [          ] 0%
+Progress: [==========----------] 50% (v1.0 complete, v1.1 Phase 6-8 pending)
 
 ## Performance Metrics
 
@@ -78,6 +78,12 @@ Recent decisions affecting current work:
 - Inline render controls below preview (not separate page)
 - State reset on regeneration prevents stale render progress
 
+**v1.1 Decisions (pending):**
+- Interpreter Pattern with AST Validation (acorn + ast-guard + sucrase)
+- DynamicCode meta-composition for Lambda (code as inputProps)
+- Read-only editor before editable (Phase 6 vs Phase 7)
+- Security is foundational - sandbox before features
+
 ### Pending Todos
 
 None.
@@ -88,12 +94,16 @@ None.
 - ANTHROPIC_API_KEY required for generation testing (documented in USER-SETUP)
 - AWS credentials required for Remotion Lambda (documented in 05-USER-SETUP)
 - AWS Lambda setup pending - code integration complete but not tested with Lambda
+- Phase 6: ast-guard is newer library (MEDIUM confidence) - needs testing with real Claude output
+- Phase 6: Function constructor security needs adversarial testing before production
 
 ## Session Continuity
 
-Last session: 2026-01-28T11:30:00Z
-Stopped at: Started milestone v1.1 Full Code Generation
+Last session: 2026-01-28T12:00:00Z
+Stopped at: Created v1.1 roadmap (Phases 6-8)
 Resume file: None
 
+Next step: `/gsd:plan-phase 6`
+
 ---
-*v1.1 in progress - defining requirements*
+*v1.1 roadmap complete - ready for Phase 6 planning*

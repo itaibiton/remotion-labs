@@ -2,7 +2,7 @@
 
 ## Overview
 
-RemotionLab delivers AI-powered video creation through five phases: establishing secure user access, building the Claude-powered generation pipeline, enabling real-time preview, providing template discovery, and implementing video rendering with download capabilities. This roadmap covers v1.0 scope (14 requirements) focused on validating the core value: users can go from text prompt to rendered video without coding or motion design knowledge.
+RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution.
 
 ## Phases
 
@@ -12,11 +12,19 @@ RemotionLab delivers AI-powered video creation through five phases: establishing
 
 Decimal phases appear between their surrounding integers in numeric order.
 
+### v1.0 (Complete)
+
 - [x] **Phase 1: Foundation & Auth** - Users can securely access their accounts via Clerk
 - [x] **Phase 2: Generation Pipeline** - Users can generate animation code from text prompts
 - [x] **Phase 3: Preview System** - Users can see real-time preview of generated animations
 - [x] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
 - [x] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
+
+### v1.1 (In Progress)
+
+- [ ] **Phase 6: Code Generation & Safe Execution** - Users can generate full Remotion JSX with validated, sandboxed execution
+- [ ] **Phase 7: Editing & Iteration** - Users can edit code and refine via chat
+- [ ] **Phase 8: Export & Polish** - Users can export source code for standalone use
 
 ## Phase Details
 
@@ -33,8 +41,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [x] 01-01-PLAN.md — Project scaffolding + Clerk/Convex provider integration
-- [x] 01-02-PLAN.md — Auth UI components + middleware + verification
+- [x] 01-01-PLAN.md - Project scaffolding + Clerk/Convex provider integration
+- [x] 01-02-PLAN.md - Auth UI components + middleware + verification
 
 ### Phase 2: Generation Pipeline
 **Goal**: Users can enter text prompts and receive validated animation code
@@ -49,9 +57,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 02-01-PLAN.md — Database schema + Convex backend (Claude API action)
-- [x] 02-02-PLAN.md — Generation UI components (prompt input, status, error)
-- [x] 02-03-PLAN.md — Integration and human verification
+- [x] 02-01-PLAN.md - Database schema + Convex backend (Claude API action)
+- [x] 02-02-PLAN.md - Generation UI components (prompt input, status, error)
+- [x] 02-03-PLAN.md - Integration and human verification
 
 ### Phase 3: Preview System
 **Goal**: Users can see real-time preview of animations before committing to render
@@ -65,7 +73,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [x] 03-01-PLAN.md — Remotion Player integration with TextAnimation composition and custom controls
+- [x] 03-01-PLAN.md - Remotion Player integration with TextAnimation composition and custom controls
 
 ### Phase 4: Templates & Discovery
 **Goal**: Users can browse pre-made templates and use them as starting points
@@ -79,8 +87,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [x] 04-01-PLAN.md — Template definitions + gallery components (types, cards, preview modal)
-- [x] 04-02-PLAN.md — /templates page + create page integration + verification
+- [x] 04-01-PLAN.md - Template definitions + gallery components (types, cards, preview modal)
+- [x] 04-02-PLAN.md - /templates page + create page integration + verification
 
 ### Phase 5: Render Pipeline
 **Goal**: Users can render animations to MP4 and download them
@@ -95,24 +103,62 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 05-01-PLAN.md — Backend foundation (schema, rate limiter, renders CRUD)
-- [x] 05-02-PLAN.md — Render action with Lambda integration and progress polling
-- [x] 05-03-PLAN.md — UI components (RenderButton, RenderProgress, DownloadButton)
-- [x] 05-04-PLAN.md — Create page integration and end-to-end verification
+- [x] 05-01-PLAN.md - Backend foundation (schema, rate limiter, renders CRUD)
+- [x] 05-02-PLAN.md - Render action with Lambda integration and progress polling
+- [x] 05-03-PLAN.md - UI components (RenderButton, RenderProgress, DownloadButton)
+- [x] 05-04-PLAN.md - Create page integration and end-to-end verification
+
+### Phase 6: Code Generation & Safe Execution
+**Goal**: Users can generate full Remotion JSX code that executes safely in a validated sandbox
+**Depends on**: Phase 5 (existing generation pipeline, Lambda infrastructure)
+**Requirements**: CODE-01, CODE-02, CODE-03, CODE-04, ANIM-02, ANIM-03, ANIM-04
+**Success Criteria** (what must be TRUE):
+  1. User can request any animation type (shapes, motion graphics, effects) via text prompt
+  2. System generates complete Remotion JSX code (not just props for fixed templates)
+  3. System validates generated code via AST parsing and rejects dangerous patterns
+  4. System executes validated code in controlled sandbox (no network, no DOM, no eval)
+  5. User can view the generated source code in a read-only editor
+**Plans**: TBD
+
+### Phase 7: Editing & Iteration
+**Goal**: Users can modify generated code and refine animations through conversation
+**Depends on**: Phase 6 (code validation pipeline, editor infrastructure)
+**Requirements**: CODE-05, ITER-01, ITER-02
+**Success Criteria** (what must be TRUE):
+  1. User can edit generated code directly in the editor
+  2. System re-validates code on every edit before preview updates
+  3. User can refine animation via chat ("make it faster", "change color to blue")
+  4. System suggests specific fixes when validation fails (not just "code invalid")
+**Plans**: TBD
+
+### Phase 8: Export & Polish
+**Goal**: Users can export generated code for standalone Remotion projects
+**Depends on**: Phase 7 (full code generation and editing complete)
+**Requirements**: OUT-02
+**Success Criteria** (what must be TRUE):
+  1. User can download generated Remotion source code as a file
+  2. Exported code is self-contained and runs in standard Remotion project
+  3. Export includes necessary imports and composition setup
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 2/2 | ✓ Complete | 2026-01-27 |
-| 2. Generation Pipeline | 3/3 | ✓ Complete | 2026-01-27 |
-| 3. Preview System | 1/1 | ✓ Complete | 2026-01-28 |
-| 4. Templates & Discovery | 2/2 | ✓ Complete | 2026-01-28 |
-| 5. Render Pipeline | 4/4 | ✓ Complete | 2026-01-28 |
+| 1. Foundation & Auth | 2/2 | Complete | 2026-01-27 |
+| 2. Generation Pipeline | 3/3 | Complete | 2026-01-27 |
+| 3. Preview System | 1/1 | Complete | 2026-01-28 |
+| 4. Templates & Discovery | 2/2 | Complete | 2026-01-28 |
+| 5. Render Pipeline | 4/4 | Complete | 2026-01-28 |
+| 6. Code Generation & Safe Execution | 0/? | Not Started | - |
+| 7. Editing & Iteration | 0/? | Not Started | - |
+| 8. Export & Polish | 0/? | Not Started | - |
 
 ---
 *Roadmap created: 2026-01-27*
-*v1.0 requirements: 14 mapped*
+*v1.0 requirements: 14 mapped (complete)*
+*v1.1 requirements: 11 mapped*
+*Updated: 2026-01-28 for v1.1 milestone*

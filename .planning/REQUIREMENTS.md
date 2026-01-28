@@ -3,18 +3,18 @@
 **Defined:** 2025-01-27
 **Core Value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
-## v1.0 Requirements (Core Validation) ✓ COMPLETE
+## v1.0 Requirements (Core Validation) - COMPLETE
 
 All v1.0 requirements delivered. See MILESTONES.md for details.
 
-### Authentication ✓
+### Authentication
 
 - [x] **AUTH-01**: User can sign up with Clerk
 - [x] **AUTH-02**: User can log in via email/password
 - [x] **AUTH-03**: User can log in via OAuth (Google/GitHub)
 - [x] **AUTH-04**: User session persists across browser refresh
 
-### Generation ✓
+### Generation
 
 - [x] **GEN-01**: User can enter text prompt describing desired animation
 - [x] **GEN-02**: User can browse template/inspiration gallery
@@ -22,15 +22,15 @@ All v1.0 requirements delivered. See MILESTONES.md for details.
 - [x] **GEN-04**: System validates generated code before rendering
 - [x] **GEN-05**: User sees real-time preview of animation
 
-### Animation Types ✓
+### Animation Types
 
 - [x] **ANIM-01**: System supports text/typography animations (kinetic typography, animated titles)
 
-### Output ✓
+### Output
 
 - [x] **OUT-01**: User can download rendered video (MP4)
 
-### Infrastructure ✓
+### Infrastructure
 
 - [x] **INFRA-01**: System enforces usage limits/quotas per user
 - [x] **INFRA-02**: User sees render progress in real-time
@@ -132,23 +132,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CODE-01 | TBD | Pending |
-| CODE-02 | TBD | Pending |
-| CODE-03 | TBD | Pending |
-| CODE-04 | TBD | Pending |
-| CODE-05 | TBD | Pending |
-| ITER-01 | TBD | Pending |
-| ITER-02 | TBD | Pending |
-| ANIM-02 | TBD | Pending |
-| ANIM-03 | TBD | Pending |
-| ANIM-04 | TBD | Pending |
-| OUT-02 | TBD | Pending |
+| CODE-01 | Phase 6 | Pending |
+| CODE-02 | Phase 6 | Pending |
+| CODE-03 | Phase 6 | Pending |
+| CODE-04 | Phase 6 | Pending |
+| CODE-05 | Phase 7 | Pending |
+| ITER-01 | Phase 7 | Pending |
+| ITER-02 | Phase 7 | Pending |
+| ANIM-02 | Phase 6 | Pending |
+| ANIM-03 | Phase 6 | Pending |
+| ANIM-04 | Phase 6 | Pending |
+| OUT-02 | Phase 8 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 14 total (complete)
-- v1.1 requirements: 11 total
-- Unmapped: 11 (pending roadmap)
+- v1.1 requirements: 11 total (mapped)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-01-27*
-*Last updated: 2026-01-28 for v1.1 milestone*
+*Last updated: 2026-01-28 for v1.1 roadmap*
