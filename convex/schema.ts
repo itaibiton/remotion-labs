@@ -34,4 +34,26 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_created", ["userId", "createdAt"]),
+
+  renders: defineTable({
+    userId: v.string(),
+    generationId: v.id("generations"),
+    renderId: v.string(), // Remotion Lambda render ID
+    bucketName: v.string(), // S3 bucket
+    status: v.union(
+      v.literal("pending"),
+      v.literal("rendering"),
+      v.literal("complete"),
+      v.literal("failed")
+    ),
+    progress: v.number(), // 0-100
+    outputUrl: v.optional(v.string()), // Presigned download URL
+    outputSize: v.optional(v.number()), // Bytes
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_generation", ["generationId"])
+    .index("by_status", ["status"]),
 });
