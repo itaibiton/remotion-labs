@@ -118,7 +118,13 @@ Plans:
   3. System validates generated code via AST parsing and rejects dangerous patterns
   4. System executes validated code in controlled sandbox (no network, no DOM, no eval)
   5. User can view the generated source code in a read-only editor
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 06-01-PLAN.md - Code validation infrastructure (acorn, ast-guard, sucrase, whitelist)
+- [ ] 06-02-PLAN.md - DynamicCode composition + code executor (Function constructor, scope injection)
+- [ ] 06-03-PLAN.md - Enhanced Claude prompt + generation action update (replace props with JSX)
+- [ ] 06-04-PLAN.md - Monaco editor integration + create page updates + verification
 
 ### Phase 7: Editing & Iteration
 **Goal**: Users can modify generated code and refine animations through conversation
@@ -153,7 +159,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Preview System | 1/1 | Complete | 2026-01-28 |
 | 4. Templates & Discovery | 2/2 | Complete | 2026-01-28 |
 | 5. Render Pipeline | 4/4 | Complete | 2026-01-28 |
-| 6. Code Generation & Safe Execution | 0/? | Not Started | - |
+| 6. Code Generation & Safe Execution | 0/4 | Not Started | - |
 | 7. Editing & Iteration | 0/? | Not Started | - |
 | 8. Export & Polish | 0/? | Not Started | - |
 
