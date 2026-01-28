@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, internalMutation } from "./_generated/server";
+import { query, internalMutation, internalQuery } from "./_generated/server";
 
 // Internal mutation for creating render records (called from action)
 export const create = internalMutation({
@@ -79,5 +79,13 @@ export const listByUser = query({
       .withIndex("by_user", (q) => q.eq("userId", identity.tokenIdentifier))
       .order("desc")
       .take(20);
+  },
+});
+
+// Internal query for action lookups (authorization checks)
+export const getInternal = internalQuery({
+  args: { id: v.id("renders") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
