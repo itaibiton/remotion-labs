@@ -4,14 +4,11 @@ import { useState, useCallback, useEffect } from "react";
 import { useAction, useMutation } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
 import { UserMenu } from "@/components/auth/user-menu";
 import { PromptInput } from "@/components/generation/prompt-input";
 import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
 import { PreviewPlayer } from "@/components/preview/preview-player";
-import { RenderButton, RenderProgress } from "@/components/render";
-import type { TextAnimationProps } from "@/remotion/compositions/TextAnimation";
 import type { Template } from "@/lib/templates";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -25,7 +22,9 @@ interface GenerationError {
 
 interface GenerationResult {
   id: string;
-  animationProps: TextAnimationProps;
+  code: string;
+  durationInFrames: number;
+  fps: number;
 }
 
 interface CreateContentProps {
@@ -41,22 +40,16 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
   const [error, setError] = useState<GenerationError | null>(null);
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
   const [lastPrompt, setLastPrompt] = useState<string>("");
-  const [currentRenderJobId, setCurrentRenderJobId] = useState<Id<"renders"> | null>(null);
 
   // Store user in Convex on first visit (handles both new signups and existing users)
   useEffect(() => {
     storeUser().catch(console.error);
   }, [storeUser]);
 
-  const handleRenderStarted = useCallback((renderJobId: Id<"renders">) => {
-    setCurrentRenderJobId(renderJobId);
-  }, []);
-
   const handleGenerate = useCallback(
     async (prompt: string) => {
       setLastPrompt(prompt);
       setError(null);
-      setCurrentRenderJobId(null);
       setIsGenerating(true);
 
       // Step through: analyzing -> generating
@@ -144,7 +137,11 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
       {/* Success state */}
       {lastGeneration && !isGenerating && !error && (
         <div className="w-full max-w-2xl mb-6">
-          <PreviewPlayer animationProps={lastGeneration.animationProps} />
+          <PreviewPlayer
+            code={lastGeneration.code}
+            durationInFrames={lastGeneration.durationInFrames}
+            fps={lastGeneration.fps}
+          />
 
           {/* Render section */}
           <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
@@ -152,12 +149,12 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
                 <p>
-                  <span className="font-medium">Text:</span>{" "}
-                  {lastGeneration.animationProps.text}
+                  <span className="font-medium">Duration:</span>{" "}
+                  {(lastGeneration.durationInFrames / lastGeneration.fps).toFixed(1)}s
                 </p>
                 <p>
-                  <span className="font-medium">Style:</span>{" "}
-                  {lastGeneration.animationProps.style}
+                  <span className="font-medium">Frames:</span>{" "}
+                  {lastGeneration.durationInFrames} @ {lastGeneration.fps}fps
                 </p>
               </div>
               <button
@@ -168,22 +165,19 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
               </button>
             </div>
 
-            {/* Render controls */}
+            {/* Render controls - temporarily disabled for code generation */}
             <div className="pt-2 border-t">
-              {currentRenderJobId ? (
-                <RenderProgress renderJobId={currentRenderJobId} />
-              ) : (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Happy with the preview? Render to download as MP4.
-                  </p>
-                  <RenderButton
-                    generationId={lastGeneration.id as Id<"generations">}
-                    animationProps={lastGeneration.animationProps}
-                    onRenderStarted={handleRenderStarted}
-                  />
-                </div>
-              )}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Happy with the preview? Render coming soon.
+                </p>
+                <button
+                  disabled
+                  className="px-4 py-2 text-sm bg-muted text-muted-foreground rounded-md cursor-not-allowed"
+                >
+                  Render (Coming Soon)
+                </button>
+              </div>
             </div>
           </div>
         </div>

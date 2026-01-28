@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PreviewPlayer } from "@/components/preview/preview-player";
+import { TemplatePlayer } from "@/components/templates/template-player";
 import type { Template } from "@/lib/templates";
 
 interface TemplatePreviewProps {
@@ -37,9 +37,9 @@ export function TemplatePreview({
           <DialogDescription>{template.description}</DialogDescription>
         </DialogHeader>
 
-        {/* Animated preview using PreviewPlayer */}
+        {/* Animated preview using TemplatePlayer (props-based) */}
         <div className="py-4">
-          <PreviewPlayer animationProps={template.props} />
+          <TemplatePlayer animationProps={template.props} />
         </div>
 
         <DialogFooter>

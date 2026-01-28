@@ -1,37 +1,35 @@
 "use client";
 
+/**
+ * Template Player - uses the legacy TextAnimation composition
+ * This player is specifically for template previews which use the props-based system
+ * For AI-generated code, use PreviewPlayer instead
+ */
+
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DynamicCode, type DynamicCodeProps } from "@/remotion/compositions/DynamicCode";
+import {
+  TextAnimation,
+  type TextAnimationProps,
+} from "@/remotion/compositions/TextAnimation";
 
 // Loading placeholder for Player
 function LoadingPlaceholder() {
-  return (
-    <div className="aspect-video bg-black rounded-lg animate-pulse" />
-  );
+  return <div className="aspect-video bg-black rounded-lg animate-pulse" />;
 }
 
-interface PreviewPlayerProps {
-  code: string;
-  durationInFrames: number;
-  fps: number;
+interface TemplatePlayerProps {
+  animationProps: TextAnimationProps;
 }
 
-function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps) {
+function TemplatePlayerInner({ animationProps }: TemplatePlayerProps) {
   const playerRef = useRef<PlayerRef>(null);
   const [isPlaying, setIsPlaying] = useState(true);
 
   // Memoize inputProps to prevent unnecessary re-renders
-  const inputProps: DynamicCodeProps = useMemo(
-    () => ({
-      code,
-      durationInFrames,
-      fps,
-    }),
-    [code, durationInFrames, fps]
-  );
+  const inputProps = useMemo(() => animationProps, [animationProps]);
 
   // Handle play event
   const onPlay = useCallback(() => {
@@ -85,10 +83,10 @@ function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps)
         <Player
           ref={playerRef}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          component={DynamicCode as any}
+          component={TextAnimation as any}
           inputProps={inputProps}
-          durationInFrames={durationInFrames}
-          fps={fps}
+          durationInFrames={animationProps.durationInFrames}
+          fps={animationProps.fps}
           compositionWidth={1920}
           compositionHeight={1080}
           style={{ width: "100%" }}
@@ -126,7 +124,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps)
 }
 
 // Wrapper that prevents SSR (Remotion uses browser APIs)
-export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProps) {
+export function TemplatePlayer({ animationProps }: TemplatePlayerProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -137,11 +135,5 @@ export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProp
     return <LoadingPlaceholder />;
   }
 
-  return (
-    <PreviewPlayerInner
-      code={code}
-      durationInFrames={durationInFrames}
-      fps={fps}
-    />
-  );
+  return <TemplatePlayerInner animationProps={animationProps} />;
 }
