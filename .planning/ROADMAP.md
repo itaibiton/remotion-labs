@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Generation Pipeline** - Users can generate animation code from text prompts
 - [x] **Phase 3: Preview System** - Users can see real-time preview of generated animations
 - [x] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
-- [ ] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
+- [x] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
 
 ## Phase Details
 
@@ -95,10 +95,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Backend foundation (schema, rate limiter, renders CRUD)
-- [ ] 05-02-PLAN.md — Render action with Lambda integration and progress polling
-- [ ] 05-03-PLAN.md — UI components (RenderButton, RenderProgress, DownloadButton)
-- [ ] 05-04-PLAN.md — Create page integration and end-to-end verification
+- [x] 05-01-PLAN.md — Backend foundation (schema, rate limiter, renders CRUD)
+- [x] 05-02-PLAN.md — Render action with Lambda integration and progress polling
+- [x] 05-03-PLAN.md — UI components (RenderButton, RenderProgress, DownloadButton)
+- [x] 05-04-PLAN.md — Create page integration and end-to-end verification
 
 ## Progress
 
@@ -111,7 +111,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Generation Pipeline | 3/3 | ✓ Complete | 2026-01-27 |
 | 3. Preview System | 1/1 | ✓ Complete | 2026-01-28 |
 | 4. Templates & Discovery | 2/2 | ✓ Complete | 2026-01-28 |
-| 5. Render Pipeline | 0/4 | Not started | - |
+| 5. Render Pipeline | 4/4 | ✓ Complete | 2026-01-28 |
 
 ---
 *Roadmap created: 2026-01-27*

@@ -19,22 +19,22 @@ Validate the core concept: can users go from prompt to video?
 - [x] **GEN-01**: User can enter text prompt describing desired animation
 - [x] **GEN-02**: User can browse template/inspiration gallery
 - [x] **GEN-03**: User can select template as starting point
-- [ ] **GEN-04**: System validates generated code before rendering
+- [x] **GEN-04**: System validates generated code before rendering
 - [x] **GEN-05**: User sees real-time preview of animation
 
 ### Animation Types
 
-- [ ] **ANIM-01**: System supports text/typography animations (kinetic typography, animated titles)
+- [x] **ANIM-01**: System supports text/typography animations (kinetic typography, animated titles)
 
 ### Output
 
-- [ ] **OUT-01**: User can download rendered video (MP4)
+- [x] **OUT-01**: User can download rendered video (MP4)
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: System enforces usage limits/quotas per user
-- [ ] **INFRA-02**: User sees render progress in real-time
-- [ ] **INFRA-03**: System handles errors gracefully with retry options
+- [x] **INFRA-01**: System enforces usage limits/quotas per user
+- [x] **INFRA-02**: User sees render progress in real-time
+- [x] **INFRA-03**: System handles errors gracefully with retry options
 
 ## v1.1 Requirements (Enhancement)
 
@@ -91,13 +91,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEN-01 | Phase 2 | Complete |
 | GEN-02 | Phase 4 | Complete |
 | GEN-03 | Phase 4 | Complete |
-| GEN-04 | Phase 2 | Pending |
+| GEN-04 | Phase 2 | Complete |
 | GEN-05 | Phase 3 | Complete |
-| ANIM-01 | Phase 2 | Pending |
-| OUT-01 | Phase 5 | Pending |
-| INFRA-01 | Phase 5 | Pending |
-| INFRA-02 | Phase 5 | Pending |
-| INFRA-03 | Phase 2 | Pending |
+| ANIM-01 | Phase 2 | Complete |
+| OUT-01 | Phase 5 | Complete |
+| INFRA-01 | Phase 5 | Complete |
+| INFRA-02 | Phase 5 | Complete |
+| INFRA-03 | Phase 2 | Complete |
 
 **Coverage:**
 - v1.0 requirements: 14 total
@@ -106,4 +106,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2025-01-27*
-*Last updated: 2026-01-28 after Phase 4 completion*
+*Last updated: 2026-01-28 after Phase 5 completion (v1.0 complete)*
