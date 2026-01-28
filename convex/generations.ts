@@ -10,9 +10,9 @@ export const store = internalMutation({
   args: {
     userId: v.string(),
     prompt: v.string(),
-    code: v.string(),
-    durationInFrames: v.number(),
-    fps: v.number(),
+    code: v.optional(v.string()),
+    durationInFrames: v.optional(v.number()),
+    fps: v.optional(v.number()),
     status: v.union(v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),

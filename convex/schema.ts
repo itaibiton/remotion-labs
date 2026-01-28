@@ -13,9 +13,22 @@ export default defineSchema({
   generations: defineTable({
     userId: v.string(),
     prompt: v.string(),
-    code: v.string(), // Full Remotion JSX code (transformed to JS)
-    durationInFrames: v.number(), // Extracted from generation
-    fps: v.number(), // Always 30
+    // v1.1: Full Remotion JSX code (transformed to JS)
+    code: v.optional(v.string()),
+    // v1.0 legacy: Animation props for fixed templates (deprecated)
+    animationProps: v.optional(v.object({
+      text: v.string(),
+      style: v.string(),
+      color: v.string(),
+      backgroundColor: v.string(),
+      fontFamily: v.string(),
+      fontSize: v.number(),
+      durationInFrames: v.number(),
+      fps: v.number(),
+    })),
+    // v1.1: Extracted from code generation
+    durationInFrames: v.optional(v.number()),
+    fps: v.optional(v.number()),
     status: v.union(v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),

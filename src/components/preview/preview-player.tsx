@@ -137,6 +137,15 @@ export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProp
     return <LoadingPlaceholder />;
   }
 
+  // Validate required props before rendering Player
+  if (!code || typeof durationInFrames !== "number" || typeof fps !== "number") {
+    return (
+      <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+        <p className="text-red-400 text-sm">Invalid animation data</p>
+      </div>
+    );
+  }
+
   return (
     <PreviewPlayerInner
       code={code}

@@ -65,7 +65,25 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
         setCurrentStep("validating");
         await new Promise((resolve) => setTimeout(resolve, 300));
 
-        setLastGeneration(result as GenerationResult);
+        // Validate result has required fields
+        if (!result || typeof result !== "object") {
+          throw new Error("Invalid response from generation service");
+        }
+
+        const generationResult: GenerationResult = {
+          id: String(result.id),
+          code: result.code,
+          // Provide defaults for safety (should always be present from action)
+          durationInFrames: result.durationInFrames ?? 90,
+          fps: result.fps ?? 30,
+        };
+
+        // Validate we have actual code
+        if (!generationResult.code) {
+          throw new Error("Generation did not return code");
+        }
+
+        setLastGeneration(generationResult);
         toast.success("Animation generated successfully!");
       } catch (e) {
         const errorMessage =
