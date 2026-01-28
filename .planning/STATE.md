@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Phase 5 - Render Pipeline (In Progress)
+**Current focus:** All 5 phases complete - v1.0 feature set delivered
 
 ## Current Position
 
 Phase: 5 of 5 (Render Pipeline)
-Plan: 3 of 4 in current phase (05-01, 05-02, 05-03 complete)
-Status: In progress
-Last activity: 2026-01-28 - Completed 05-02-PLAN.md (Render Action)
+Plan: 4 of 4 in current phase (all complete)
+Status: COMPLETE
+Last activity: 2026-01-28 - Completed 05-04-PLAN.md (Integration)
 
-Progress: [#########-] 83%
+Progress: [##########] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 5.2 min
-- Total execution time: 62 min
+- Total plans completed: 13
+- Average duration: 5.4 min
+- Total execution time: 70 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [#########-] 83%
 | 02-generation-pipeline | 3 | 16 min | 5.3 min |
 | 03-preview-system | 1 | 12 min | 12 min |
 | 04-templates-discovery | 2 | 10 min | 5 min |
-| 05-render-pipeline | 3 | 9 min | 3 min |
+| 05-render-pipeline | 4 | 17 min | 4.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (8 min), 05-01 (3 min), 05-02 (4 min), 05-03 (2 min)
+- Last 5 plans: 05-01 (3 min), 05-02 (4 min), 05-03 (2 min), 05-04 (8 min)
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -75,6 +75,8 @@ Recent decisions affecting current work:
 - Action callback pattern: onRenderStarted passes job ID to parent for progress tracking
 - Explicit Promise return types for actions referencing internal.* (TypeScript pattern)
 - Self-scheduling actions via ctx.scheduler.runAfter for polling
+- Inline render controls below preview (not separate page)
+- State reset on regeneration prevents stale render progress
 
 ### Pending Todos
 
@@ -84,13 +86,14 @@ None.
 
 - Research flagged: Claude prompt engineering may need iteration if generation quality <60%
 - ANTHROPIC_API_KEY required for generation testing (documented in USER-SETUP)
-- AWS credentials required for Remotion Lambda (to be documented in 05-USER-SETUP)
+- AWS credentials required for Remotion Lambda (documented in 05-USER-SETUP)
+- AWS Lambda setup pending - code integration complete but not tested with Lambda
 
 ## Session Continuity
 
-Last session: 2026-01-28T08:16:29Z
-Stopped at: Completed 05-02-PLAN.md (Render Action)
+Last session: 2026-01-28T10:30:00Z
+Stopped at: Completed 05-04-PLAN.md (Integration) - All phases complete
 Resume file: None
 
 ---
-*Next step: Execute 05-04-PLAN.md (Integration)*
+*v1.0 COMPLETE - All 5 phases delivered*
