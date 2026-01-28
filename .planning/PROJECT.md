@@ -8,26 +8,44 @@ A web app where users create animated videos through text prompts, powered by Cl
 
 Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
+## Current Milestone: v1.1 Full Code Generation
+
+**Goal:** Unlock unlimited animation possibilities by having Claude generate actual Remotion JSX code instead of just props for fixed templates.
+
+**Target features:**
+- Claude generates complete Remotion compositions (JSX/React code)
+- Safe execution environment for AI-generated code
+- Code validation pipeline (AST analysis, security checks)
+- Access to Remotion's full animation API
+- Users can view and edit generated code
+
 ## Requirements
 
-### Validated
+### Validated (v1.0)
 
-(None yet — ship to validate)
+- [x] AUTH-01: User can sign up with Clerk
+- [x] AUTH-02: User can log in via email/password
+- [x] AUTH-03: User can log in via OAuth (Google/GitHub)
+- [x] AUTH-04: User session persists across browser refresh
+- [x] GEN-01: User can enter text prompt describing desired animation
+- [x] GEN-02: User can browse template/inspiration gallery
+- [x] GEN-03: User can select template as starting point
+- [x] GEN-04: System validates generated code before rendering
+- [x] GEN-05: User can see real-time preview of animation
+- [x] ANIM-01: System supports text/typography animations
+- [x] OUT-01: User can download rendered video (MP4)
+- [x] INFRA-01: System enforces usage limits/quotas per user
+- [x] INFRA-02: User sees render progress in real-time
+- [x] INFRA-03: System handles errors gracefully with retry options
 
-### Active
+### Active (v1.1)
 
-- [ ] User can enter a text prompt describing desired animation
-- [ ] System generates Remotion code via Claude Code (hybrid: custom + pre-built components)
-- [ ] User can browse templates/inspiration as starting points
-- [ ] User can refine animation via chat ("make it faster", "change color")
-- [ ] User can fine-tune in visual editor (timeline, properties)
-- [ ] User can upload images/logos for use in animations
-- [ ] User can download rendered video (MP4)
-- [ ] User can get shareable link to video
-- [ ] User can embed video on external sites
-- [ ] User can export Remotion source code
-- [ ] User can sign up/login via Clerk
-- [ ] Animation types: text/typography, logo/brand, data viz, social media content
+- [ ] User can generate any Remotion animation from text prompt (not limited to templates)
+- [ ] System executes AI-generated code safely in sandbox
+- [ ] User can view generated Remotion code
+- [ ] User can edit generated code before rendering
+- [ ] System validates generated code for security and correctness
+- [ ] Animation types expanded: shapes, transitions, motion graphics, data viz
 
 ### Out of Scope
 
@@ -72,4 +90,4 @@ Users can go from a text prompt to a rendered, downloadable animated video witho
 | No payments in MVP | Focus on core value, validate before monetizing | — Pending |
 
 ---
-*Last updated: 2025-01-27 after initialization*
+*Last updated: 2026-01-28 after v1.0 completion, starting v1.1*
