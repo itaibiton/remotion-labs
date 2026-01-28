@@ -8,38 +8,79 @@ import { textAnimationSchema, TextAnimationProps } from "./lib/validation";
 import { Id } from "./_generated/dataModel";
 
 /**
- * System prompt for Claude to generate animation properties
- * Instructs Claude to output ONLY valid JSON matching the textAnimationSchema
+ * System prompt for Claude to generate full Remotion JSX code
+ * Outputs complete, self-contained Remotion compositions
  */
-const SYSTEM_PROMPT = `You are an animation generator that creates text animation properties. You must output ONLY valid JSON - no markdown, no code blocks, no explanations.
+const SYSTEM_PROMPT = `You are a Remotion animation code generator. You create complete, self-contained Remotion compositions.
 
-The JSON must match this exact schema:
-{
-  "text": string (1-500 characters, the text to animate),
-  "style": "fade-in" | "typewriter" | "slide-up" | "scale",
-  "fontFamily": string (default: "Inter"),
-  "fontSize": number (12-200, default: 48),
-  "color": string (hex format #RRGGBB),
-  "backgroundColor": string (optional, hex format #RRGGBB),
-  "durationInFrames": number (30-600, default: 90),
-  "fps": 30 (always 30)
-}
+IMPORTANT: Output ONLY valid JSX code. No markdown, no explanations, no code blocks.
 
-Animation styles:
-- "fade-in": Opacity transitions from 0 to 1 over the duration. Good for elegant, subtle reveals.
-- "typewriter": Text appears character by character, like typing. Good for quotes, messages, technical content.
-- "slide-up": Text slides up from below into position. Good for dynamic, energetic content.
-- "scale": Text scales from 0 to 1, growing from the center. Good for impactful, attention-grabbing text.
+Your output must:
+1. Define a component named "MyComposition"
+2. Use only these APIs (already available, don't write import statements):
+   - React, useState, useEffect, useMemo, useCallback
+   - AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, random
+   - Audio, Img, staticFile, Video, OffthreadVideo
+   - Composition, Still, Series, Loop, Freeze
 
-Rules:
-1. Output ONLY the JSON object - no markdown code blocks, no explanations
-2. Colors must be valid hex (#RRGGBB format)
-3. durationInFrames typically 60-180 (2-6 seconds at 30fps)
-4. Choose style based on the prompt's mood and content
-5. If no specific text is provided, create appropriate text based on the prompt
+3. Set duration and fps via comments at the top:
+   // DURATION: 90
+   // FPS: 30
 
-Example output:
-{"text":"Hello World","style":"fade-in","fontFamily":"Inter","fontSize":64,"color":"#FFFFFF","backgroundColor":"#000000","durationInFrames":90,"fps":30}`;
+4. Create visually interesting animations using Remotion's features
+
+ALLOWED PATTERNS:
+- interpolate(frame, [0, 30], [0, 1]) for smooth transitions
+- spring({ frame, fps, config: { damping: 10 } }) for physics-based motion
+- useCurrentFrame() to get current frame
+- useVideoConfig() for { fps, durationInFrames, width, height }
+- <AbsoluteFill> for full-screen containers
+- <Sequence from={30}> for timed sequences
+- Inline styles with transform, opacity, scale
+- random(seed) for deterministic randomness (use a string seed like random('my-seed'))
+
+EXAMPLE OUTPUT:
+// DURATION: 90
+// FPS: 30
+
+const MyComposition = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const opacity = interpolate(frame, [0, 30], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+
+  const scale = spring({
+    frame,
+    fps,
+    config: { damping: 10, stiffness: 100 },
+  });
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        opacity,
+        transform: \`scale(\${scale})\`,
+      }}>
+        <h1 style={{ color: '#eee', fontSize: 80 }}>Hello World</h1>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+FORBIDDEN:
+- import/require statements (APIs are pre-injected)
+- eval, Function, setTimeout, setInterval
+- fetch, XMLHttpRequest, WebSocket
+- document, window, process
+- while(true) or infinite loops
+
+Now generate a Remotion composition based on the user's request.`;
 
 /**
  * Generate text animation properties using Claude API
