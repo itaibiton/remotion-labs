@@ -10,21 +10,9 @@ export const store = internalMutation({
   args: {
     userId: v.string(),
     prompt: v.string(),
-    animationProps: v.object({
-      text: v.string(),
-      style: v.union(
-        v.literal("fade-in"),
-        v.literal("typewriter"),
-        v.literal("slide-up"),
-        v.literal("scale")
-      ),
-      fontFamily: v.string(),
-      fontSize: v.number(),
-      color: v.string(),
-      backgroundColor: v.optional(v.string()),
-      durationInFrames: v.number(),
-      fps: v.literal(30),
-    }),
+    code: v.string(),
+    durationInFrames: v.number(),
+    fps: v.number(),
     status: v.union(v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),
@@ -33,7 +21,9 @@ export const store = internalMutation({
     const generationId = await ctx.db.insert("generations", {
       userId: args.userId,
       prompt: args.prompt,
-      animationProps: args.animationProps,
+      code: args.code,
+      durationInFrames: args.durationInFrames,
+      fps: args.fps,
       status: args.status,
       errorMessage: args.errorMessage,
       createdAt: args.createdAt,
