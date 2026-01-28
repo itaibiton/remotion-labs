@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Phase 4 - Templates & Discovery (Complete)
+**Current focus:** Phase 5 - Render Pipeline (In Progress)
 
 ## Current Position
 
-Phase: 4 of 5 (Templates & Discovery)
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase complete
-Last activity: 2026-01-28 - Completed 04-02-PLAN.md
+Phase: 5 of 5 (Render Pipeline)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-28 - Completed 05-01-PLAN.md
 
-Progress: [########--] 80%
+Progress: [########.-] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 5.9 min
-- Total execution time: 53 min
+- Total plans completed: 10
+- Average duration: 5.6 min
+- Total execution time: 56 min
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [########--] 80%
 | 02-generation-pipeline | 3 | 16 min | 5.3 min |
 | 03-preview-system | 1 | 12 min | 12 min |
 | 04-templates-discovery | 2 | 10 min | 5 min |
+| 05-render-pipeline | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (8 min), 03-01 (12 min), 04-01 (2 min), 04-02 (8 min)
-- Trend: Consistent execution pace
+- Last 5 plans: 03-01 (12 min), 04-01 (2 min), 04-02 (8 min), 05-01 (3 min)
+- Trend: Consistent fast execution
 
 *Updated after each plan completion*
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - PreviewPlayer reuse for animated modal preview
 - Server/client component split for searchParams handling (Next.js 15 pattern)
 - Template context is informational only (v1) - guides user prompt, doesn't pre-fill props
+- @convex-dev/rate-limiter@0.3.2 for render quota enforcement (renamed from ratelimiter)
+- Internal mutations for render create/update (security pattern from actions)
 
 ### Pending Todos
 
@@ -77,12 +80,13 @@ None.
 
 - Research flagged: Claude prompt engineering may need iteration if generation quality <60%
 - ANTHROPIC_API_KEY required for generation testing (documented in USER-SETUP)
+- AWS credentials required for Remotion Lambda (to be documented in 05-USER-SETUP)
 
 ## Session Continuity
 
-Last session: 2026-01-28T00:38:00Z
-Stopped at: Completed 04-02-PLAN.md (Templates Page & Navigation)
+Last session: 2026-01-28T08:09:47Z
+Stopped at: Completed 05-01-PLAN.md (Backend Foundation)
 Resume file: None
 
 ---
-*Next step: Plan Phase 5 (Render & Download) - final v1 feature*
+*Next step: Execute 05-02-PLAN.md (Render Action)*
