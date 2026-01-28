@@ -12,6 +12,7 @@ import type * as generateAnimation from "../generateAnimation.js";
 import type * as generations from "../generations.js";
 import type * as lib_renderLimits from "../lib/renderLimits.js";
 import type * as lib_validation from "../lib/validation.js";
+import type * as renders from "../renders.js";
 import type * as users from "../users.js";
 
 import type {
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   generations: typeof generations;
   "lib/renderLimits": typeof lib_renderLimits;
   "lib/validation": typeof lib_validation;
+  renders: typeof renders;
   users: typeof users;
 }>;
 
