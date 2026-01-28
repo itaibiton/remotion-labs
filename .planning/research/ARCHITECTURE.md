@@ -1,496 +1,451 @@
-# Architecture Research
+# Architecture Research: Full Code Generation
 
-**Domain:** AI-Powered Video Creation Platform (Prompt-to-Animation)
-**Researched:** 2026-01-27
-**Confidence:** HIGH (verified via official Remotion, Convex, and Clerk documentation)
+**Domain:** AI-Powered Video Creation Platform (v1.1 - Full Code Generation)
+**Researched:** 2026-01-28
+**Confidence:** MEDIUM (core patterns verified, code execution approach requires validation)
 
-## System Overview
+## Executive Summary
 
-```
-+-----------------------------------------------------------------------------------+
-|                              CLIENT LAYER (Next.js)                               |
-+-----------------------------------------------------------------------------------+
-|  +-------------+  +----------------+  +---------------+  +-------------------+    |
-|  | Auth UI     |  | Prompt Editor  |  | Video Player  |  | Visual Editor     |    |
-|  | (Clerk)     |  | + Chat         |  | (Remotion)    |  | (Future Phase)    |    |
-|  +------+------+  +-------+--------+  +-------+-------+  +---------+---------+    |
-|         |                 |                   |                    |              |
-+---------|-----------------|-------------------|--------------------|--------------+
-          |                 |                   |                    |
-          v                 v                   v                    v
-+-----------------------------------------------------------------------------------+
-|                           BACKEND LAYER (Convex)                                  |
-+-----------------------------------------------------------------------------------+
-|  +-------------+  +----------------+  +---------------+  +-------------------+    |
-|  | Auth Sync   |  | Generation     |  | Project       |  | Asset             |    |
-|  | (Webhooks)  |  | Jobs           |  | Storage       |  | Storage           |    |
-|  +------+------+  +-------+--------+  +-------+-------+  +---------+---------+    |
-|         |                 |                   |                    |              |
-|         |        +--------v--------+         |                    |              |
-|         |        | Scheduled       |         |                    |              |
-|         |        | Actions         |         |                    |              |
-|         |        +--------+--------+         |                    |              |
-|         |                 |                   |                    |              |
-+---------|-----------------|-------------------|--------------------|--------------+
-          |                 |                   |                    |
-          v                 v                   v                    v
-+-----------------------------------------------------------------------------------+
-|                          EXTERNAL SERVICES                                        |
-+-----------------------------------------------------------------------------------+
-|  +-------------+  +----------------+  +---------------+  +-------------------+    |
-|  | Clerk       |  | Claude API     |  | Remotion      |  | S3 (via Lambda)   |    |
-|  | (Identity)  |  | (Code Gen)     |  | Lambda        |  | (Video Storage)   |    |
-|  +-------------+  +----------------+  +---------------+  +-------------------+    |
-+-----------------------------------------------------------------------------------+
-```
+v1.1 adds full code generation: Claude produces Remotion JSX code instead of just props. The core challenge is that **Lambda requires pre-bundled compositions** - you cannot `bundle()` at runtime per Remotion's official documentation. This research identifies three architectural approaches with a recommended path.
 
-### Component Responsibilities
-
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| Auth UI | User sign-in/sign-up, session management | Clerk components (`<SignIn>`, `<UserButton>`) |
-| Prompt Editor | User input collection, chat interface | React components with `useMutation` to Convex |
-| Video Player | Real-time preview of generated videos | Remotion `<Player>` with `inputProps` |
-| Visual Editor | Direct manipulation of video elements | Future: Custom UI modifying Remotion props |
-| Auth Sync | Mirror Clerk users to Convex database | Clerk webhooks to Convex HTTP endpoint |
-| Generation Jobs | Track AI generation status, manage workflow | Convex table with union-typed status fields |
-| Project Storage | Store generated code, version history | Convex documents with code as text field |
-| Asset Storage | User uploads (images, audio) | Convex File Storage API |
-| Claude API | Generate Remotion code from prompts | Convex action calling Anthropic API |
-| Remotion Lambda | Render final MP4 videos | AWS Lambda with S3 output |
-
-## Recommended Project Structure
+## Current Architecture (v1.0)
 
 ```
-remotionlab/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Auth routes (sign-in, sign-up)
-│   ├── (dashboard)/              # Authenticated routes
-│   │   ├── projects/             # Project list, creation
-│   │   ├── editor/[id]/          # Project editor view
-│   │   └── render/[id]/          # Render status/download
-│   ├── api/                      # API routes (if needed for webhooks)
-│   └── layout.tsx                # Root layout with providers
-├── components/                   # React components
-│   ├── ui/                       # Shadcn/UI components
-│   ├── editor/                   # Editor-specific components
-│   │   ├── PromptInput.tsx
-│   │   ├── ChatHistory.tsx
-│   │   └── VideoPreview.tsx
-│   ├── player/                   # Remotion Player wrappers
-│   │   └── PreviewPlayer.tsx     # Memoized Player with inputProps
-│   └── providers/                # Context providers
-│       └── ConvexClerkProvider.tsx
-├── convex/                       # Convex backend
-│   ├── schema.ts                 # Database schema
-│   ├── auth.ts                   # Auth helpers, user identity
-│   ├── projects.ts               # Project CRUD mutations/queries
-│   ├── generations.ts            # AI generation job management
-│   ├── renders.ts                # Lambda render job management
-│   ├── assets.ts                 # File upload/management
-│   ├── _actions/                 # External API actions
-│   │   ├── claude.ts             # Claude API integration
-│   │   └── remotion.ts           # Remotion Lambda integration
-│   └── http.ts                   # HTTP endpoints (webhooks)
-├── remotion/                     # Remotion compositions
-│   ├── Root.tsx                  # Composition registry
-│   ├── compositions/             # Video compositions
-│   │   └── DynamicVideo.tsx      # Main composition accepting code/props
-│   ├── components/               # Reusable video components
-│   │   ├── TextSlide.tsx
-│   │   ├── ImageSequence.tsx
-│   │   └── Transitions.tsx
-│   └── utils/                    # Remotion utilities
-│       └── interpolations.ts
-├── lib/                          # Shared utilities
-│   ├── remotion-lambda.ts        # Lambda client configuration
-│   └── code-executor.ts          # Safe code evaluation (if needed)
-└── public/                       # Static assets
+User Prompt
+    |
+    v
+[Claude API] -- generates --> JSON Props (TextAnimationProps)
+    |
+    v
+[Convex Storage] -- stores --> { text, style, fontSize, color, ... }
+    |
+    v
+[Remotion Player] -- renders --> Fixed TextAnimation composition
+    |
+    v
+[Remotion Lambda] -- renders --> Same TextAnimation composition
 ```
 
-### Structure Rationale
+**Key characteristic:** Claude outputs structured data, not code. The `TextAnimation` composition is pre-bundled and accepts props.
 
-- **`app/`:** Next.js 14+ App Router for server components, layouts, and route organization
-- **`convex/`:** Co-located backend code for real-time database, actions, and HTTP handlers
-- **`remotion/`:** Separated Remotion code to bundle independently for Lambda deployment
-- **`components/editor/`:** Editor-specific components isolated from generic UI
-- **`convex/_actions/`:** Actions calling external APIs (Claude, Lambda) separated for clarity
+## The Challenge
 
-## Architectural Patterns
+**Desired v1.1 flow:**
+```
+User Prompt
+    |
+    v
+[Claude API] -- generates --> Remotion JSX Code
+    |
+    v
+[???] -- executes --> Dynamic composition
+    |
+    v
+[Player + Lambda] -- renders --> Video
+```
 
-### Pattern 1: Mutation-First Job Scheduling
+**Core problem:** Lambda uses a pre-deployed Serve URL (via `deploySite()`). The composition must exist in the bundle before rendering. You cannot:
+- Call `bundle()` at runtime (explicitly not recommended per Remotion docs)
+- Call `bundle()` in serverless (not supported)
+- Pass arbitrary JSX code to Lambda and have it execute
 
-**What:** User intent captured in mutation, external work scheduled via action
-**When to use:** Any operation involving Claude API or Remotion Lambda
-**Trade-offs:** More complex than direct action calls, but provides transactional guarantees and UI reactivity
+## Three Architectural Approaches
 
-**Example:**
+### Approach A: Flexible Composition with Rich Props (Recommended)
+
+**Concept:** Create a powerful `DynamicComposition` that accepts structured scene descriptions. Claude generates complex props, not raw code.
+
 ```typescript
-// convex/generations.ts
-export const startGeneration = mutation({
-  args: { projectId: v.id("projects"), prompt: v.string() },
-  handler: async (ctx, { projectId, prompt }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    // Create job record (UI immediately shows "generating")
-    const jobId = await ctx.db.insert("generations", {
-      projectId,
-      prompt,
-      status: { type: "pending" },
-      createdAt: Date.now(),
-      userId: identity.subject,
-    });
-
-    // Schedule the actual work
-    await ctx.scheduler.runAfter(0, internal.actions.claude.generateCode, {
-      jobId,
-      prompt,
-    });
-
-    return jobId;
-  },
-});
-```
-
-### Pattern 2: Union-Typed Job Status
-
-**What:** Single document with discriminated union for job states
-**When to use:** Any async job (AI generation, video render)
-**Trade-offs:** More complex schema, but enables type-safe status handling and real-time UI updates
-
-**Example:**
-```typescript
-// convex/schema.ts
-import { defineSchema, defineTable } from "convex/server";
-import { v } from "convex/values";
-
-export default defineSchema({
-  generations: defineTable({
-    projectId: v.id("projects"),
-    prompt: v.string(),
-    userId: v.string(),
-    createdAt: v.number(),
-    status: v.union(
-      v.object({ type: v.literal("pending") }),
-      v.object({ type: v.literal("generating"), progress: v.optional(v.string()) }),
-      v.object({ type: v.literal("completed"), code: v.string(), elapsedMs: v.number() }),
-      v.object({ type: v.literal("failed"), error: v.string(), elapsedMs: v.number() })
-    ),
-  }).index("by_project", ["projectId"]),
-});
-```
-
-### Pattern 3: Memoized Player InputProps
-
-**What:** Wrap Remotion Player inputProps in useMemo to prevent unnecessary re-renders
-**When to use:** Any use of Remotion Player with dynamic data
-**Trade-offs:** Slightly more code, but critical for performance
-
-**Example:**
-```tsx
-// components/player/PreviewPlayer.tsx
-import { Player } from "@remotion/player";
-import { useMemo, useCallback } from "react";
-
-export function PreviewPlayer({ code, props }: { code: string; props: Record<string, unknown> }) {
-  // Memoize inputProps to prevent re-render cascade
-  const inputProps = useMemo(() => ({
-    generatedCode: code,
-    ...props,
-  }), [code, props]);
-
-  // If using lazyComponent, wrap in useCallback
-  const lazyComponent = useCallback(
-    () => import("@/remotion/compositions/DynamicVideo"),
-    []
-  );
-
-  return (
-    <Player
-      lazyComponent={lazyComponent}
-      inputProps={inputProps}
-      durationInFrames={300}
-      compositionWidth={1920}
-      compositionHeight={1080}
-      fps={30}
-      controls
-    />
-  );
+// What Claude generates:
+{
+  scenes: [
+    {
+      type: "text",
+      text: "Hello World",
+      animation: {
+        type: "spring",
+        from: { scale: 0, opacity: 0 },
+        to: { scale: 1, opacity: 1 },
+        config: { stiffness: 100, damping: 10 }
+      },
+      style: { fontSize: 64, color: "#FFFFFF", fontFamily: "Inter" },
+      position: { x: "center", y: "center" },
+      duration: 30
+    },
+    {
+      type: "shape",
+      shape: "circle",
+      animation: { type: "interpolate", ... },
+      ...
+    }
+  ],
+  transitions: [
+    { from: 0, to: 1, type: "fade", duration: 15 }
+  ],
+  settings: { backgroundColor: "#000000" }
 }
 ```
 
-### Pattern 4: Three-Layer Authentication
+**How it works:**
+1. Claude outputs structured JSON describing scenes, animations, timing
+2. `DynamicComposition` interprets this JSON and renders accordingly
+3. Same bundle works for Player and Lambda
+4. No code execution needed
 
-**What:** Authentication enforced at middleware, client, and database layers
-**When to use:** All authenticated routes and data access
-**Trade-offs:** Redundant checks, but defense-in-depth prevents security gaps
+**Pros:**
+- No security concerns (no code execution)
+- Same bundle works everywhere
+- Faster generation (JSON smaller than code)
+- Easier to validate/sanitize
 
-**Implementation layers:**
-1. **Middleware (Next.js):** Clerk middleware redirects unauthenticated users
-2. **Client (React):** `useConvexAuth()` hook (not `useAuth()`) for UI state
-3. **Database (Convex):** Every mutation/query checks `ctx.auth.getUserIdentity()`
+**Cons:**
+- Limited to what DynamicComposition supports
+- Need to anticipate and implement all animation patterns
+- Complex composition code to maintain
 
-## Data Flow
+**Build order:**
+1. Design DynamicComposition schema (scene types, animation types)
+2. Implement DynamicComposition renderer
+3. Update Claude prompt to output new schema
+4. Update Player integration
+5. Redeploy Lambda bundle (once, with new composition)
 
-### Primary Flow: Prompt to Video
+### Approach B: Client-Side Transpilation with Sandpack Preview
 
-```
-User types prompt
-        |
-        v
-[React Component] --useMutation--> [Convex: startGeneration]
-        |                                    |
-        |                           Creates job record
-        |                           Schedules action
-        |                                    |
-        v                                    v
-[UI shows "Generating..."]          [Convex Action: generateCode]
-        |                                    |
-        | subscribes via useQuery            | calls Claude API
-        |                                    |
-        v                                    v
-[Real-time status updates] <-------- [Mutation: updateJobStatus]
-        |                                    |
-        |                           Stores generated code
-        |                                    |
-        v                                    v
-[Remotion Player preview] <--------- [Query: getProjectCode]
-        |
-        | User clicks "Render"
-        |
-        v
-[Convex: startRender] --schedules--> [Action: renderOnLambda]
-        |                                    |
-        |                           Calls renderMediaOnLambda()
-        |                                    |
-        v                                    v
-[UI shows render progress] <-------- [Polling: getRenderProgress]
-        |                                    |
-        |                           Video uploaded to S3
-        |                                    |
-        v                                    v
-[Download/Share UI] <--------------- [S3 URL stored in Convex]
-```
-
-### Asset Upload Flow
+**Concept:** Use Sandpack (CodeSandbox's engine) for browser preview. For Lambda rendering, maintain a library of pre-bundled composition "templates" that Claude can select from.
 
 ```
-User selects image
-        |
-        v
-[Convex: generateUploadUrl] --> [Returns signed upload URL]
-        |
-        v
-[Client uploads to Convex storage]
-        |
-        v
-[Convex: saveAsset mutation] --> [Stores storageId + metadata]
-        |
-        v
-[Asset available in generation context]
+[Claude] -- generates --> JSX Code (for preview)
+                     \--> Template ID + Props (for render)
+
+[Sandpack iframe] -- executes --> Live preview in browser
+[Lambda] -- uses --> Pre-bundled template composition
 ```
 
-### Key Data Flows
+**How it works:**
+1. Claude generates full JSX code for preview flexibility
+2. Sandpack runs code in sandboxed iframe for instant preview
+3. For Lambda render, Claude also outputs template ID + props
+4. Lambda renders using pre-built template with passed props
 
-1. **Authentication Flow:** Clerk token -> ConvexProviderWithClerk -> Backend validation -> `ctx.auth.getUserIdentity()`
-2. **Generation Flow:** Prompt -> Mutation (creates job) -> Scheduled Action (calls Claude) -> Mutation (stores code) -> Query (serves to Player)
-3. **Render Flow:** Trigger mutation -> Scheduled Action (calls Lambda) -> Progress polling -> S3 URL storage
-4. **Real-time Updates:** Convex `useQuery` hooks automatically subscribe to data changes; any mutation triggers instant UI updates across all connected clients
+**Pros:**
+- Maximum preview flexibility (any valid Remotion code)
+- Sandpack handles sandboxing
+- Clear separation: preview = flexible, render = templated
 
-## Rendering Pipeline
+**Cons:**
+- Preview and render may not match exactly
+- Need to maintain template library
+- User sees code that can't actually render on Lambda
+- Two systems to maintain
 
-### Preview vs Final Render
+**Build order:**
+1. Integrate Sandpack with Remotion Player
+2. Create template library (expand beyond TextAnimation)
+3. Update Claude to output dual format (code + template)
+4. Handle preview/render mismatch UX
 
-| Aspect | Preview (Player) | Final Render (Lambda) |
-|--------|-----------------|----------------------|
-| **Location** | Client browser | AWS Lambda |
-| **Speed** | Real-time (60fps) | Minutes (distributed) |
-| **Output** | Canvas rendering | MP4/WebM file |
-| **Use Case** | Instant feedback, iteration | Downloadable, shareable video |
-| **Cost** | Free (client CPU) | AWS Lambda + S3 costs |
-| **GPU** | Client GPU available | CPU-only |
+### Approach C: Dynamic Bundle Deployment (Complex)
 
-### Code Generation to Render Pipeline
+**Concept:** When Claude generates new code, dynamically create and deploy a new bundle to S3, then render from that bundle.
 
-**Option A: Props-Based (Recommended for MVP)**
 ```
-Claude generates JSON props -> Store in Convex -> Player renders with inputProps
-                                                -> Lambda renders with inputProps
+[Claude] -- generates --> JSX Code
+    |
+    v
+[Server Process] -- runs --> bundle() + deploySite()
+    |
+    v
+[New Serve URL in S3] -- stored --> Convex
+    |
+    v
+[Lambda] -- uses --> New Serve URL
 ```
-- **Pros:** Simpler, safer, no code execution
-- **Cons:** Limited to pre-defined composition templates
 
-**Option B: Component-Based (Future)**
-```
-Claude generates JSX -> Store as text -> Dynamically import/evaluate -> Render
-```
-- **Pros:** Maximum flexibility
-- **Cons:** Security concerns (code sandbox needed), complexity
+**How it works:**
+1. Claude generates Remotion composition code
+2. Server-side process (not serverless) bundles the code
+3. Deploys bundle to S3 via `deploySite()`
+4. Lambda renders using new serve URL
 
-**Recommendation:** Start with Option A. Define a rich `DynamicVideo` composition that accepts props describing:
-- Scenes (array of scene definitions)
-- Timing (durations, transitions)
-- Assets (image URLs, text content)
-- Styling (colors, fonts, positions)
+**Pros:**
+- True full code generation
+- Exact match between preview and render
+- Maximum flexibility
 
-This defers the code execution problem while still enabling AI-generated video variety.
+**Cons:**
+- Requires long-running server (not serverless)
+- `bundle()` takes 10-60 seconds
+- High latency for user experience
+- Complex infrastructure
+- Code execution security concerns
+- Each generation creates new S3 objects (storage costs)
 
-### Lambda Integration Pattern
+**Build order:**
+1. Set up long-running server (EC2, Railway, etc.)
+2. Implement code validation/sandboxing
+3. Implement bundle + deploy pipeline
+4. Integrate with Convex for orchestration
+5. Handle cleanup of old bundles
+
+## Recommendation
+
+**Start with Approach A (Flexible Composition).**
+
+Rationale:
+1. **Security:** No code execution means no sandbox escape risks
+2. **Architecture:** Works with existing Convex + Lambda setup
+3. **Complexity:** Incremental change, not architectural overhaul
+4. **User value:** Users get dynamic animations without seeing code
+5. **Path forward:** Can add Approach B's preview later if needed
+
+The key insight: **Users want dynamic animations, not necessarily to see/write code.** A well-designed DynamicComposition can produce infinite variety without code execution.
+
+## Detailed Design: Approach A
+
+### New Schema
 
 ```typescript
-// convex/_actions/remotion.ts
-"use node";
+// New type for dynamic animations
+interface DynamicAnimationProps {
+  // Scenes are rendered sequentially
+  scenes: Scene[];
 
-import { internalAction } from "../_generated/server";
-import { renderMediaOnLambda, getRenderProgress } from "@remotion/lambda/client";
+  // Global settings
+  settings: {
+    width: number;        // 1920 default
+    height: number;       // 1080 default
+    fps: number;          // 30 default
+    backgroundColor: string;
+  };
 
-export const triggerRender = internalAction({
-  args: {
-    jobId: v.id("renders"),
-    inputProps: v.any(),
-  },
-  handler: async (ctx, { jobId, inputProps }) => {
-    const { renderId, bucketName } = await renderMediaOnLambda({
-      region: "us-east-1",
-      functionName: process.env.REMOTION_LAMBDA_FUNCTION!,
-      serveUrl: process.env.REMOTION_SERVE_URL!,
-      composition: "DynamicVideo",
-      inputProps,
-      codec: "h264",
-    });
+  // Transitions between scenes
+  transitions?: Transition[];
+}
 
-    // Store render info for progress tracking
-    await ctx.runMutation(internal.renders.setRenderId, {
-      jobId,
-      renderId,
-      bucketName,
-    });
-  },
-});
+type Scene = TextScene | ShapeScene | ImageScene | GroupScene;
+
+interface TextScene {
+  type: "text";
+  id: string;
+  text: string;
+  style: TextStyle;
+  position: Position;
+  animation: Animation;
+  startFrame: number;
+  durationFrames: number;
+}
+
+interface ShapeScene {
+  type: "shape";
+  id: string;
+  shape: "rectangle" | "circle" | "ellipse" | "line" | "path";
+  shapeProps: ShapeProps;
+  style: ShapeStyle;
+  position: Position;
+  animation: Animation;
+  startFrame: number;
+  durationFrames: number;
+}
+
+interface Animation {
+  type: "spring" | "interpolate" | "sequence";
+  properties: AnimatedProperty[];
+}
+
+interface AnimatedProperty {
+  property: "opacity" | "scale" | "x" | "y" | "rotation" | "width" | "height";
+  from: number;
+  to: number;
+  timing?: {
+    delay?: number;
+    easing?: "linear" | "ease-in" | "ease-out" | "ease-in-out";
+  };
+  // For spring animations
+  springConfig?: {
+    stiffness?: number;
+    damping?: number;
+    mass?: number;
+  };
+}
 ```
 
-## Scaling Considerations
+### Migration Path
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 0-1k users | Single Remotion Lambda deployment, default concurrency |
-| 1k-10k users | Increase Lambda concurrency limits, consider SQS queue for renders |
-| 10k+ users | Multiple Lambda regions, render queue with priority, CDN for video delivery |
+**Phase 1: Extend TextAnimation**
+- Add more animation types (bounce, wave, glitch)
+- Add position control (not just centered)
+- Add multiple text elements
+- Keep backwards compatible
 
-### Scaling Priorities
+**Phase 2: Add Shape Support**
+- Rectangle, circle, line primitives
+- Animated shapes
+- Layer ordering
 
-1. **First bottleneck:** Lambda concurrency (default 1000/region). Solution: Request limit increase, or implement SQS queue to manage render requests.
+**Phase 3: Add Scene Sequencing**
+- Multiple scenes in sequence
+- Transitions between scenes
+- Timeline control
 
-2. **Second bottleneck:** S3 egress costs for video delivery. Solution: CloudFront CDN in front of S3, or migrate to dedicated video hosting.
+**Phase 4: Enable User Code View**
+- Show generated props as "pseudo-code"
+- Allow users to edit props
+- Consider future code export
 
-3. **Third bottleneck:** Claude API rate limits. Solution: Implement request queuing in Convex with backoff, consider caching common patterns.
+### Component Boundaries
 
-## Anti-Patterns
+```
+src/remotion/
+  compositions/
+    TextAnimation.tsx       # Keep for backwards compat
+    DynamicComposition.tsx  # New: renders any scene type
 
-### Anti-Pattern 1: Direct Action Calls from Client
+  renderers/
+    TextRenderer.tsx        # Handles TextScene
+    ShapeRenderer.tsx       # Handles ShapeScene
+    ImageRenderer.tsx       # Handles ImageScene
+    GroupRenderer.tsx       # Handles GroupScene
 
-**What people do:** Call Claude/Lambda directly from client via Convex actions
-**Why it's wrong:** No transactional guarantees, poor UX (no immediate feedback), harder to track job state
-**Do this instead:** Mutation creates job record first, then schedules action. Client subscribes to job status.
+  animations/
+    springAnimation.ts      # Spring physics helpers
+    interpolateAnimation.ts # Interpolation helpers
+    sequenceAnimation.ts    # Sequential animation helpers
 
-### Anti-Pattern 2: Storing Generated Code as Executable
+  types/
+    scenes.ts               # Scene type definitions
+    animations.ts           # Animation type definitions
+```
 
-**What people do:** Store Claude output as JavaScript, execute with `eval()` or `new Function()`
-**Why it's wrong:** Security vulnerability, no sandboxing, potential for injection attacks
-**Do this instead:** Store as structured props/data, render through pre-defined Remotion compositions
+### Data Flow Changes
 
-### Anti-Pattern 3: Polling for Progress in Client
+**Before (v1.0):**
+```
+Claude -> TextAnimationProps -> Store -> Render
+```
 
-**What people do:** `setInterval` to check render progress
-**Why it's wrong:** Unnecessary requests, doesn't leverage Convex real-time
-**Do this instead:** Store progress in Convex, use `useQuery` for automatic real-time updates
+**After (v1.1):**
+```
+Claude -> DynamicAnimationProps -> Validate -> Store -> Render
+                                      |
+                                      v
+                               [Zod schema validation]
+                               [Scene count limits]
+                               [Duration limits]
+```
 
-### Anti-Pattern 4: Using Clerk's useAuth for Convex State
+### Integration Points
 
-**What people do:** Use `useAuth()` from Clerk to check authentication before Convex operations
-**Why it's wrong:** Race condition - Clerk may report authenticated before Convex has validated token
-**Do this instead:** Use `useConvexAuth()` hook which ensures Convex backend has validated the session
+| Component | Change Required | Effort |
+|-----------|-----------------|--------|
+| `generateAnimation.ts` | New system prompt, new validation | High |
+| `schema.ts` | New animationProps type | Medium |
+| `preview-player.tsx` | Use DynamicComposition | Low |
+| `triggerRender.ts` | Composition ID change | Low |
+| `remotion/` | New compositions, renderers | High |
+| Lambda bundle | Redeploy with new composition | Low |
 
-### Anti-Pattern 5: Bundle Per Render
+### Suggested Build Order
 
-**What people do:** Call `bundle()` for every video render
-**Why it's wrong:** Expensive operation, unnecessary when only props change
-**Do this instead:** Bundle once with `deploySite()`, render many videos with different `inputProps`
+1. **Design scene schema** - Define all scene types, animations, props
+2. **Implement DynamicComposition** - Core renderer with basic scenes
+3. **Implement TextRenderer** - Port TextAnimation logic
+4. **Update Claude prompt** - Generate new schema format
+5. **Update validation** - Zod schemas for new types
+6. **Add ShapeRenderer** - Basic shape support
+7. **Add animations library** - Reusable animation helpers
+8. **Deploy new Lambda bundle** - One-time deployment
+9. **Add user code view** - Read-only props display
+10. **Add props editing** - User can tweak values
 
-## Integration Points
+## Security Considerations
 
-### External Services
+### Even with Approach A, validate strictly:
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Clerk | JWT templates + webhooks | Use Convex JWT template, sync users via webhook |
-| Claude API | Convex action with `"use node"` | 10-minute action timeout sufficient for generation |
-| Remotion Lambda | Convex action calling `renderMediaOnLambda` | Store renderId for progress tracking |
-| S3 | Accessed via Remotion Lambda | Videos stored in Remotion's S3 bucket |
+```typescript
+// convex/lib/validation.ts
+import { z } from "zod";
 
-### Internal Boundaries
+const MAX_SCENES = 20;
+const MAX_DURATION_FRAMES = 900; // 30 seconds at 30fps
+const MAX_TEXT_LENGTH = 1000;
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| Next.js <-> Convex | React hooks (`useQuery`, `useMutation`) | Real-time, type-safe |
-| Convex mutations <-> actions | `ctx.scheduler.runAfter()` | Transactional scheduling |
-| Convex <-> Clerk | HTTP webhook + JWT validation | User sync, token validation |
-| Next.js <-> Remotion Player | Direct React component embedding | Import and render directly |
+const sceneSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("text"),
+    text: z.string().max(MAX_TEXT_LENGTH),
+    // ... rest of schema
+  }),
+  // ... other scene types
+]);
 
-## Build Order Implications
+export const dynamicAnimationSchema = z.object({
+  scenes: z.array(sceneSchema).max(MAX_SCENES),
+  settings: z.object({
+    width: z.number().min(100).max(4096),
+    height: z.number().min(100).max(4096),
+    fps: z.literal(30),
+    backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  }),
+}).refine(
+  (data) => {
+    const totalFrames = data.scenes.reduce(
+      (sum, scene) => sum + scene.durationFrames, 0
+    );
+    return totalFrames <= MAX_DURATION_FRAMES;
+  },
+  { message: "Total animation duration exceeds limit" }
+);
+```
 
-Based on architectural dependencies, recommended implementation order:
+### If later adding code preview (Approach B):
 
-### Phase 1: Foundation
-1. **Auth integration** (Clerk + Convex + Next.js) - Everything depends on this
-2. **Basic schema** (users, projects tables) - Data foundation
-3. **Project CRUD** - Basic functionality to test full stack
+- Use Sandpack for browser sandboxing
+- Never execute user code server-side
+- Never send user code to Lambda
+- Clear separation: code is preview-only
 
-### Phase 2: Generation Pipeline
-4. **Remotion composition** (template-based, accepts props) - Define what we're generating
-5. **Player integration** - Preview before render
-6. **Claude integration** (action + job management) - Core feature
-7. **Generation flow** (mutation -> action -> status updates) - Complete loop
+## Future Considerations
 
-### Phase 3: Rendering Pipeline
-8. **Lambda deployment** - Requires working composition
-9. **Render triggering** (action + progress tracking) - Depends on Lambda
-10. **Download/share** - Final delivery
+### Path to Full Code Generation (if needed later)
 
-### Phase 4: Enhancements
-11. **Asset uploads** - Richer compositions
-12. **Chat refinement** - Iterative generation
-13. **Visual editor** - Direct manipulation (complex, defer)
+If business needs require true code generation:
+
+1. **Start with read-only code view** - Show what code would look like
+2. **Add Sandpack preview** - Code runs in sandboxed iframe
+3. **Evaluate Cloud IDE approach** - Consider StackBlitz WebContainers
+4. **Consider dedicated render server** - Not serverless, can bundle
+
+### Alternative: Code Export Feature
+
+Instead of executing user code, offer export:
+- User generates animation via prompts
+- User clicks "Export Code"
+- Download Remotion project zip
+- User runs locally or on their infrastructure
+
+This provides full code access without execution risks.
 
 ## Sources
 
 ### Remotion (HIGH confidence - official documentation)
-- [How Remotion Lambda Works](https://www.remotion.dev/docs/lambda/how-lambda-works)
-- [Remotion Lambda Overview](https://www.remotion.dev/docs/lambda)
-- [Comparison of SSR Options](https://www.remotion.dev/docs/compare-ssr)
-- [Player Component API](https://www.remotion.dev/docs/player/player)
-- [Passing Props](https://www.remotion.dev/docs/passing-props)
-- [renderMediaOnLambda](https://www.remotion.dev/docs/lambda/rendermediaonlambda)
-- [deploySite](https://www.remotion.dev/docs/lambda/deploysite)
-- [Using Lambda with SQS](https://www.remotion.dev/docs/lambda/sqs)
+- [bundle() documentation](https://www.remotion.dev/docs/bundle) - "bundle() cannot be called in a serverless function"
+- [deploySite()](https://www.remotion.dev/docs/lambda/deploysite) - Bundle deployment to S3
+- [Serve URL terminology](https://www.remotion.dev/docs/terminology/serve-url) - "URL under which a Remotion Bundle is hosted"
+- [Passing props](https://www.remotion.dev/docs/passing-props) - InputProps pattern
+- [Parameterized rendering](https://www.remotion.dev/docs/parameterized-rendering) - Dynamic content via props
+- [Player component](https://www.remotion.dev/docs/player/player) - Client-side preview
 
-### Convex (HIGH confidence - official documentation)
-- [Next.js App Router](https://docs.convex.dev/client/nextjs/app-router/)
-- [Scheduled Functions](https://docs.convex.dev/scheduling/scheduled-functions)
-- [Actions](https://docs.convex.dev/functions/actions)
-- [File Storage](https://docs.convex.dev/file-storage)
-- [Background Job Management](https://stack.convex.dev/background-job-management)
-- [Authentication Best Practices](https://stack.convex.dev/authentication-best-practices-convex-clerk-and-nextjs)
+### Sandpack/Code Execution (MEDIUM confidence)
+- [Sandpack documentation](https://sandpack.codesandbox.io/) - Browser-based code execution
+- [Sandpack GitHub](https://github.com/codesandbox/sandpack) - Implementation details
+- [JavaScript sandboxing patterns](https://dev.to/leapcell/a-deep-dive-into-javascript-sandboxing-97b) - Security considerations
 
-### Clerk (HIGH confidence - official documentation)
-- [Convex Integration](https://clerk.com/docs/guides/development/integrations/databases/convex)
-- [Convex & Clerk](https://docs.convex.dev/auth/clerk)
-
-### Security (MEDIUM confidence - multiple sources)
-- [CSA on LLM Code Execution](https://cloudsecurityalliance.org/blog/2025/06/03/llms-writing-code-cool-llms-executing-it-dangerous)
-- [Code Sandboxes for AI Agents](https://amirmalik.net/2025/03/07/code-sandboxes-for-llm-ai-agents)
+### Architecture Patterns (MEDIUM confidence)
+- [a16z Developer Patterns](https://a16z.com/nine-emerging-developer-patterns-for-the-ai-era/) - AI code generation patterns
+- [React security practices](https://snyk.io/blog/10-react-security-best-practices/) - Never eval untrusted code
 
 ---
-*Architecture research for: AI-Powered Video Creation Platform*
-*Researched: 2026-01-27*
+*Architecture research for: RemotionLab v1.1 - Full Code Generation*
+*Researched: 2026-01-28*
+*Previous version: 2026-01-27 (v1.0 architecture)*

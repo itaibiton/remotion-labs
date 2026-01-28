@@ -1,244 +1,347 @@
-# Feature Research
+# Feature Landscape: Full Code Generation (v1.1)
 
-**Domain:** AI-Powered Video/Animation Creation Platform (Prompt-to-Remotion)
-**Researched:** 2026-01-27
-**Confidence:** MEDIUM (based on WebSearch findings from multiple credible sources)
+**Domain:** AI-powered code generation for creative tools (video/animation)
+**Researched:** 2026-01-28
+**Milestone:** v1.1 Full Code Generation
+**Confidence:** HIGH (based on patterns from v0.dev, Bolt.new, Cursor, and Remotion docs)
 
 ## Executive Summary
 
-The AI video/animation creation space in 2026 is dominated by platforms like Runway (Gen-4.5), Sora 2, Pika 2.5, and Midjourney V7. However, these tools focus on **AI-generated video content** (photorealistic, generative), not **programmatic motion graphics**.
+RemotionLab v1.0 generates JSON props for fixed templates. v1.1 transitions to **full code generation** where Claude generates actual Remotion JSX code, enabling unlimited animation possibilities beyond the current text-only animations.
 
-Your platform occupies a unique niche: **text prompt to deterministic, code-based animations** via Remotion. This positions you closer to Canva's animation tools, Hera AI, and kinetic typography generators than to Runway/Sora. The key differentiation is **code export** and **precise control** vs. the "AI lottery" of generative video.
+This research focuses specifically on **code generation UX patterns** from the 2026 AI coding tools landscape (v0.dev, Bolt.new, Cursor, Windsurf) and applies them to the creative/animation domain.
+
+**Current system:** User prompt -> Claude generates JSON props -> Fixed TextAnimation component renders
+**Target system:** User prompt -> Claude generates Remotion JSX code -> Validation -> Safe execution -> Preview/render
 
 ---
 
-## Feature Landscape
+## Table Stakes
 
-### Table Stakes (Users Expect These)
+Features users expect from any AI code generation tool. Missing these makes the product feel broken.
 
-Features users assume exist. Missing these = product feels incomplete.
+| Feature | Why Expected | Complexity | Depends On | Notes |
+|---------|--------------|------------|------------|-------|
+| **Code Preview** | Users want to see what was generated before execution | Low | Generation pipeline | Monaco Editor is industry standard; @monaco-editor/react works without webpack config |
+| **Syntax Highlighting** | Code without highlighting looks unprofessional and hard to understand | Low | Code Preview | Monaco provides TypeScript/JSX highlighting out of the box |
+| **Error Messages on Generation Failure** | Users need to know why generation failed | Low | Existing (already built) | v1.0 has this; extend for code-specific errors (syntax, validation) |
+| **Code Validation Before Execution** | Prevents runtime crashes, security vulnerabilities | High | AST parser | Must parse, validate structure, check for dangerous patterns; study found AI code has 1.7x more issues |
+| **Safe Execution Environment** | Users must not be able to break the system or access sensitive data | High | Sandbox technology | Core security requirement; iframe sandbox is proven approach |
+| **Regenerate Option** | First generation often needs refinement; <50% of AI code accepted without changes | Low | Generation pipeline | "Try again" with same or modified prompt |
+| **Preview Before Render** | Users need to see animation before committing to expensive Lambda render | Medium | Safe execution | Remotion Player integration already exists; needs to work with dynamic code |
+| **Expanded Animation Types** | Shapes, motion graphics, transitions beyond just text | Medium | Full Remotion API access | Users expect more than 4 text styles (fade-in, typewriter, slide-up, scale) |
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| **Prompt Input** | Core interaction model for all AI tools in 2026 | LOW | Text box with clear submission flow |
-| **Real-time Preview** | Runway, Pika, Canva all show results quickly | MEDIUM | Preview before full render; even a low-res preview is expected |
-| **Multiple Export Formats** | Industry standard: MP4, WebM; aspect ratios 16:9, 9:16, 1:1 | MEDIUM | Canva, FlexClip, all competitors support multiple formats |
-| **Resolution Options** | 720p minimum, 1080p expected, 4K for pro users | MEDIUM | Most platforms offer up to 4K; start with 1080p |
-| **Basic Iteration** | "Re-prompt" or "try again" functionality | LOW | Users expect to regenerate without starting over |
-| **Download Button** | Obvious export action | LOW | Immediate, clear path to get the video file |
-| **Progress Indicator** | Rendering takes time; users need feedback | LOW | Loading states, progress bars, estimated time |
-| **Error Handling** | Graceful failure with actionable messages | LOW | "Something went wrong" is not acceptable |
-| **Template Gallery** | Starting point for non-creative users | MEDIUM | Canva's Magic Design, Biteable templates are the standard |
-| **Responsive Design** | Mobile access expected (viewing, basic editing) | MEDIUM | Canva, Pika have mobile apps; at minimum, responsive web |
+---
 
-### Differentiators (Competitive Advantage)
+## Differentiators
 
-Features that set the product apart. Not required, but valuable for this specific platform.
+Features that set RemotionLab apart in the AI code generation space. Not expected, but highly valued.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| **Code Export (Remotion)** | Developers can take generated code and customize further; unique in the market | LOW | Key differentiator - no AI video tool offers this today |
-| **Chat-Based Refinement** | Runway and DeeVid pioneered "refine via conversation"; aligns with Claude integration | MEDIUM | "Make it faster", "change the color" - natural iteration |
-| **Deterministic Output** | Unlike AI video (each render differs), Remotion renders are reproducible | LOW (inherent) | Marketing angle: "Same input = same output, every time" |
-| **Visual Editor (Post-Generation)** | Canva's motion path animator; adjust timing, colors, positions | HIGH | This bridges the gap between prompt users and power users |
-| **Embed Code Generation** | Fliki, enterprise tools offer embed codes for websites | LOW | Shareable `<iframe>` or JS snippet for web embedding |
-| **Data-Driven Animation** | Connect to live data sources (CSV, API) like Vizzu, Flourish | HIGH | Unique for motion graphics: animated charts, counters |
-| **Style/Character Reference** | Midjourney's `--sref` and `--cref` for consistent visual identity | MEDIUM | "Generate in the style of X" or "Use this color palette" |
-| **Aspect Ratio Presets** | One-click social media formats (TikTok, Instagram, YouTube) | LOW | Standard in Canva, FlexClip; expected by marketers |
-| **Project History/Versioning** | Adobe Firefly, Runway keep project history | MEDIUM | Return to previous versions, see iteration history |
-| **Collaboration (Share Link)** | Loom-style instant share links | LOW | Share a preview link before downloading |
-| **Animation Presets/Styles** | Kinetic typography styles: typewriter, bounce, roll, fade | MEDIUM | CapCut, Canva have preset libraries |
+| Feature | Value Proposition | Complexity | Depends On | Notes |
+|---------|-------------------|------------|------------|-------|
+| **Inline Code Editing** | Edit generated code directly without full regeneration | Medium | Code Preview | Cursor pioneered "select and describe changes"; 40% faster iteration |
+| **Visual Edits** | Click on preview elements to modify them | High | Preview + code sync | Lovable's killer feature; Firebase Studio has similar |
+| **Iteration via Chat** | "Make the text bigger" instead of editing code | Medium | Conversation context | v0.dev's refinement loop; maintains generation history |
+| **Real-time Preview Updates** | Preview updates as code changes | High | Hot reload in sandbox | WebContainer enables; Bolt.new and Windsurf have this |
+| **Code Explanation** | AI explains what the generated code does | Low | Generation pipeline | Builds trust, helps users learn Remotion; educational value |
+| **Error Recovery Suggestions** | AI suggests fixes when code fails validation | Medium | Validation + LLM | "Your code uses Math.random() which isn't deterministic. Use random('seed') instead." |
+| **Template-to-Code Conversion** | Use existing templates as editable code starting points | Low | Existing templates | 8 templates already exist; convert props to full JSX |
+| **Export to Remotion Project** | Download code as standalone Remotion project | Medium | Code generation | For power users who want to continue in their own IDE; unique differentiator |
+| **Version History** | Undo/redo through generation iterations | Medium | Storage | Track each generation/edit; allow reverting to previous versions |
+| **Multi-Scene Compositions** | Generate sequences with multiple scenes | High | Sequence understanding | "Intro -> main content -> outro" workflow using Remotion's Sequence/Series |
 
-### Anti-Features (Commonly Requested, Often Problematic)
+---
 
-Features that seem good but create problems for this specific platform.
+## Anti-Features
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| **AI-Generated Video (Runway-style)** | Users see Sora/Runway and expect the same | Completely different technology; Remotion renders motion graphics, not photorealistic video. Competing here is a losing battle. | Clearly position as "motion graphics" not "AI video". Emphasize control, code export, determinism. |
-| **Real-Time 3D Rendering** | "3D animations look cool" | Massively increases complexity; Remotion's strength is 2D motion graphics and SVG/HTML-based animation | Offer 2.5D effects (parallax, depth) via CSS transforms; defer true 3D |
-| **Audio Generation** | Sora 2 and Google Veo generate synced audio | Different AI domain; audio generation is a separate, complex problem | Allow users to upload/select music; provide royalty-free library |
-| **Face/Lip Sync (Pikaformance-style)** | "Make my avatar talk" | Requires separate AI models, training, and compute; not core to motion graphics | Out of scope; if needed, integrate third-party (HeyGen API) |
-| **Unlimited Length Videos** | Users want full-length content | Longer videos = exponentially more compute, complexity, and cost. Most AI tools cap at 10-25 seconds. | Start with 15-30 second limit; expand based on usage patterns |
-| **Full Video Editing Suite** | "I want to do everything here" | Feature creep; competing with Adobe, CapCut, DaVinci Resolve is impossible | Focus on generation; export to other tools for editing |
-| **Offline/Desktop App** | "I want to work without internet" | Adds massive development burden; cloud rendering is the strength | Web-first; desktop app is v2+ if ever |
-| **Multi-User Real-Time Collab** | "Like Figma for video" | Extremely complex; even Adobe struggles with this | Share links and async comments first; real-time collab is v2+ |
-| **Custom Font Upload (Day 1)** | "I want my brand fonts" | Licensing complexity, technical challenges | Start with curated font library; add custom fonts post-MVP |
+Features to deliberately NOT build. Common mistakes in this domain.
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Unrestricted Code Execution** | Security nightmare; could exfiltrate data, crash servers, mine crypto | Strict sandbox with allowlist of permitted APIs, no network access, memory/time limits |
+| **Full IDE Experience** | Scope creep; VS Code took years to build; Cursor is a funded company | Monaco editor with syntax highlighting and basic editing is sufficient |
+| **Collaborative Real-time Editing** | CRDT implementation is extremely complex; even Google Docs struggles | Single-user editing; collaboration via share/export |
+| **Custom Font Uploads** | File handling complexity, font licensing issues, security concerns | Support Google Fonts (Remotion has built-in support) and system fonts |
+| **Audio Generation** | Different AI domain entirely; complicates rendering pipeline | Visual-only for v1.1; audio is separate future milestone |
+| **Node.js Server Access** | Sandbox escape vector; security risk | Browser-only sandbox; no server-side code execution by users |
+| **Arbitrary npm Package Installation** | Supply chain attacks, sandbox escapes, unpredictable behavior | Curated allowlist of safe packages (Remotion core, @remotion/* packages only) |
+| **Infinite Undo History** | Storage costs, complexity, performance | Reasonable limit (20-50 iterations per session) |
+| **Visual Drag-and-Drop Editor** | Different product entirely; competes with Canva, Rive | Code-first approach; visual editing only for property modifications |
+| **Full React Ecosystem Access** | Security and bundle size concerns | Remotion APIs only; no arbitrary React libraries |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Prompt Input]
-    |
-    v
-[Claude Code Generation] ---> [Remotion Code]
-    |                              |
-    v                              v
-[Preview Render] <---------> [Code Export]
-    |
-    v
-[Chat Refinement] ---> loops back to [Claude Code Generation]
-    |
-    v
-[Visual Editor] (optional post-generation tweaks)
-    |
-    v
-[Export Options]
-    |
-    +---> [Download MP4/WebM]
-    +---> [Embed Code]
-    +---> [Share Link]
+                        +------------------+
+                        |   Text Prompt    |
+                        +--------+---------+
+                                 |
+                                 v
+                    +------------+------------+
+                    |  Claude Code Generation |
+                    |  (Remotion JSX output)  |
+                    +------------+------------+
+                                 |
+                                 v
+               +-----------------+------------------+
+               |                                    |
+               v                                    v
+    +----------+----------+              +---------+---------+
+    |   Code Preview      |              |  Code Validation  |
+    |   (Monaco Editor)   |              |  (AST + Security) |
+    +----------+----------+              +---------+---------+
+               |                                    |
+               |   +----------------+               |
+               +-->|  Inline Editing |<-------------+
+                   +-------+--------+     (re-validate on edit)
+                           |
+                           v
+                   +-------+--------+
+                   | Safe Execution |
+                   |   (Sandbox)    |
+                   +-------+--------+
+                           |
+                           v
+                   +-------+--------+
+                   | Remotion Player|
+                   |   (Preview)    |
+                   +-------+--------+
+                           |
+                           v
+                   +-------+--------+
+                   |  Render to MP4 |
+                   |  (Lambda)      |
+                   +------ +--------+
 ```
 
-### Dependency Notes
+**Dependency Chain:**
+1. **Code Generation** must output valid Remotion JSX
+2. **Code Validation** must pass before **Safe Execution**
+3. **Safe Execution** must work before **Preview** can show dynamic code
+4. **Preview** already integrates with **Render** (v1.0)
+5. **Inline Editing** requires both **Code Preview** and **Validation** to re-validate changes
 
-- **Preview requires working generation**: Can't preview without a working prompt-to-Remotion pipeline
-- **Chat refinement requires generation context**: Claude needs previous generation context to iterate
-- **Code export requires clean generation**: Remotion code must be well-structured to be useful
-- **Visual editor requires preview**: Can't edit what you can't see
-- **Templates depend on generation working**: Templates are just pre-tested prompts + styles
-
----
-
-## MVP Definition
-
-### Launch With (v1) - Concept Validation
-
-Minimum viable product to validate "prompt to motion graphics" concept.
-
-- [x] **Prompt input** - Text box where users describe what they want
-- [x] **Single template type** - Start with kinetic typography (most common use case)
-- [x] **Preview render** - Low-res preview, even if slow
-- [x] **Download MP4** - One format, one resolution (1080p)
-- [x] **Basic iteration** - "Try again" button with same prompt
-- [x] **Error handling** - Clear messages when generation fails
-
-**Why these:** This is the minimum to test if users will type prompts and get usable motion graphics. Everything else is optimization.
-
-### Add After Validation (v1.x)
-
-Features to add once core generation is working and users are engaged.
-
-- [ ] **Chat refinement** - "Make it faster", "change colors" via conversation
-- [ ] **Template gallery** - 5-10 pre-made styles users can start from
-- [ ] **Multiple export formats** - Add WebM, GIF, aspect ratio options
-- [ ] **Code export** - Show Remotion code, let devs copy it
-- [ ] **Style reference** - "Use this color palette" with image/prompt input
-- [ ] **Project history** - Save and return to previous generations
-- [ ] **Share link** - Public URL to preview video
-
-**Trigger for adding:** Once 100+ users have successfully generated and downloaded videos, indicating product-market fit signal.
-
-### Future Consideration (v2+)
-
-Features to defer until product-market fit is established.
-
-- [ ] **Visual editor** - High complexity; only if users request fine-tuning
-- [ ] **Data-driven animations** - CSV/API integration for charts and counters
-- [ ] **Embed code generation** - After share links prove useful
-- [ ] **Animation preset library** - After understanding which styles users want
-- [ ] **Team collaboration** - Only if B2B demand emerges
-- [ ] **API access** - For developers who want to integrate
-
-**Why defer:** These features are expensive to build and maintain. Build them only when user demand is validated.
+**Parallel Tracks:**
+- Chat-based iteration can be built alongside code editing
+- Export feature is independent once generation works
+- Error recovery suggestions layer onto validation
+- Version history is independent infrastructure
 
 ---
 
-## Feature Prioritization Matrix
+## MVP Recommendation for v1.1
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Prompt input | HIGH | LOW | **P1** |
-| Preview render | HIGH | MEDIUM | **P1** |
-| Download MP4 | HIGH | LOW | **P1** |
-| Error handling | HIGH | LOW | **P1** |
-| Basic iteration | MEDIUM | LOW | **P1** |
-| Chat refinement | HIGH | MEDIUM | **P2** |
-| Template gallery | HIGH | MEDIUM | **P2** |
-| Code export | MEDIUM | LOW | **P2** |
-| Multiple formats | MEDIUM | LOW | **P2** |
-| Share link | MEDIUM | LOW | **P2** |
-| Style reference | MEDIUM | MEDIUM | **P2** |
-| Project history | MEDIUM | MEDIUM | **P3** |
-| Visual editor | MEDIUM | HIGH | **P3** |
-| Data-driven animation | LOW | HIGH | **P3** |
-| Embed codes | LOW | LOW | **P3** |
+### Must Have (Table Stakes)
 
-**Priority key:**
-- P1: Must have for launch (MVP)
-- P2: Should have, add after validation
-- P3: Nice to have, future consideration
+These features are required for code generation to work at all.
+
+1. **Code Generation Pipeline** - Claude generates complete Remotion JSX instead of JSON props
+   - System prompt based on Remotion's llms.txt guidelines
+   - Handle imports, component structure, animation APIs
+
+2. **Code Preview** - Monaco editor shows generated code
+   - Syntax highlighting for TypeScript/JSX
+   - Read-only initially (editing comes next)
+
+3. **Code Validation Pipeline** - Parse and validate before execution
+   - TypeScript/JSX parsing (AST analysis)
+   - Security checks (no eval, no fetch, no Math.random)
+   - Remotion-specific validation (determinism requirements)
+
+4. **Safe Execution Sandbox** - Execute code without system access
+   - Iframe sandbox with `sandbox="allow-scripts"`
+   - Limited API surface (only Remotion globals)
+   - Memory and execution time limits
+
+5. **Preview Integration** - Remotion Player renders dynamic code
+   - Bridge sandbox output to Player component
+   - Maintain existing playback controls
+
+### Should Have (Key Differentiators)
+
+Add after core pipeline works.
+
+6. **Inline Editing** - Users can modify code before preview/render
+   - Monaco editor becomes editable
+   - Re-validate on every change
+   - Syntax error highlighting
+
+7. **Regenerate with Context** - "Make it faster" refines existing code
+   - Send previous generation + modification request
+   - Claude maintains conversation context
+
+8. **Error Recovery Suggestions** - Clear messages with actionable fixes
+   - Parse validation errors
+   - Suggest Remotion-specific fixes (random -> random('seed'), etc.)
+
+### Defer to Post-MVP
+
+- Visual edits (click on preview to modify)
+- Real-time preview updates (hot reload)
+- Multi-scene compositions
+- Export to standalone project
+- Version history beyond current session
 
 ---
 
-## Competitor Feature Analysis
+## Sandbox Security Requirements
 
-| Feature | Runway Gen-4.5 | Pika 2.5 | Canva | Midjourney | Our Approach |
-|---------|----------------|----------|-------|------------|--------------|
-| **Generation Type** | AI video (photorealistic) | AI video (effects-focused) | Template-based animation | AI images (+ limited video) | Prompt-to-code motion graphics |
-| **Output Control** | Limited (prompt + camera) | Moderate (effects, frames) | High (manual editor) | Limited (prompt) | High (code export, visual editor) |
-| **Deterministic** | No | No | Yes | No | **Yes** (Remotion renders) |
-| **Code Export** | No | No | No | No | **Yes** (unique) |
-| **Chat Refinement** | Partial | No | No | No | **Yes** (Claude-powered) |
-| **Max Length** | 10-15 sec | 10 sec | No limit | N/A (images) | Start 15-30 sec |
-| **Price Entry** | $12/mo | $10/mo | Free tier | $10/mo | TBD |
-| **Target User** | Filmmakers, creators | Social media creators | Everyone | Artists, designers | Content creators, marketers, developers |
+Based on 2026 best practices for executing AI-generated code.
 
-### Key Insights from Competitor Analysis
+### Required Restrictions
 
-1. **No one offers code export** - This is a genuine differentiator for developer-adjacent users
-2. **AI video tools have low control** - Users get what they get; iteration is expensive
-3. **Canva owns "template-based"** - Don't try to out-Canva Canva on templates
-4. **Chat refinement is emerging** - Runway has basic chat; opportunity to do it better
-5. **Determinism is unique** - AI video tools are probabilistic; Remotion is deterministic
+| Restriction | Why | Implementation |
+|-------------|-----|----------------|
+| No network access | Prevent data exfiltration | Iframe sandbox without `allow-same-origin` |
+| No localStorage/cookies | Prevent persistence attacks | Sandbox attribute blocks by default |
+| No parent window access | Prevent DOM manipulation | `sandbox` attribute + separate origin |
+| Time limit | Prevent infinite loops | Kill execution after 30 seconds |
+| Memory limit | Prevent memory exhaustion | Browser handles via separate process |
+| No eval/Function | Prevent code injection | AST validation + CSP headers |
+
+### Allowed APIs (Allowlist)
+
+| API | Reason |
+|-----|--------|
+| Remotion hooks (`useCurrentFrame`, `useVideoConfig`) | Core animation APIs |
+| Remotion components (`AbsoluteFill`, `Sequence`, `Series`) | Layout and timing |
+| Remotion utilities (`interpolate`, `spring`, `random`) | Animation helpers |
+| React core (`useState`, `useEffect`, `useMemo`) | Component logic |
+| CSS (inline styles) | Styling animations |
+| `@remotion/google-fonts` | Font loading |
+| Math (except Math.random) | Calculations |
+
+### Blocked Patterns (AST Check)
+
+| Pattern | Risk |
+|---------|------|
+| `eval(...)` | Code injection |
+| `new Function(...)` | Code injection |
+| `fetch(...)` / `XMLHttpRequest` | Network access |
+| `Math.random()` | Non-deterministic rendering |
+| `Date.now()` / `new Date()` | Non-deterministic rendering |
+| `window.*` / `document.*` | DOM access |
+| `localStorage` / `sessionStorage` | Persistence |
+| `import(...)` dynamic imports | Arbitrary code loading |
 
 ---
 
-## Unique Value Proposition for Remotionlab
+## Remotion Code Generation Guidelines
 
-Based on competitor analysis, the platform should emphasize:
+From Remotion's official llms.txt system prompt.
 
-1. **"Prompt to Motion Graphics"** - Not AI video, not templates. The middle ground.
-2. **"What You Prompt Is What You Get"** - Deterministic rendering, no AI lottery
-3. **"Own Your Code"** - Export Remotion code, customize forever
-4. **"Refine Through Conversation"** - Chat-based iteration with Claude
-5. **"Developer-Friendly"** - For people who might eventually want to code
+### Required Structure
+
+```typescript
+// Every composition must have:
+- registerRoot(Root) in entry file
+- <Composition> with id, component, durationInFrames, width, height, fps
+- Default: fps=30, width=1920, height=1080
+```
+
+### Animation Patterns
+
+| Pattern | API | Notes |
+|---------|-----|-------|
+| Frame-based animation | `useCurrentFrame()` | Core hook for all animations |
+| Config access | `useVideoConfig()` | Get fps, duration, dimensions |
+| Value interpolation | `interpolate()` | Always include `extrapolateLeft: 'clamp'`, `extrapolateRight: 'clamp'` |
+| Physics-based motion | `spring()` | Pass `fps`, `frame`, and `config` |
+| Deterministic randomness | `random('seed')` | Never use `Math.random()` |
+| Layering | `<AbsoluteFill>` | Z-index via nesting order |
+| Timing | `<Sequence from={frame}>` | Delay elements |
+| Sequential elements | `<Series>` | No gaps between items |
+
+### Critical Requirements
+
+1. **All code must be deterministic** - Same input = same output
+2. **TypeScript only** - No plain JavaScript
+3. **No side effects** - Components must be pure
+4. **Proper extrapolation** - Always clamp `interpolate()` outputs
+
+---
+
+## Complexity Estimates
+
+| Feature | Estimated Effort | Risk Level | Notes |
+|---------|------------------|------------|-------|
+| Monaco Editor Integration | 1-2 days | Low | @monaco-editor/react is well-documented |
+| Code Validation Pipeline | 3-5 days | Medium | AST parsing, security rules, error messages |
+| Sandbox Execution | 5-8 days | High | Security-critical, many edge cases to handle |
+| Claude Code Generation Prompt | 2-3 days | Medium | Prompt engineering, testing various inputs |
+| Preview Integration with Dynamic Code | 2-3 days | Medium | Bridge sandbox to Remotion Player |
+| Inline Editing with Re-validation | 2-3 days | Low | Builds on validation pipeline |
+| Chat-based Iteration | 3-4 days | Medium | Context management, conversation state |
+
+**Total MVP estimate:** 3-4 weeks of focused development
+
+---
+
+## Success Metrics
+
+| Metric | Target | Why |
+|--------|--------|-----|
+| Generation success rate | >85% | Code should compile and render most of the time |
+| Time to first preview | <10 seconds | Users expect fast feedback |
+| Validation catch rate | >99% of unsafe code | Security is non-negotiable |
+| User iteration count | <3 regenerations per final video | Good first generation reduces iteration |
+| Code export usage | >20% of power users | Validates differentiator value |
 
 ---
 
 ## Sources
 
-### AI Video Platforms (2026)
-- [Runway Gen-4.5 Review](https://max-productive.ai/ai-tools/runwayml/) - Features, pricing, capabilities
-- [Runway Research - Gen-4.5](https://runwayml.com/research/introducing-runway-gen-4.5) - Official announcement
-- [Pika Labs AI Review 2026](https://www.allaboutai.com/ai-reviews/pika-labs/) - 47 videos tested
-- [Pika 2.5 Features](https://pikartai.com/pika-2-5/) - Latest release capabilities
-- [OpenAI Sora 2 Guide](https://wavespeed.ai/blog/posts/openai-sora-2-complete-guide-2026/) - Complete feature overview
-- [Midjourney Review 2026](https://techvernia.com/pages/reviews/image/midjourney.html) - Version 7 features
+### AI Code Generation UX Patterns
+- [Top 10 Vibe Coding Tools 2026](https://www.toools.design/blog-posts/top-10-vibe-coding-tools-designers-will-love-in-2026) - Design-centric AI patterns
+- [AI Coding Trends 2026 - Medium](https://medium.com/ai-software-engineer/12-ai-coding-emerging-trends-that-will-dominate-2026-dont-miss-out-dae9f4a76592) - Industry direction
+- [MIT Technology Review - AI Coding](https://www.technologyreview.com/2025/12/15/1128352/rise-of-ai-coding-developers-2026/) - Developer perspectives
+- [Best AI Code Editors 2026](https://playcode.io/blog/best-ai-code-editors-2026) - Editor feature comparison
 
-### Motion Graphics & Animation Tools
-- [Kinetic Typography Guide 2026](https://www.ikagency.com/graphic-design-typography/kinetic-typography/) - Comprehensive overview
-- [Hera AI](https://hera.video) - AI motion graphics generator
-- [Canva Animation Features](https://www.canva.com/features/motion-path-animator/) - Motion path tools
-- [Canva AI Video Generator Guide](https://www.clipcat.com/blog/complete-guide-to-canva-ai-video-generator-2025-features-pricing-and-honest-review/) - 2026 features
+### AI App Builders (UX Reference)
+- [v0 vs Bolt Comparison](https://www.index.dev/blog/v0-vs-bolt-ai-app-builder-review) - Iteration workflow patterns
+- [Best AI App Builders 2026](https://getmocha.com/blog/best-ai-app-builder-2026/) - Feature expectations
+- [Bolt.new WebContainers](https://aitoolsinsights.com/articles/stackblitz-bolt-new-infrastructure-explained) - In-browser execution
+- [2026 AI Coding Platform Wars](https://medium.com/@aftab001x/the-2026-ai-coding-platform-wars-replit-vs-windsurf-vs-bolt-new-f908b9f76325) - Competitive landscape
 
-### Data Visualization & Export
-- [Vizzu](https://www.vizzu.io/) - Data-driven animated storytelling
-- [Flourish Animated Charts](https://flourish.studio/blog/animated-charts/) - Animation features
-- [FlexClip Data Visualization](https://www.flexclip.com/learn/data-visualization-video.html) - Video data viz
+### Remotion + AI
+- [Remotion AI Documentation](https://www.remotion.dev/docs/ai/claude-code) - Official Claude integration guide
+- [Remotion System Prompt for LLMs](https://www.remotion.dev/llms.txt) - Full guidelines for AI code generation
+- [Remotion Skills Guide](https://gaga.art/blog/remotion-skills/) - Skills feature overview
+- [Claude Code + Remotion](https://medium.com/@ai-with-eric/claude-code-remotion-professional-content-with-zero-video-skills-3545498407ff) - Real-world usage
 
-### Code Export & Developer Tools
-- [Google Stitch Guide](https://almcorp.com/blog/google-stitch-complete-guide-ai-ui-design-tool-2026/) - Design-to-code features
-- [Best AI Coding Tools 2026](https://www.builder.io/blog/best-ai-tools-2026) - Developer workflow integration
+### Sandbox Security
+- [Claude Code Sandboxing - Anthropic](https://www.anthropic.com/engineering/claude-code-sandboxing) - Official sandboxing approach
+- [Claude Code Security Best Practices](https://www.backslash.security/blog/claude-code-security-best-practices) - Security guidelines
+- [WebContainers AI](https://webcontainers.io/ai) - Browser-based execution
+- [Top Sandbox Platforms 2026](https://www.koyeb.com/blog/top-sandbox-code-execution-platforms-for-ai-code-execution-2026) - Platform comparison
+- [Iframe Security 2026](https://qrvey.com/blog/iframe-security/) - Iframe sandboxing best practices
+- [JavaScript Sandboxing Deep Dive](https://dev.to/leapcell/a-deep-dive-into-javascript-sandboxing-97b) - Technical implementation
 
-### Workflow & UX Patterns
-- [AI Video Generators Comparison](https://wavespeed.ai/blog/posts/best-ai-video-generators-2026/) - Feature comparison
-- [Text-to-Video Benchmark](https://research.aimultiple.com/text-to-video-generator/) - Evaluation criteria
-- [How Teams Use AI Video 2026](https://pictory.ai/blog/how-teams-use-ai-video-generation-2026) - Workflow patterns
+### Code Quality & Validation
+- [AI-Generated Code Statistics](https://techintelpro.com/news/ai/enterprise-ai/study-ai-generated-code-has-17x-more-issues-than-human-code) - Quality benchmarks
+- [AI Code Security - Jit](https://www.jit.io/resources/ai-security/ai-generated-code-the-security-blind-spot-your-team-cant-ignore) - Security considerations
+
+### Code Editors
+- [Monaco Editor React](https://github.com/suren-atoyan/monaco-react) - React integration
+- [Monaco Editor Documentation](https://monaco-react.surenatoyan.com/) - API reference
 
 ---
 
-*Feature research for: AI-Powered Video/Animation Creation Platform (Prompt-to-Remotion)*
-*Researched: 2026-01-27*
+## Confidence Assessment
+
+| Area | Confidence | Reason |
+|------|------------|--------|
+| Table Stakes Features | HIGH | Consistent patterns across v0, Bolt, Cursor, Windsurf |
+| Differentiators | HIGH | Clear market differentiation from competitor research |
+| Anti-Features | HIGH | Security best practices well-documented; clear risks |
+| Sandbox Approach | MEDIUM | Multiple valid approaches (iframe, WebContainer); needs technical spike |
+| Complexity Estimates | MEDIUM | Based on similar projects; actual depends on codebase specifics |
+| Remotion Guidelines | HIGH | Directly from official llms.txt documentation |
+
+---
+*Research completed: 2026-01-28*
+*Previous version: 2026-01-27 (v1.0 features)*
+*This version: v1.1 Full Code Generation focus*
+*Feeds into: Requirements definition, Phase planning*

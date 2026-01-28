@@ -1,7 +1,7 @@
 # Stack Research: AI-Powered Video Creation Platform
 
 **Domain:** AI-powered animated video creation ("Midjourney for animations")
-**Researched:** 2026-01-27
+**Researched:** 2026-01-27 (v1.0), 2026-01-28 (v1.1 additions)
 **Confidence:** HIGH (core stack verified via official docs)
 
 ---
@@ -21,7 +21,407 @@ The stack prioritizes developer velocity, real-time updates, and seamless integr
 
 ---
 
-## Recommended Stack
+## v1.1 Stack Additions: Full Code Generation
+
+**Added:** 2026-01-28
+**Focus:** Executing AI-generated Remotion JSX code safely
+
+### The Challenge
+
+v1.0 uses props-based generation: Claude generates JSON props for a fixed `TextAnimation` composition. v1.1 requires Claude to generate actual Remotion JSX code that gets executed and rendered.
+
+**Key constraints:**
+1. Remotion Lambda requires pre-bundled compositions (cannot add code at runtime)
+2. AI-generated code is untrusted and may contain malicious patterns
+3. Preview (Player) and Render (Lambda) have different execution contexts
+
+### Recommended Architecture: Interpreter Pattern with AST Validation
+
+After researching the alternatives, the recommended approach is:
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Validation** | acorn + ast-guard | Parse and validate JSX AST against whitelist |
+| **Transformation** | sucrase | Fast JSX-to-JS transpilation (20x faster than Babel) |
+| **Preview Execution** | Function constructor + Remotion component wrapper | Execute in browser with controlled scope |
+| **Lambda Execution** | Parametrized meta-composition | Pass code as prop, execute via controlled wrapper |
+
+**Why NOT other approaches:**
+
+| Approach | Why Not |
+|----------|---------|
+| `eval()` / `new Function()` without validation | Security vulnerability (CVE-2025-55182 React2Shell demonstrated this) |
+| E2B / Vercel Sandbox | Adds latency (~150-200ms), cost per execution, overkill for controlled JSX |
+| iframe sandbox | Cannot access Remotion hooks/context, breaks composition model |
+| Re-bundle per generation | Expensive (~seconds), deploySite not designed for runtime bundling |
+
+---
+
+### Code Validation Stack
+
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **acorn** | ^8.14.0 | JavaScript parser | Fast, standards-compliant, ESTree AST output. 55M+ weekly downloads. Used by ESLint, webpack. |
+| **acorn-jsx** | ^5.3.2 | JSX support for acorn | Official extension for JSX parsing. Required since Remotion code is JSX. |
+| **ast-guard** | ^0.8.x | AST validation with whitelist | Purpose-built for LLM-generated code. Blocks dangerous constructs, whitelist-only globals. |
+
+**Alternative considered:** eslint-plugin-security
+- Rejected: Designed for linting, not runtime validation. Too slow for per-request validation.
+
+**Alternative considered:** SandboxJS
+- Rejected: 90% ECMAScript support insufficient. No JSX support. Better for general JS sandboxing.
+
+#### ast-guard Configuration for Remotion
+
+```typescript
+// lib/code-validator.ts
+import { JSAstValidator, createAgentScriptPreset } from 'ast-guard';
+
+// Custom preset for Remotion JSX
+const remotionPreset = {
+  ...createAgentScriptPreset(),
+  allowedGlobals: [
+    // Remotion hooks (essential)
+    'useCurrentFrame',
+    'useVideoConfig',
+    'interpolate',
+    'spring',
+    'Easing',
+    'AbsoluteFill',
+    'Sequence',
+    'Audio',
+    'Video',
+    'Img',
+    'staticFile',
+
+    // React essentials
+    'React',
+    'useState',
+    'useEffect',
+    'useMemo',
+    'useCallback',
+
+    // Safe JS globals
+    'Math',
+    'JSON',
+    'Object',
+    'Array',
+    'String',
+    'Number',
+    'Boolean',
+    'Date',
+    'console', // for debugging, can remove in production
+  ],
+
+  // Block dangerous patterns
+  blockedPatterns: [
+    'eval',
+    'Function',
+    'require',
+    'import',
+    'process',
+    'globalThis',
+    'window',
+    'document',
+    'fetch',
+    'XMLHttpRequest',
+    '__proto__',
+    'constructor',
+  ],
+
+  // LLM-specific limits
+  maxInputSize: 100 * 1024, // 100KB max generated code
+  maxNestingDepth: 20,
+  maxLineLength: 2000,
+};
+
+const validator = new JSAstValidator(remotionPreset);
+
+export async function validateRemotionCode(code: string): Promise<{
+  valid: boolean;
+  issues: string[];
+  ast?: any;
+}> {
+  const result = await validator.validate(code);
+  return {
+    valid: result.valid,
+    issues: result.issues?.map(i => i.message) ?? [],
+    ast: result.valid ? result.ast : undefined,
+  };
+}
+```
+
+**Confidence:** HIGH (acorn is battle-tested, ast-guard is purpose-built for this use case)
+
+---
+
+### JSX Transformation Stack
+
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **sucrase** | ^3.35.0 | Fast JSX transpilation | 20x faster than Babel, 8M+ weekly downloads, sufficient for JSX+TS. |
+
+**Why sucrase over @babel/standalone:**
+- Speed: 20x faster (critical for responsive preview)
+- Size: Smaller bundle for browser usage
+- Focus: Only transforms JSX/TS, not general ES features (which modern browsers handle)
+
+**Why NOT esbuild-wasm:**
+- WASM loading adds complexity
+- Sucrase is pure JS, easier to bundle
+- Sucrase is fast enough for this use case
+
+```typescript
+// lib/jsx-transformer.ts
+import { transform } from 'sucrase';
+
+export function transformJSX(code: string): string {
+  const result = transform(code, {
+    transforms: ['jsx', 'typescript'],
+    jsxRuntime: 'automatic', // React 17+ style
+    production: true,
+  });
+  return result.code;
+}
+```
+
+**Confidence:** HIGH (sucrase is mature, widely used in dev tooling)
+
+---
+
+### Preview Execution (Browser)
+
+For the Remotion Player preview, execute transformed code in a controlled scope.
+
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| **Function constructor** | (native) | Create function from code string | Safer than eval(), does not access local scope |
+| **Remotion scope wrapper** | (custom) | Inject Remotion APIs into function scope | Controlled access to only allowed APIs |
+
+```typescript
+// lib/code-executor.ts
+import * as RemotionAPI from 'remotion';
+import * as React from 'react';
+import { validateRemotionCode } from './code-validator';
+import { transformJSX } from './jsx-transformer';
+
+// Allowed scope for generated code
+const REMOTION_SCOPE = {
+  // Remotion core
+  useCurrentFrame: RemotionAPI.useCurrentFrame,
+  useVideoConfig: RemotionAPI.useVideoConfig,
+  interpolate: RemotionAPI.interpolate,
+  spring: RemotionAPI.spring,
+  Easing: RemotionAPI.Easing,
+  AbsoluteFill: RemotionAPI.AbsoluteFill,
+  Sequence: RemotionAPI.Sequence,
+  Audio: RemotionAPI.Audio,
+  Video: RemotionAPI.Video,
+  Img: RemotionAPI.Img,
+  staticFile: RemotionAPI.staticFile,
+
+  // React
+  React,
+  useState: React.useState,
+  useEffect: React.useEffect,
+  useMemo: React.useMemo,
+  useCallback: React.useCallback,
+
+  // Safe globals
+  Math,
+  JSON,
+  Object,
+  Array,
+  String,
+  Number,
+  Boolean,
+  Date,
+  console,
+};
+
+export async function createRemotionComponent(
+  jsxCode: string
+): Promise<React.ComponentType<any>> {
+  // 1. Validate AST
+  const validation = await validateRemotionCode(jsxCode);
+  if (!validation.valid) {
+    throw new Error(`Invalid code: ${validation.issues.join(', ')}`);
+  }
+
+  // 2. Transform JSX to JS
+  const jsCode = transformJSX(jsxCode);
+
+  // 3. Create function with controlled scope
+  const scopeKeys = Object.keys(REMOTION_SCOPE);
+  const scopeValues = Object.values(REMOTION_SCOPE);
+
+  // The generated code should export a component
+  // Wrap it to return the component
+  const wrappedCode = `
+    ${jsCode}
+    return typeof MyComposition !== 'undefined' ? MyComposition : Component;
+  `;
+
+  const factory = new Function(...scopeKeys, wrappedCode);
+  const Component = factory(...scopeValues);
+
+  return Component;
+}
+```
+
+**Security notes:**
+- Function constructor cannot access local closure variables
+- All APIs are explicitly whitelisted via scope injection
+- AST validation runs BEFORE transformation
+- No access to window, document, fetch, or other browser APIs
+
+**Confidence:** MEDIUM (approach is sound, but needs thorough testing)
+
+---
+
+### Lambda Execution: Meta-Composition Pattern
+
+**Critical insight:** Remotion Lambda cannot execute arbitrary code at runtime. The bundle must be pre-deployed. However, we can use a "meta-composition" pattern.
+
+**How it works:**
+1. Deploy a `DynamicCode` composition that accepts `code` as a prop
+2. The composition uses the same validation + transformation + execution
+3. Pass the generated code via `inputProps` to Lambda
+
+```typescript
+// remotion/compositions/DynamicCode.tsx
+"use client";
+
+import React, { useMemo } from 'react';
+import { AbsoluteFill } from 'remotion';
+import { createRemotionComponent } from '@/lib/code-executor';
+
+interface DynamicCodeProps {
+  code: string;
+  inputProps?: Record<string, unknown>;
+}
+
+export const DynamicCode: React.FC<DynamicCodeProps> = ({ code, inputProps = {} }) => {
+  const [Component, setComponent] = React.useState<React.ComponentType<any> | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    createRemotionComponent(code)
+      .then(setComponent)
+      .catch(e => setError(e.message));
+  }, [code]);
+
+  if (error) {
+    return (
+      <AbsoluteFill style={{ backgroundColor: 'red', color: 'white', padding: 40 }}>
+        <h1>Code Error</h1>
+        <pre>{error}</pre>
+      </AbsoluteFill>
+    );
+  }
+
+  if (!Component) {
+    return (
+      <AbsoluteFill style={{ backgroundColor: '#111', color: 'white' }}>
+        <p>Loading...</p>
+      </AbsoluteFill>
+    );
+  }
+
+  return <Component {...inputProps} />;
+};
+```
+
+**Lambda deployment:**
+```typescript
+// Deploy the bundle with DynamicCode composition
+await deploySite({
+  entryPoint: './src/remotion/index.ts',
+  siteName: 'remotionlab-v1-1',
+  // ... other options
+});
+
+// Render with generated code
+await renderMediaOnLambda({
+  composition: 'DynamicCode',
+  inputProps: {
+    code: generatedJSXCode, // The AI-generated code
+    inputProps: userProps,   // Any user-provided props
+  },
+  // ... other options
+});
+```
+
+**Important constraints:**
+- Bundle must include all validation/transformation code
+- Code validation runs on Lambda (not just preview)
+- Lambda has same whitelist as browser preview
+- Consider code size limits (Lambda payload max 6MB)
+
+**Confidence:** HIGH (this pattern is documented in Remotion community, verified against deploySite docs)
+
+---
+
+### Full Stack Addition Summary
+
+```bash
+# New dependencies for v1.1
+npm install acorn acorn-jsx ast-guard sucrase
+```
+
+| Package | Size | Purpose |
+|---------|------|---------|
+| acorn | 130KB | JS parser |
+| acorn-jsx | 12KB | JSX extension |
+| ast-guard | ~50KB | AST validation |
+| sucrase | 500KB | JSX transformation |
+
+**Total addition:** ~700KB (acceptable for code execution feature)
+
+---
+
+### Security Checklist for v1.1
+
+- [ ] AST validation rejects `eval`, `Function`, `require`, `import`
+- [ ] No access to `window`, `document`, `globalThis`
+- [ ] No access to `fetch`, `XMLHttpRequest`, networking
+- [ ] No access to `process`, Node.js APIs
+- [ ] No prototype pollution via `__proto__`, `constructor`
+- [ ] Input size limits (100KB max code)
+- [ ] Nesting depth limits (prevent parser DoS)
+- [ ] Same validation runs on both preview and Lambda
+- [ ] Error messages don't leak internal state
+- [ ] Rate limiting on code generation (existing Convex rate limiter)
+
+---
+
+### What NOT to Add for v1.1
+
+| Technology | Why Not |
+|------------|---------|
+| **E2B sandbox** | Adds ~$150/mo minimum, 150ms latency per execution. Overkill when AST validation + controlled scope is sufficient. |
+| **Vercel Sandbox** | Same cost/latency concerns. Better for truly untrusted arbitrary code. |
+| **iframe sandbox** | Breaks Remotion context (hooks don't work across iframe boundary). |
+| **Web Workers** | Cannot share React context, would require message passing for every frame. |
+| **@babel/standalone** | 20x slower than sucrase, larger bundle size. |
+| **esbuild-wasm** | WASM complexity not justified for JSX-only transformation. |
+| **vm2 / isolated-vm** | Node.js only, doesn't work in browser preview. |
+
+---
+
+### Confidence Assessment for v1.1 Additions
+
+| Component | Confidence | Reason |
+|-----------|------------|--------|
+| acorn + acorn-jsx | HIGH | Battle-tested, 55M weekly downloads, ESLint uses it |
+| ast-guard | MEDIUM | Newer library but purpose-built for LLM code validation |
+| sucrase | HIGH | Mature, widely used, 8M weekly downloads |
+| Function constructor approach | MEDIUM | Sound in theory, needs security testing |
+| Meta-composition pattern | HIGH | Verified against Remotion docs, community-used pattern |
+
+---
+
+## Recommended Stack (Full)
 
 ### Core Framework
 
@@ -64,10 +464,10 @@ The stack prioritizes developer velocity, real-time updates, and seamless integr
 
 | Technology | Version | Purpose | Why Recommended | Confidence |
 |------------|---------|---------|-----------------|------------|
-| remotion | 4.0.x | Programmatic video creation | React-based video composition, supports React 19. Latest: 4.0.407. | HIGH |
-| @remotion/player | 4.0.x | In-browser video preview | Embed video previews without rendering, real-time prop updates. | HIGH |
-| @remotion/lambda | 4.0.x | Serverless video rendering | Distributed rendering across Lambda functions, fastest option. Pay only while rendering. | HIGH |
-| @remotion/cli | 4.0.x | Local development, rendering | Preview and test videos locally. | HIGH |
+| remotion | 4.0.410 | Programmatic video creation | React-based video composition, supports React 19. Latest stable. | HIGH |
+| @remotion/player | 4.0.410 | In-browser video preview | Embed video previews without rendering, real-time prop updates. | HIGH |
+| @remotion/lambda | 4.0.410 | Serverless video rendering | Distributed rendering across Lambda functions, fastest option. Pay only while rendering. | HIGH |
+| @remotion/cli | 4.0.410 | Local development, rendering | Preview and test videos locally. | HIGH |
 
 **Lambda Constraints to Know:**
 - Max 10GB storage per function (output ~5GB max)
@@ -114,6 +514,15 @@ The stack prioritizes developer velocity, real-time updates, and seamless integr
 
 **Source:** [Claude API Messages](https://platform.claude.com/docs/en/api/messages), [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
 
+### Code Execution Stack (NEW in v1.1)
+
+| Technology | Version | Purpose | Why Recommended | Confidence |
+|------------|---------|---------|-----------------|------------|
+| acorn | ^8.14.0 | JavaScript parser | Fast, standards-compliant, 55M+ weekly downloads. ESTree AST. | HIGH |
+| acorn-jsx | ^5.3.2 | JSX support | Official JSX extension for acorn parser. | HIGH |
+| ast-guard | ^0.8.x | AST validation | Purpose-built for LLM code. Whitelist-only globals. | MEDIUM |
+| sucrase | ^3.35.0 | JSX transformation | 20x faster than Babel. 8M+ weekly downloads. | HIGH |
+
 ### UI Framework
 
 | Technology | Version | Purpose | Why Recommended | Confidence |
@@ -145,20 +554,33 @@ The stack prioritizes developer velocity, real-time updates, and seamless integr
 User Request Flow:
 
 [User types prompt]
-       ↓
+       |
+       v
 [Next.js API Route / Convex Action]
-       ↓
-[Claude API] → Generates Remotion JSX
-       ↓
-[Validate with Zod] → Store in Convex
-       ↓
-[Remotion Player] → Preview in browser
-       ↓
+       |
+       v
+[Claude API] --> Generates Remotion JSX
+       |
+       v
+[Validate with ast-guard] --> Reject invalid code
+       |
+       v
+[Transform with sucrase] --> JSX to JS
+       |
+       v
+[Store in Convex] --> code + validation status
+       |
+       v
+[Remotion Player] --> Execute via Function constructor
+       |                (Preview in browser)
+       v
 [User clicks "Render"]
-       ↓
-[Remotion Lambda] → Render to MP4
-       ↓
-[Store URL in Convex] → User downloads/shares
+       |
+       v
+[Remotion Lambda] --> DynamicCode composition
+       |              (Same validation + execution)
+       v
+[Store URL in Convex] --> User downloads/shares
 ```
 
 ### Provider Hierarchy (Next.js App Router)
@@ -205,14 +627,12 @@ export default {
 ## Installation
 
 ```bash
-# Create Next.js project with Tailwind
-npx create-next-app@latest my-video-app --ts --tailwind --eslint --app
-
-# Core dependencies
+# Core dependencies (existing)
 npm install @clerk/nextjs convex remotion @remotion/player @remotion/cli @remotion/lambda
-
-# Claude API
 npm install @anthropic-ai/sdk
+
+# Code execution stack (NEW for v1.1)
+npm install acorn acorn-jsx ast-guard sucrase
 
 # UI components
 npx shadcn@latest init
@@ -281,6 +701,9 @@ UPSTASH_REDIS_REST_TOKEN=...
 | Video Rendering | Remotion Lambda | Cloud Run, self-hosted | If Lambda constraints (size, GPU) block you |
 | AI Model | Claude Sonnet 4.5 | GPT-4, Gemini | If Claude output quality is insufficient (unlikely for code gen) |
 | UI | shadcn/ui | Radix Themes, Chakra UI | If you prefer pre-styled components |
+| Code Validation | ast-guard | Custom acorn walker | If ast-guard doesn't meet specific requirements |
+| JSX Transform | sucrase | @babel/standalone | If you need Babel plugins (decorators, etc.) |
+| Code Sandbox | Function constructor | E2B, Vercel Sandbox | If code truly needs full isolation (filesystem, network) |
 
 ---
 
@@ -295,6 +718,10 @@ UPSTASH_REDIS_REST_TOKEN=...
 | React Query for Convex data | Convex has built-in reactivity, React Query adds unnecessary complexity | Convex's useQuery/useMutation |
 | Remotion Cloud Run | Alpha status, not actively developed, lacks distributed rendering | Remotion Lambda |
 | Express/Fastify server for rendering | Complex to set up correctly, Lambda handles queueing/scaling | Remotion Lambda |
+| eval() | Security vulnerability, access to local scope | new Function() with controlled scope |
+| E2B / Vercel Sandbox | Overkill for controlled JSX, adds latency and cost | ast-guard + Function constructor |
+| iframe sandbox | Breaks Remotion hooks/context | Direct execution with scope injection |
+| Re-bundle per generation | Expensive, not designed for runtime use | Meta-composition pattern |
 
 ---
 
@@ -309,6 +736,9 @@ UPSTASH_REDIS_REST_TOKEN=...
 | @tanstack/react-query@5.x | React 18+ | useSyncExternalStore requirement |
 | zod@4.x | TypeScript 5.5+ | Strict mode required |
 | Tailwind CSS 4.x | shadcn/ui latest | Use tw-animate-css |
+| acorn@8.x | ES2023+ | Stable |
+| sucrase@3.x | React 17+ JSX runtime | Automatic runtime supported |
+| ast-guard@0.8.x | Node.js 22+, acorn 8.x | Pure TypeScript |
 
 ---
 
@@ -331,6 +761,13 @@ UPSTASH_REDIS_REST_TOKEN=...
 - Consider Cloud Run with GPU (untested by Remotion team)
 - Or self-hosted rendering on GPU instances
 - This is an edge case - most Remotion videos don't need GPU
+
+### For v1.1 full code generation:
+- Implement ast-guard validation first (security baseline)
+- Add sucrase transformation (preview execution)
+- Create DynamicCode meta-composition (Lambda execution)
+- Deploy updated bundle with deploySite()
+- Test security with adversarial prompts
 
 ---
 
@@ -358,9 +795,24 @@ UPSTASH_REDIS_REST_TOKEN=...
 - [Remotion Lambda](https://www.remotion.dev/docs/lambda)
 - [Remotion Player](https://www.remotion.dev/docs/player/player)
 - [Remotion SSR Comparison](https://www.remotion.dev/docs/compare-ssr)
+- [Remotion deploySite](https://www.remotion.dev/docs/lambda/deploysite)
+- [Remotion FAQ - Dynamic Compositions](https://www.remotion.dev/docs/lambda/faq)
+- [Remotion Parameterized Rendering](https://www.remotion.dev/docs/parameterized-rendering)
 - [Claude API Messages](https://platform.claude.com/docs/en/api/messages)
 - [shadcn/ui Tailwind v4](https://ui.shadcn.com/docs/tailwind-v4)
 - [Zod v4](https://zod.dev/)
+
+### Code Execution Research (MEDIUM-HIGH confidence)
+- [acorn GitHub](https://github.com/acornjs/acorn) - 55M weekly downloads
+- [sucrase GitHub](https://github.com/alangpierce/sucrase) - 8M weekly downloads
+- [ast-guard Documentation](https://agentfront.dev/docs/guides/ast-guard) - Purpose-built for LLM code
+- [Vercel Guide: Running AI Generated Code](https://vercel.com/guides/running-ai-generated-code-sandbox)
+- [E2B Documentation](https://e2b.dev/docs)
+
+### Security Research (MEDIUM confidence)
+- [React2Shell CVE-2025-55182](https://www.resecurity.com/blog/article/react2shell-explained-cve-2025-55182-from-vulnerability-discovery-to-exploitation) - Why Function constructor needs validation
+- [JavaScript Sandboxing Deep Dive](https://dev.to/leapcell/a-deep-dive-into-javascript-sandboxing-97b)
+- [Building Secure Code Sandboxes](https://medium.com/@muyiwamighty/building-a-secure-code-sandbox-what-i-learned-about-iframe-isolation-and-postmessage-a6e1c45966df)
 
 ### Verified via WebSearch (MEDIUM confidence)
 - [Upstash Rate Limiting](https://upstash.com/docs/redis/sdks/ratelimit-ts/overview)
@@ -376,5 +828,6 @@ UPSTASH_REDIS_REST_TOKEN=...
 ---
 
 *Stack research for: AI-powered video creation platform*
-*Researched: 2026-01-27*
+*Original research: 2026-01-27*
+*v1.1 additions: 2026-01-28 (Code execution stack)*
 *Overall confidence: HIGH (core components verified via official documentation)*
