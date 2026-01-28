@@ -9,6 +9,7 @@ import { PromptInput } from "@/components/generation/prompt-input";
 import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
 import { PreviewPlayer } from "@/components/preview/preview-player";
+import { CodeDisplay } from "@/components/code-editor/code-display";
 import type { Template } from "@/lib/templates";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -134,14 +135,25 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
         </div>
       )}
 
-      {/* Success state */}
+      {/* Success state - side-by-side preview and code */}
       {lastGeneration && !isGenerating && !error && (
-        <div className="w-full max-w-2xl mb-6">
-          <PreviewPlayer
-            code={lastGeneration.code}
-            durationInFrames={lastGeneration.durationInFrames}
-            fps={lastGeneration.fps}
-          />
+        <div className="w-full max-w-5xl mb-6">
+          {/* Two-column layout: Preview | Code */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Preview */}
+            <div>
+              <PreviewPlayer
+                code={lastGeneration.code}
+                durationInFrames={lastGeneration.durationInFrames}
+                fps={lastGeneration.fps}
+              />
+            </div>
+
+            {/* Code */}
+            <div>
+              <CodeDisplay code={lastGeneration.code} />
+            </div>
+          </div>
 
           {/* Render section */}
           <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
