@@ -145,3 +145,7 @@ export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProp
     />
   );
 }
+
+// Alias for semantic clarity - DynamicPreviewPlayer for code-based generation
+// Note: TemplatePlayer in /templates/template-player.tsx handles legacy props-based templates
+export { PreviewPlayer as DynamicPreviewPlayer };
