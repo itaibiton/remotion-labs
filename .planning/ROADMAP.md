@@ -92,12 +92,13 @@ Plans:
   3. User can download rendered MP4 when complete
   4. System enforces usage limits/quotas per user
   5. System prevents abuse via render limits (resolution, duration caps)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md — Backend foundation (schema, rate limiter, renders CRUD)
+- [ ] 05-02-PLAN.md — Render action with Lambda integration and progress polling
+- [ ] 05-03-PLAN.md — UI components (RenderButton, RenderProgress, DownloadButton)
+- [ ] 05-04-PLAN.md — Create page integration and end-to-end verification
 
 ## Progress
 
@@ -110,7 +111,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Generation Pipeline | 3/3 | ✓ Complete | 2026-01-27 |
 | 3. Preview System | 1/1 | ✓ Complete | 2026-01-28 |
 | 4. Templates & Discovery | 2/2 | ✓ Complete | 2026-01-28 |
-| 5. Render Pipeline | 0/3 | Not started | - |
+| 5. Render Pipeline | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-27*
