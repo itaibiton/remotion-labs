@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v1.1 Full Code Generation - Phase 8 In Progress
+**Current focus:** v1.1 Complete - All phases executed
 
 ## Current Position
 
-Phase: 8 - Export & Polish
-Plan: 1 of 2 complete
-Status: In progress — Plan 1 (export utilities) complete, Plan 2 (UI wiring) next
-Last activity: 2026-01-29 - Completed 08-01-PLAN.md (export utility library)
+Phase: 8 of 8 - Export & Polish
+Plan: 2 of 2 complete
+Status: Phase complete - All plans executed, human verified
+Last activity: 2026-01-29 - Completed 08-02-PLAN.md (export buttons UI + human verification)
 
-Progress: [==============================] 97% (v1.0 complete, Phases 6-7 complete, Phase 8 plan 1/2)
+Progress: [================================] 100% (v1.0 + v1.1 complete, all 8 phases done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 4.8 min
-- Total execution time: 105 min
+- Total plans completed: 23
+- Average duration: 4.7 min
+- Total execution time: 110 min
 
 **By Phase:**
 
@@ -33,13 +33,12 @@ Progress: [==============================] 97% (v1.0 complete, Phases 6-7 comple
 | 04-templates-discovery | 2 | 10 min | 5 min |
 | 05-render-pipeline | 4 | 17 min | 4.3 min |
 | 06-code-generation-safe-execution | 4 | 19 min | 4.8 min |
-
 | 07-editing-iteration | 4/4 | 14 min | 3.5 min |
-| 08-export-polish | 1/2 | 2 min | 2 min |
+| 08-export-polish | 2/2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-03 (3 min), 07-02 (3 min), 07-04 (5 min), 08-01 (2 min)
-- Trend: Fastest plan yet at 2 min — pure library code with no UI or integration
+- Last 5 plans: 07-04 (5 min), 08-01 (2 min), 08-02 (3 min)
+- Trend: Phase 8 fastest phase overall at 5 min total (2 plans)
 
 *Updated after each plan completion*
 
@@ -108,6 +107,9 @@ Recent decisions affecting current work:
 - Scaffold APIs (Composition, registerRoot) added by generators, not by detectUsedAPIs
 - Metadata comments stripped from exported code (values become Composition props)
 - Config import from @remotion/cli/config (Remotion v4 pattern)
+- ExportButtons component with dual export (single .tsx + project zip)
+- Independent loading states per export button
+- Export buttons in render controls area (pt-2 border-t) below preview
 
 ### Pending Todos
 
@@ -125,10 +127,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 08-01-PLAN.md (export utility library)
+Stopped at: Completed 08-02-PLAN.md (export buttons UI + human verification)
 Resume file: None
 
-Next step: Execute 08-02-PLAN.md (export UI wiring)
+All v1.1 phases complete. Project is feature-complete for v1.1 requirements.
 
 ---
-*Phase 8 in progress - plan 1/2 complete, export utilities built*
+*All phases complete - v1.0 + v1.1 feature set delivered*
