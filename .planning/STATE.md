@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v1.1 Full Code Generation - Phase 7 Complete
+**Current focus:** v1.1 Full Code Generation - Phase 8 Planned
 
 ## Current Position
 
-Phase: 7 - Editing & Iteration
-Plan: 4 of 4 complete
-Status: Phase complete — all plans executed, human verified
-Last activity: 2026-01-29 - Completed 07-04-PLAN.md (unified input + create page wiring + human verification)
+Phase: 8 - Export & Polish
+Plan: 0 of 2 complete
+Status: Planned — 2 plans in 2 waves, ready for execution
+Last activity: 2026-01-29 - Phase 8 planned (research + 2 plans + verification)
 
-Progress: [=============================-] 96% (v1.0 complete, Phases 6-7 complete, Phase 8 pending)
+Progress: [=============================-] 96% (v1.0 complete, Phases 6-7 complete, Phase 8 planned)
 
 ## Performance Metrics
 
@@ -120,10 +120,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Phase 7 complete — all 4 plans executed, human verified
+Stopped at: Phase 8 planned — 2 plans ready for execution
 Resume file: None
 
-Next step: Verify phase goal, then plan Phase 8
+Next step: Execute Phase 8 (/gsd:execute-phase 8)
 
 ---
-*Phase 7 complete - editing, chat refinement, unified input, human verified*
+*Phase 8 planned - export utilities + UI wiring, 2 plans in 2 waves*
