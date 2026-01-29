@@ -320,6 +320,28 @@ function transformJSX(jsxCode: string): TransformResult {
 }
 
 // ============================================================================
+// Refinement System Prompt
+// ============================================================================
+
+const REFINEMENT_SYSTEM_PROMPT = `You are a Remotion animation code modifier. You receive existing Remotion code and a user request to modify it.
+
+IMPORTANT: Output ONLY the complete modified code. No markdown, no explanations, no code blocks.
+
+Your output must:
+1. Be the complete, modified version of the code (not a diff or partial update)
+2. Keep the component named "MyComposition"
+3. Keep the // DURATION and // FPS comments (update values if the user requests timing changes)
+4. Use only these APIs (already available, don't write import statements):
+   - React, useState, useEffect, useMemo, useCallback
+   - AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, random
+   - Audio, Img, staticFile, Video, OffthreadVideo
+   - Composition, Still, Series, Loop, Freeze
+
+FORBIDDEN: import/require statements, eval, Function, fetch, document, window, process
+
+Respond ONLY with the complete modified code. No explanations before or after.`;
+
+// ============================================================================
 // Generation Action
 // ============================================================================
 
@@ -431,6 +453,115 @@ export const generate = action({
 
     return {
       id: generationId,
+      rawCode,
+      code: transformed.code,
+      durationInFrames,
+      fps,
+    };
+  },
+});
+
+// ============================================================================
+// Refinement Action (multi-turn chat)
+// ============================================================================
+
+/**
+ * Refine existing Remotion animation code via multi-turn conversation with Claude.
+ * Sends conversation history + current code, returns modified code.
+ * Does NOT persist to database -- the caller manages local state updates.
+ */
+export const refine = action({
+  args: {
+    currentCode: v.string(),
+    refinementPrompt: v.string(),
+    conversationHistory: v.array(
+      v.object({
+        role: v.union(v.literal("user"), v.literal("assistant")),
+        content: v.string(),
+      })
+    ),
+  },
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
+    rawCode: string;
+    code: string;
+    durationInFrames: number;
+    fps: number;
+  }> => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("You must be logged in to refine animations");
+    }
+
+    // Create Anthropic client
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY not configured.");
+    }
+
+    const client = new Anthropic({ apiKey });
+
+    // Build messages array: conversation history + new refinement request
+    // Cap history at last 10 exchanges (20 messages) to prevent token overflow
+    const maxHistoryMessages = 20;
+    const trimmedHistory = args.conversationHistory.slice(-maxHistoryMessages);
+
+    const messages: Array<{ role: "user" | "assistant"; content: string }> = [
+      ...trimmedHistory,
+      {
+        role: "user" as const,
+        content: `Current Remotion code:\n\n${args.currentCode}\n\nPlease modify it: ${args.refinementPrompt}`,
+      },
+    ];
+
+    // Call Claude API with refinement system prompt
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 4096,
+      system: REFINEMENT_SYSTEM_PROMPT,
+      messages,
+    });
+
+    // Extract text content
+    const textContent = response.content.find((block) => block.type === "text");
+    if (!textContent || textContent.type !== "text") {
+      throw new Error("Failed to refine animation: No response from AI.");
+    }
+
+    // Clean code (same logic as generate action)
+    let rawCode = textContent.text.trim();
+    if (rawCode.startsWith("```")) {
+      rawCode = rawCode
+        .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
+        .replace(/\n?```\s*$/, "")
+        .trim();
+    }
+
+    // Extract metadata
+    const durationMatch = rawCode.match(/\/\/\s*DURATION:\s*(\d+)/);
+    const fpsMatch = rawCode.match(/\/\/\s*FPS:\s*(\d+)/);
+    const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
+    const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
+    const fps = fpsMatch ? Math.min(Math.max(parseInt(fpsMatch[1]), 15), 60) : 30;
+
+    // Validate the refined code
+    const validation = validateRemotionCode(rawCode);
+    if (!validation.valid) {
+      throw new Error(
+        `Refined code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
+      );
+    }
+
+    // Transform JSX to JavaScript
+    const transformed = transformJSX(rawCode);
+    if (!transformed.success || !transformed.code) {
+      throw new Error(transformed.error || "Code transformation failed");
+    }
+
+    return {
       rawCode,
       code: transformed.code,
       durationInFrames,
