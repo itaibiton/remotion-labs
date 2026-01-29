@@ -10,6 +10,7 @@ import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
 import { PreviewPlayer } from "@/components/preview/preview-player";
 import { CodeDisplay } from "@/components/code-editor/code-display";
+import { ChatMessages, type ChatMessage } from "@/components/generation/chat-messages";
 import { useDebouncedValidation } from "@/hooks/use-debounced-validation";
 import type { Template } from "@/lib/templates";
 import Link from "next/link";
@@ -24,6 +25,7 @@ interface GenerationError {
 
 interface GenerationResult {
   id: string;
+  rawCode: string;
   code: string;
   durationInFrames: number;
   fps: number;
@@ -36,6 +38,7 @@ interface CreateContentProps {
 function CreateContent({ selectedTemplate }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
+  const refine = useAction(api.generateAnimation.refine);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState<GenerationStep>(null);
@@ -48,26 +51,34 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
   const [editedCode, setEditedCode] = useState<string | null>(null);
   const [skipValidation, setSkipValidation] = useState(true);
 
-  // Current code: edited version if editing, otherwise generation code
-  const currentCode = editedCode ?? lastGeneration?.code ?? "";
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isRefining, setIsRefining] = useState(false);
+
+  // Current editor code: edited version if editing, otherwise raw JSX from generation
+  const editorCode = editedCode ?? lastGeneration?.rawCode ?? "";
 
   // Debounced validation on user edits
-  const { isValid, errors, resetToValid } = useDebouncedValidation(
-    currentCode,
+  const validation = useDebouncedValidation(
+    editorCode,
     500,
     skipValidation
   );
 
+  // Preview code: use validated+transformed code from user edits, otherwise server-transformed code
+  // This ensures preview freezes on last valid code when validation fails
+  const previewCode = validation.transformedCode ?? lastGeneration?.code ?? "";
+
   const handleEditToggle = useCallback(() => {
     setIsEditing((prev) => {
       if (!prev) {
-        // Entering edit mode: initialize edited code from current
-        setEditedCode(lastGeneration?.code ?? "");
+        // Entering edit mode: initialize edited code from raw JSX
+        setEditedCode(lastGeneration?.rawCode ?? "");
         setSkipValidation(false);
       }
       return !prev;
     });
-  }, [lastGeneration?.code]);
+  }, [lastGeneration?.rawCode]);
 
   const handleCodeChange = useCallback((code: string) => {
     setEditedCode(code);
@@ -88,7 +99,9 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
       setIsEditing(false);
       setEditedCode(null);
       setSkipValidation(true);
-      resetToValid();
+      validation.resetToValid();
+      // Reset chat on new generation
+      setChatMessages([]);
 
       // Step through: analyzing -> generating
       setCurrentStep("analyzing");
@@ -109,6 +122,7 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
 
         const generationResult: GenerationResult = {
           id: String(result.id),
+          rawCode: result.rawCode,
           code: result.code,
           // Provide defaults for safety (should always be present from action)
           durationInFrames: result.durationInFrames ?? 90,
@@ -135,7 +149,84 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
         setCurrentStep(null);
       }
     },
-    [generate, error?.retryCount, resetToValid]
+    [generate, error?.retryCount, validation]
+  );
+
+  const handleRefine = useCallback(
+    async (prompt: string) => {
+      setIsRefining(true);
+      try {
+        // Add user message to chat
+        const userMessage: ChatMessage = { role: "user", content: prompt };
+        setChatMessages((prev) => [...prev, userMessage]);
+
+        const result = await refine({
+          currentCode: editorCode,
+          refinementPrompt: prompt,
+          conversationHistory: chatMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        });
+
+        // Update editor with refined code (raw JSX)
+        setEditedCode(result.rawCode);
+        setSkipValidation(true);
+        setTimeout(() => setSkipValidation(false), 100);
+
+        // Update generation result for preview
+        setLastGeneration((prev) =>
+          prev
+            ? {
+                ...prev,
+                rawCode: result.rawCode,
+                code: result.code,
+                durationInFrames: result.durationInFrames,
+                fps: result.fps,
+              }
+            : prev
+        );
+
+        // Add assistant message to chat
+        const assistantMessage: ChatMessage = {
+          role: "assistant",
+          content: `Updated the animation based on: "${prompt}"`,
+        };
+        setChatMessages((prev) => [...prev, assistantMessage]);
+
+        toast.success("Animation refined!");
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : "Refinement failed";
+        toast.error(errorMessage);
+        // Remove the user message on failure
+        setChatMessages((prev) => prev.slice(0, -1));
+      } finally {
+        setIsRefining(false);
+      }
+    },
+    [editorCode, chatMessages, refine]
+  );
+
+  const handleUnifiedSubmit = useCallback(
+    async (text: string) => {
+      if (!lastGeneration) {
+        await handleGenerate(text);
+      } else if (text.toLowerCase().startsWith("start over:")) {
+        const newPrompt = text.replace(/^start over:\s*/i, "").trim();
+        setChatMessages([]);
+        setEditedCode(null);
+        setLastGeneration(null);
+        setIsEditing(false);
+        setSkipValidation(true);
+        validation.resetToValid();
+        if (newPrompt) {
+          await handleGenerate(newPrompt);
+        }
+      } else {
+        await handleRefine(text);
+      }
+    },
+    [lastGeneration, handleGenerate, handleRefine, validation]
   );
 
   const handleRetry = useCallback(() => {
@@ -146,7 +237,7 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
 
   const promptPlaceholder = selectedTemplate
     ? "Describe how you'd like to customize this template..."
-    : "Describe the animation you want to create...";
+    : undefined; // Let PromptInput choose based on hasExistingCode
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6">
@@ -195,25 +286,25 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
         <div className="w-full max-w-5xl mb-6">
           {/* Two-column layout: Preview | Code */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Preview */}
+            {/* Preview - uses validated transformed code or server-transformed code */}
             <div>
               <PreviewPlayer
-                code={lastGeneration.code}
+                code={previewCode}
                 durationInFrames={lastGeneration.durationInFrames}
                 fps={lastGeneration.fps}
               />
             </div>
 
-            {/* Code */}
+            {/* Code - shows raw JSX for editing */}
             <div>
               <CodeDisplay
-                code={currentCode}
-                originalCode={lastGeneration.code}
+                code={editorCode}
+                originalCode={lastGeneration.rawCode}
                 isEditing={isEditing}
                 onEditToggle={handleEditToggle}
                 onChange={handleCodeChange}
-                errors={errors}
-                isValid={isValid}
+                errors={validation.errors}
+                isValid={validation.isValid}
               />
             </div>
           </div>
@@ -255,14 +346,23 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
               </div>
             </div>
           </div>
+
+          {/* Chat messages - shown when conversation exists */}
+          {chatMessages.length > 0 && (
+            <div className="mt-4 border rounded-lg">
+              <ChatMessages messages={chatMessages} isRefining={isRefining} />
+            </div>
+          )}
         </div>
       )}
 
-      {/* Prompt input - always visible unless generating */}
+      {/* Prompt input - visible when not generating */}
       {!isGenerating && (
         <PromptInput
-          onSubmit={handleGenerate}
+          onSubmit={handleUnifiedSubmit}
           isGenerating={isGenerating}
+          isRefining={isRefining}
+          hasExistingCode={!!lastGeneration}
           disabled={false}
           placeholder={promptPlaceholder}
         />
