@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v1.1 Full Code Generation - Phase 8 Planned
+**Current focus:** v1.1 Full Code Generation - Phase 8 In Progress
 
 ## Current Position
 
 Phase: 8 - Export & Polish
-Plan: 0 of 2 complete
-Status: Planned — 2 plans in 2 waves, ready for execution
-Last activity: 2026-01-29 - Phase 8 planned (research + 2 plans + verification)
+Plan: 1 of 2 complete
+Status: In progress — Plan 1 (export utilities) complete, Plan 2 (UI wiring) next
+Last activity: 2026-01-29 - Completed 08-01-PLAN.md (export utility library)
 
-Progress: [=============================-] 96% (v1.0 complete, Phases 6-7 complete, Phase 8 planned)
+Progress: [==============================] 97% (v1.0 complete, Phases 6-7 complete, Phase 8 plan 1/2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: 4.9 min
-- Total execution time: 103 min
+- Total plans completed: 22
+- Average duration: 4.8 min
+- Total execution time: 105 min
 
 **By Phase:**
 
@@ -35,10 +35,11 @@ Progress: [=============================-] 96% (v1.0 complete, Phases 6-7 comple
 | 06-code-generation-safe-execution | 4 | 19 min | 4.8 min |
 
 | 07-editing-iteration | 4/4 | 14 min | 3.5 min |
+| 08-export-polish | 1/2 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (3 min), 07-03 (3 min), 07-02 (3 min), 07-04 (5 min)
-- Trend: Consistent fast execution, 07-04 slightly longer due to human verification + runtime fix
+- Last 5 plans: 07-03 (3 min), 07-02 (3 min), 07-04 (5 min), 08-01 (2 min)
+- Trend: Fastest plan yet at 2 min — pure library code with no UI or integration
 
 *Updated after each plan completion*
 
@@ -103,6 +104,10 @@ Recent decisions affecting current work:
 - Conversation history capped at 20 messages (10 exchanges) for token safety
 - Unified input: same PromptInput adapts between generate and refine modes based on context
 - Per-frame operation counter reset: DynamicCode resets counter before each render to prevent exhaustion
+- REMOTION_APIS map covers 22 Remotion-specific globals, excludes JS globals and React hooks
+- Scaffold APIs (Composition, registerRoot) added by generators, not by detectUsedAPIs
+- Metadata comments stripped from exported code (values become Composition props)
+- Config import from @remotion/cli/config (Remotion v4 pattern)
 
 ### Pending Todos
 
@@ -120,10 +125,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Phase 8 planned — 2 plans ready for execution
+Stopped at: Completed 08-01-PLAN.md (export utility library)
 Resume file: None
 
-Next step: Execute Phase 8 (/gsd:execute-phase 8)
+Next step: Execute 08-02-PLAN.md (export UI wiring)
 
 ---
-*Phase 8 planned - export utilities + UI wiring, 2 plans in 2 waves*
+*Phase 8 in progress - plan 1/2 complete, export utilities built*
