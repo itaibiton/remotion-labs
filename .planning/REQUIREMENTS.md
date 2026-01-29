@@ -42,22 +42,22 @@ Unlock unlimited animation possibilities by having Claude generate actual Remoti
 
 ### Code Generation
 
-- [ ] **CODE-01**: Claude generates complete Remotion JSX compositions from text prompts
-- [ ] **CODE-02**: System validates generated code via AST parsing before execution
-- [ ] **CODE-03**: System executes validated code in safe sandbox environment
-- [ ] **CODE-04**: User can view generated Remotion code in editor
-- [ ] **CODE-05**: User can edit generated code and re-validate
+- [x] **CODE-01**: Claude generates complete Remotion JSX compositions from text prompts
+- [x] **CODE-02**: System validates generated code via AST parsing before execution
+- [x] **CODE-03**: System executes validated code in safe sandbox environment
+- [x] **CODE-04**: User can view generated Remotion code in editor
+- [x] **CODE-05**: User can edit generated code and re-validate
 
 ### Iteration
 
-- [ ] **ITER-01**: User can refine animation via chat ("make it faster", "change color")
-- [ ] **ITER-02**: System suggests fixes when code validation fails
+- [x] **ITER-01**: User can refine animation via chat ("make it faster", "change color")
+- [x] **ITER-02**: System suggests fixes when code validation fails
 
 ### Animation Types (Extended)
 
-- [ ] **ANIM-02**: System supports shape animations (rectangles, circles, paths)
-- [ ] **ANIM-03**: System supports motion graphics (complex compositions, sequences)
-- [ ] **ANIM-04**: System supports transitions and effects (fade, scale, rotate)
+- [x] **ANIM-02**: System supports shape animations (rectangles, circles, paths)
+- [x] **ANIM-03**: System supports motion graphics (complex compositions, sequences)
+- [x] **ANIM-04**: System supports transitions and effects (fade, scale, rotate)
 
 ### Output (Extended)
 
@@ -132,16 +132,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CODE-01 | Phase 6 | Pending |
-| CODE-02 | Phase 6 | Pending |
-| CODE-03 | Phase 6 | Pending |
-| CODE-04 | Phase 6 | Pending |
-| CODE-05 | Phase 7 | Pending |
-| ITER-01 | Phase 7 | Pending |
-| ITER-02 | Phase 7 | Pending |
-| ANIM-02 | Phase 6 | Pending |
-| ANIM-03 | Phase 6 | Pending |
-| ANIM-04 | Phase 6 | Pending |
+| CODE-01 | Phase 6 | Complete |
+| CODE-02 | Phase 6 | Complete |
+| CODE-03 | Phase 6 | Complete |
+| CODE-04 | Phase 6 | Complete |
+| CODE-05 | Phase 7 | Complete |
+| ITER-01 | Phase 7 | Complete |
+| ITER-02 | Phase 7 | Complete |
+| ANIM-02 | Phase 6 | Complete |
+| ANIM-03 | Phase 6 | Complete |
+| ANIM-04 | Phase 6 | Complete |
 | OUT-02 | Phase 8 | Pending |
 
 **Coverage:**
@@ -151,4 +151,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2025-01-27*
-*Last updated: 2026-01-28 for v1.1 roadmap*
+*Last updated: 2026-01-29 - Phases 6-7 complete (10/11 v1.1 requirements done)*
