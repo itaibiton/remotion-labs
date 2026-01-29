@@ -25,6 +25,7 @@ export interface ValidationResult {
     line: number;
     column: number;
     message: string; // Generic message, does not reveal blocklist details
+    suggestion?: string; // Actionable fix suggestion for editor display
   }>;
 }
 
@@ -71,6 +72,7 @@ export function validateRemotionCode(code: string): ValidationResult {
           line: parseError.loc?.line ?? 1,
           column: parseError.loc?.column ?? 0,
           message: "Code contains syntax errors",
+          suggestion: "Check for missing brackets, quotes, or semicolons near this line.",
         },
       ],
     };
@@ -115,7 +117,7 @@ function walkNode(node: ASTNode, errors: ValidationResult["errors"]): void {
 
     case "ImportExpression":
       // Dynamic import() - always block
-      addError(errors, node, "Code contains unsafe patterns");
+      addError(errors, node, "Code contains unsafe patterns", "import");
       break;
   }
 
@@ -140,7 +142,7 @@ function walkNode(node: ASTNode, errors: ValidationResult["errors"]): void {
 function validateImport(node: ASTNode, errors: ValidationResult["errors"]): void {
   const source = node.source?.value;
   if (typeof source === "string" && !isImportAllowed(source)) {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", "import");
   }
 }
 
@@ -152,7 +154,7 @@ function validateIdentifier(node: ASTNode, errors: ValidationResult["errors"]): 
   if (typeof name === "string" && BLOCKED_PATTERNS.has(name)) {
     // Check if this identifier is used as a variable name (safe) vs reference (unsafe)
     // We block all blocked pattern identifiers to be safe
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", name);
   }
 }
 
@@ -164,19 +166,19 @@ function validateCallExpression(node: ASTNode, errors: ValidationResult["errors"
 
   // Block: require('module')
   if (callee?.type === "Identifier" && callee.name === "require") {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", callee.name);
     return;
   }
 
   // Block: eval('code')
   if (callee?.type === "Identifier" && callee.name === "eval") {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", callee.name);
     return;
   }
 
   // Block: Function('code')
   if (callee?.type === "Identifier" && callee.name === "Function") {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", callee.name);
     return;
   }
 }
@@ -198,7 +200,7 @@ function validateMemberExpression(node: ASTNode, errors: ValidationResult["error
     BLOCKED_PATTERNS.has(objectName) &&
     propertyName // Only if accessing a property
   ) {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", objectName);
     return;
   }
 
@@ -206,7 +208,7 @@ function validateMemberExpression(node: ASTNode, errors: ValidationResult["error
   if (objectName && propertyName) {
     for (const [blockedObj, blockedProp] of BLOCKED_MEMBER_PATTERNS) {
       if (objectName === blockedObj && propertyName === blockedProp) {
-        addError(errors, node, "Code contains unsafe patterns");
+        addError(errors, node, "Code contains unsafe patterns", blockedProp);
         return;
       }
     }
@@ -221,27 +223,84 @@ function validateNewExpression(node: ASTNode, errors: ValidationResult["errors"]
 
   // Block: new Function('code')
   if (callee?.type === "Identifier" && callee.name === "Function") {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", callee.name);
     return;
   }
 
   // Block: new WebSocket(), new XMLHttpRequest(), etc.
   if (callee?.type === "Identifier" && BLOCKED_PATTERNS.has(callee.name)) {
-    addError(errors, node, "Code contains unsafe patterns");
+    addError(errors, node, "Code contains unsafe patterns", callee.name);
   }
 }
 
 /**
- * Helper to add an error with location info
+ * Maps blocked identifiers to actionable fix suggestions referencing Remotion APIs.
+ * These suggestions help users understand WHAT to use instead of the blocked pattern.
+ */
+function getSuggestionForBlockedPattern(identifier: string): string | undefined {
+  const suggestions: Record<string, string> = {
+    // Network access
+    fetch: "Network requests are not available. Use interpolate() or spring() for data-driven animations.",
+    XMLHttpRequest: "Network requests are not available. Use interpolate() or spring() for data-driven animations.",
+    WebSocket: "Network requests are not available. Use interpolate() for animations.",
+    EventSource: "Network requests are not available. Use interpolate() for animations.",
+    Request: "Network requests are not available. Use interpolate() or spring() for data-driven animations.",
+    Response: "Network requests are not available. Use interpolate() for animations.",
+    Headers: "Network requests are not available. Use interpolate() for animations.",
+    // Timers
+    setTimeout: "'setTimeout' is not available. Use <Sequence from={frameNumber}> for timed animations.",
+    setInterval: "'setInterval' is not available. Use useCurrentFrame() for frame-based animation loops.",
+    clearTimeout: "Timer APIs are not available. Use <Sequence from={frameNumber}> for timed animations.",
+    clearInterval: "Timer APIs are not available. Use useCurrentFrame() for frame-based animation loops.",
+    // DOM/Browser
+    document: "DOM access is not available. Use <AbsoluteFill> and inline styles for layout.",
+    window: "Browser globals are not available. Use useVideoConfig() for width, height, fps.",
+    navigator: "Browser globals are not available. Use useVideoConfig() for dimensions.",
+    location: "Browser globals are not available. Use useVideoConfig() for dimensions.",
+    history: "Browser globals are not available. Use <Sequence> for navigation-like transitions.",
+    localStorage: "Browser storage is not available. Use React state (useState) instead.",
+    sessionStorage: "Browser storage is not available. Use React state (useState) instead.",
+    indexedDB: "Browser storage is not available. Use React state (useState) instead.",
+    // Node.js globals
+    process: "Node.js globals are not available in the Remotion sandbox.",
+    global: "Node.js globals are not available. Use useVideoConfig() for environment info.",
+    globalThis: "Global scope access is not available. Use the pre-injected Remotion APIs.",
+    __dirname: "Node.js path globals are not available in the Remotion sandbox.",
+    __filename: "Node.js path globals are not available in the Remotion sandbox.",
+    Buffer: "Node.js Buffer is not available in the Remotion sandbox.",
+    setImmediate: "Node.js setImmediate is not available. Use useCurrentFrame() for frame-based logic.",
+    clearImmediate: "Node.js clearImmediate is not available. Use useCurrentFrame() for frame-based logic.",
+    // Dynamic code execution
+    eval: "Dynamic code execution is not allowed. Write your logic directly.",
+    Function: "The Function constructor is not allowed. Define functions with arrow syntax or function declarations.",
+    // Module system
+    require: "Use the pre-injected APIs instead of require(). All Remotion and React APIs are already available.",
+    import: "Import statements are not needed. All APIs (AbsoluteFill, interpolate, spring, etc.) are pre-injected.",
+    module: "Module system access is not available. All APIs are pre-injected.",
+    exports: "Module system access is not available. All APIs are pre-injected.",
+    // Dangerous APIs
+    Proxy: "Proxy is not available in the sandbox.",
+    Reflect: "Reflect is not available in the sandbox.",
+    constructor: "Direct constructor access is not allowed. Use standard object creation patterns.",
+    prototype: "Prototype manipulation is not allowed.",
+    __proto__: "Prototype manipulation is not allowed.",
+  };
+  return suggestions[identifier];
+}
+
+/**
+ * Helper to add an error with location info and optional suggestion
  */
 function addError(
   errors: ValidationResult["errors"],
   node: ASTNode,
-  message: string
+  message: string,
+  identifier?: string
 ): void {
   errors.push({
     line: node.loc?.start?.line ?? 1,
     column: node.loc?.start?.column ?? 0,
     message,
+    suggestion: identifier ? getSuggestionForBlockedPattern(identifier) : undefined,
   });
 }
