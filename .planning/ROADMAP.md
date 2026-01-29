@@ -151,7 +151,11 @@ Plans:
   1. User can download generated Remotion source code as a file
   2. Exported code is self-contained and runs in standard Remotion project
   3. Export includes necessary imports and composition setup
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 08-01-PLAN.md -- Export utility library (JSZip, import detection, single-file + zip generators)
+- [ ] 08-02-PLAN.md -- Export buttons UI + create page wiring + human verification
 
 ## Progress
 
@@ -167,10 +171,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Render Pipeline | 4/4 | Complete | 2026-01-28 |
 | 6. Code Generation & Safe Execution | 4/4 | Complete | 2026-01-29 |
 | 7. Editing & Iteration | 4/4 | Complete | 2026-01-29 |
-| 8. Export & Polish | 0/? | Not Started | - |
+| 8. Export & Polish | 0/2 | Not Started | - |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped*
-*Updated: 2026-01-29 - Phase 7 complete (4/4 plans, human verified)*
+*Updated: 2026-01-29 - Phase 8 planned (2 plans in 2 waves)*
