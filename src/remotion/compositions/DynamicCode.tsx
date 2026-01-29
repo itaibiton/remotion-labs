@@ -118,6 +118,11 @@ export const DynamicCode: React.FC<DynamicCodeProps> = ({
     return <ErrorFallback error={result.error} />;
   }
 
+  // Reset the operation counter before each frame render.
+  // The counter is shared across all frames via the closure, so without
+  // resetting, it accumulates and hits the limit on longer animations.
+  result.resetCounter();
+
   const Component = result.Component;
   return <Component />;
 };

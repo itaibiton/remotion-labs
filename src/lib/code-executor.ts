@@ -73,7 +73,7 @@ function createOperationCounter() {
  * Result of code execution
  */
 export type ExecutionResult =
-  | { success: true; Component: React.FC }
+  | { success: true; Component: React.FC; resetCounter: () => void }
   | { success: false; error: string };
 
 /**
@@ -201,7 +201,7 @@ function createExecutionScope() {
 export function executeCode(code: string): ExecutionResult {
   try {
     // Create execution scope with operation counting
-    const { scope } = createExecutionScope();
+    const { scope, counter } = createExecutionScope();
 
     // Build function with scope parameters
     const scopeKeys = Object.keys(scope);
@@ -236,7 +236,10 @@ export function executeCode(code: string): ExecutionResult {
       };
     }
 
-    return { success: true, Component };
+    // Expose counter.reset so DynamicCode can reset per frame render.
+    // Without this, the counter accumulates across all frames and
+    // hits the limit on longer/complex animations.
+    return { success: true, Component, resetCounter: counter.reset };
   } catch (e) {
     const error = e instanceof Error ? e.message : "Unknown execution error";
     return { success: false, error };
