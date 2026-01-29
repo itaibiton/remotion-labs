@@ -20,11 +20,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
 - [x] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
 
-### v1.1 (In Progress)
+### v1.1 (Complete)
 
 - [x] **Phase 6: Code Generation & Safe Execution** - Users can generate full Remotion JSX with validated, sandboxed execution
 - [x] **Phase 7: Editing & Iteration** - Users can edit code and refine via chat
-- [ ] **Phase 8: Export & Polish** - Users can export source code for standalone use
+- [x] **Phase 8: Export & Polish** - Users can export source code for standalone use
 
 ## Phase Details
 
@@ -154,8 +154,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md -- Export utility library (JSZip, import detection, single-file + zip generators)
-- [ ] 08-02-PLAN.md -- Export buttons UI + create page wiring + human verification
+- [x] 08-01-PLAN.md -- Export utility library (JSZip, import detection, single-file + zip generators)
+- [x] 08-02-PLAN.md -- Export buttons UI + create page wiring + human verification
 
 ## Progress
 
@@ -171,10 +171,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Render Pipeline | 4/4 | Complete | 2026-01-28 |
 | 6. Code Generation & Safe Execution | 4/4 | Complete | 2026-01-29 |
 | 7. Editing & Iteration | 4/4 | Complete | 2026-01-29 |
-| 8. Export & Polish | 0/2 | Not Started | - |
+| 8. Export & Polish | 2/2 | Complete | 2026-01-29 |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped*
-*Updated: 2026-01-29 - Phase 8 planned (2 plans in 2 waves)*
+*Updated: 2026-01-29 - Phase 8 complete (2/2 plans, human verified). v1.1 milestone complete.*

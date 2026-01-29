@@ -61,7 +61,7 @@ Unlock unlimited animation possibilities by having Claude generate actual Remoti
 
 ### Output (Extended)
 
-- [ ] **OUT-02**: User can export generated Remotion source code
+- [x] **OUT-02**: User can export generated Remotion source code
 
 ## v1.2+ Requirements (Future)
 
@@ -128,7 +128,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-02 | Phase 5 | Complete |
 | INFRA-03 | Phase 2 | Complete |
 
-### v1.1 (In Progress)
+### v1.1 (Complete)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -142,7 +142,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ANIM-02 | Phase 6 | Complete |
 | ANIM-03 | Phase 6 | Complete |
 | ANIM-04 | Phase 6 | Complete |
-| OUT-02 | Phase 8 | Pending |
+| OUT-02 | Phase 8 | Complete |
 
 **Coverage:**
 - v1.0 requirements: 14 total (complete)
@@ -151,4 +151,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2025-01-27*
-*Last updated: 2026-01-29 - Phases 6-7 complete (10/11 v1.1 requirements done)*
+*Last updated: 2026-01-29 - All v1.1 requirements complete (11/11)*
