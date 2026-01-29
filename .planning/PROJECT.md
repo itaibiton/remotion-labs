@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The interface combines chat-based generation with a code editor for fine-tuning, and exports standalone Remotion projects.
+A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The interface combines chat-based generation with a code editor for fine-tuning, and exports standalone Remotion projects. v2.0 evolves from single-clip creation into a multi-scene movie editor with a timeline, clip library, and continuation-based generation.
 
 ## Core Value
 
@@ -46,15 +46,34 @@ Claude generates complete Remotion JSX code. AST validation and sandboxed execut
 - [x] ITER-01: User can refine animation via chat
 - [x] ITER-02: System suggests fixes when code validation fails
 
+### Active (v2.0 — Scenes, Timeline & Movie Editor)
+
+- [ ] SAVE-01: User can quick-save the current composition as a named clip
+- [ ] SAVE-02: User can list, open, and delete saved clips from a library
+- [ ] SAVE-03: Saved clip stores composition code, duration, optional name/thumbnail; can be re-opened and re-rendered
+- [ ] MOVIE-01: User can create/open a movie with an ordered list of scenes
+- [ ] MOVIE-02: Horizontal timeline UI shows scenes in order with durations; user can reorder, remove, add scenes
+- [ ] MOVIE-03: User can preview the full movie (all scenes in sequence) in one Remotion Player
+- [ ] MOVIE-04: User can render the full movie to one MP4
+- [ ] OUT-03: User can export a single clip as MP4 and/or Remotion source without rendering the whole movie
+- [ ] OUT-04: User can export the full movie as one MP4 and/or Remotion project
+- [ ] GEN-06: User can trigger "Generate next scene" — system captures last frame state of a clip via code serialization
+- [ ] GEN-07: Claude generates continuation JSX that starts from the previous clip's end state
+- [ ] UI-01: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
+- [ ] UI-02: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
+- [ ] UI-03: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
+- [ ] UI-04: Video preview shows a timeline bar (playhead, duration, scrub)
+
 ### Out of Scope
 
 - Payments/subscriptions — focus on core value, monetize after validation
 - Custom font uploads — start with system/web fonts
-- Audio/music integration — visual-only for now
+- Audio/music tracks on timeline — visual-only for now
 - Brand kits (saved colors, fonts, logos) — future feature
 - Mobile app — web-first
 - Real-time collaboration — solo creation
-- Visual click-to-edit — complex, defer to v2
+- Visual drag-and-drop timeline — horizontal timeline with reorder, not full drag-and-drop editor
+- Sharing movies — solo creation first
 
 ## Context
 
@@ -101,6 +120,8 @@ Claude generates complete Remotion JSX code. AST validation and sandboxed execut
 | Stateless chat refinement | Conversation history managed client-side, action is pure | Validated |
 | JSZip client-side export | No server needed for project scaffold generation | Validated |
 | No payments in MVP | Focus on core value, validate before monetizing | Active |
+| Serialize end-state from code (v2.0) | Static analysis of JSX to extract final frame positions/styles/text for continuation generation | — Pending |
+| Horizontal timeline UI (v2.0) | Traditional video-editor-style track with duration bars, not a simple list | — Pending |
 
 ---
-*Last updated: 2026-01-29 after v1.1 completion*
+*Last updated: 2026-01-29 after v2.0 milestone start*

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Between milestones — v1.0 + v1.1 complete
+**Current focus:** Milestone v2.0 — Scenes, Timeline & Movie Editor
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: Milestone v1.1 complete. No active milestone.
-Last activity: 2026-01-29 — Completed milestone v1.1 (Full Code Generation)
+Status: Defining requirements for v2.0
+Last activity: 2026-01-29 — Milestone v2.0 started
 
-Progress: Between milestones
+Progress: Milestone initialization
 
 ## Milestone History
 
@@ -57,10 +57,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Milestone v1.1 complete
+Stopped at: Milestone v2.0 initialization
 Resume file: None
 
-Next step: `/gsd:new-milestone` to start v1.2 or v2.0
+Next step: Define requirements, then create roadmap
 
 ---
-*Between milestones — v1.0 + v1.1 shipped*
+*Milestone v2.0 started — 2026-01-29*
