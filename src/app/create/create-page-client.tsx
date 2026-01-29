@@ -15,6 +15,7 @@ import { useDebouncedValidation } from "@/hooks/use-debounced-validation";
 import type { Template } from "@/lib/templates";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ExportButtons } from "@/components/export/export-buttons";
 
 type GenerationStep = "analyzing" | "generating" | "validating" | null;
 
@@ -343,6 +344,21 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
                 >
                   Render (Coming Soon)
                 </button>
+              </div>
+            </div>
+
+            {/* Export controls */}
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Export source code for standalone use
+                </p>
+                <ExportButtons
+                  rawCode={lastGeneration.rawCode}
+                  prompt={lastPrompt}
+                  durationInFrames={lastGeneration.durationInFrames}
+                  fps={lastGeneration.fps}
+                />
               </div>
             </div>
           </div>
