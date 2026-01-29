@@ -2,26 +2,23 @@
 
 ## What This Is
 
-A web app where users create animated videos through text prompts, powered by Claude Code and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics. The interface combines chat-based generation with a visual editor for fine-tuning, serving everyone from content creators to marketers to developers.
+A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The interface combines chat-based generation with a code editor for fine-tuning, and exports standalone Remotion projects.
 
 ## Core Value
 
 Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
-## Current Milestone: v1.1 Full Code Generation
+## Shipped
 
-**Goal:** Unlock unlimited animation possibilities by having Claude generate actual Remotion JSX code instead of just props for fixed templates.
+### v1.0 — Core Validation (Phases 1-5)
+Authentication, template-based generation, preview, templates gallery, render pipeline with Lambda.
 
-**Target features:**
-- Claude generates complete Remotion compositions (JSX/React code)
-- Safe execution environment for AI-generated code
-- Code validation pipeline (AST analysis, security checks)
-- Access to Remotion's full animation API
-- Users can view and edit generated code
+### v1.1 — Full Code Generation (Phases 6-8)
+Claude generates complete Remotion JSX code. AST validation and sandboxed execution. Monaco editor with live validation, editable code, chat refinement. Export to standalone .tsx or full Remotion project zip.
 
 ## Requirements
 
-### Validated (v1.0)
+### Validated (v1.0 + v1.1)
 
 - [x] AUTH-01: User can sign up with Clerk
 - [x] AUTH-02: User can log in via email/password
@@ -33,61 +30,77 @@ Users can go from a text prompt to a rendered, downloadable animated video witho
 - [x] GEN-04: System validates generated code before rendering
 - [x] GEN-05: User can see real-time preview of animation
 - [x] ANIM-01: System supports text/typography animations
+- [x] ANIM-02: System supports shape animations (rectangles, circles, paths)
+- [x] ANIM-03: System supports motion graphics (complex compositions, sequences)
+- [x] ANIM-04: System supports transitions and effects (fade, scale, rotate)
 - [x] OUT-01: User can download rendered video (MP4)
+- [x] OUT-02: User can export generated Remotion source code
 - [x] INFRA-01: System enforces usage limits/quotas per user
 - [x] INFRA-02: User sees render progress in real-time
 - [x] INFRA-03: System handles errors gracefully with retry options
-
-### Active (v1.1)
-
-- [ ] User can generate any Remotion animation from text prompt (not limited to templates)
-- [ ] System executes AI-generated code safely in sandbox
-- [ ] User can view generated Remotion code
-- [ ] User can edit generated code before rendering
-- [ ] System validates generated code for security and correctness
-- [ ] Animation types expanded: shapes, transitions, motion graphics, data viz
+- [x] CODE-01: Claude generates complete Remotion JSX compositions from text prompts
+- [x] CODE-02: System validates generated code via AST parsing before execution
+- [x] CODE-03: System executes validated code in safe sandbox environment
+- [x] CODE-04: User can view generated Remotion code in editor
+- [x] CODE-05: User can edit generated code and re-validate
+- [x] ITER-01: User can refine animation via chat
+- [x] ITER-02: System suggests fixes when code validation fails
 
 ### Out of Scope
 
-- Payments/subscriptions — focus on core value for MVP, add later
+- Payments/subscriptions — focus on core value, monetize after validation
 - Custom font uploads — start with system/web fonts
-- Audio/music integration — visual-only for MVP
+- Audio/music integration — visual-only for now
 - Brand kits (saved colors, fonts, logos) — future feature
 - Mobile app — web-first
+- Real-time collaboration — solo creation
+- Visual click-to-edit — complex, defer to v2
 
 ## Context
 
 **Inspiration:** Midjourney's UX for image generation, applied to video/animation creation.
 
 **Technical approach:**
-- Claude Code generates Remotion JSX/React code
-- Hybrid generation: can write custom code AND use pre-built component library
-- Remotion Lambda for serverless video rendering (to be researched)
+- Claude generates full Remotion JSX/React code (not just template props)
+- AST validation + sandboxed execution via Function constructor with controlled scope
+- Remotion Lambda for serverless video rendering
+- Monaco editor for code viewing/editing with live validation
 
 **Target users:**
 - Content creators (YouTubers, TikTokers, social media)
 - Marketers/businesses (product videos, ads, promos)
 - Developers (want Remotion but easier)
 
-**User skill levels:** Mixed — dead simple for beginners, power features (code export) for pros.
+**User skill levels:** Mixed — dead simple for beginners, power features (code editing, export) for pros.
 
 ## Constraints
 
-- **Auth**: Clerk — already decided, good DX and fast to integrate
-- **Backend**: Convex — already decided, real-time and serverless
-- **Rendering**: Remotion — core technology, non-negotiable
-- **AI**: Claude Code API — powers the generation, non-negotiable
-- **MVP goal**: Validate the concept with minimal features, learn fast
+- **Auth**: Clerk — handles signup, login, OAuth, session management
+- **Backend**: Convex — real-time serverless with reactive queries
+- **Rendering**: Remotion + Lambda — core technology for animation and rendering
+- **AI**: Claude API — powers code generation and refinement
+- **Validation**: acorn + acorn-jsx + sucrase — AST parsing and JSX transformation
+- **Editor**: Monaco — code display, editing, inline error markers
+- **Export**: JSZip — client-side project scaffold generation
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Clerk for auth | Fast integration, good UX, handles OAuth | — Pending |
-| Convex for backend | Real-time, serverless, pairs well with React | — Pending |
-| Remotion Lambda for rendering | Serverless, scales automatically, Remotion's recommended approach | — Pending |
-| Hybrid generation (custom + components) | Flexibility for unique requests + speed for common patterns | — Pending |
-| No payments in MVP | Focus on core value, validate before monetizing | — Pending |
+| Clerk for auth | Fast integration, good UX, handles OAuth, 10K MAU free tier | Validated |
+| Convex for backend | Real-time, serverless, pairs well with React | Validated |
+| Remotion Lambda for rendering | Serverless, scales automatically | Validated |
+| Props-based generation (v1.0) | Fast MVP validation with fixed templates | Shipped, superseded by v1.1 |
+| Full JSX generation (v1.1) | Unlimited animation possibilities | Validated |
+| Interpreter pattern (acorn + sucrase) | AST validation before execution, no eval/new Function risks from user code | Validated |
+| Whitelist-only imports | Security: only remotion, @remotion/*, react allowed | Validated |
+| Function constructor with scope injection | Safe execution with controlled API surface | Validated |
+| Meta-composition pattern | Single Lambda bundle serves all generated code | Validated |
+| Dual code storage (rawCode + code) | JSX for editor, transformed JS for execution | Validated |
+| Monaco editor | Industry-standard code editing with markers, syntax highlighting | Validated |
+| Stateless chat refinement | Conversation history managed client-side, action is pure | Validated |
+| JSZip client-side export | No server needed for project scaffold generation | Validated |
+| No payments in MVP | Focus on core value, validate before monetizing | Active |
 
 ---
-*Last updated: 2026-01-28 after v1.0 completion, starting v1.1*
+*Last updated: 2026-01-29 after v1.1 completion*
