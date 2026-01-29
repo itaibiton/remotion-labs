@@ -74,27 +74,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAVE-01 | TBD | Pending |
-| SAVE-02 | TBD | Pending |
-| SAVE-03 | TBD | Pending |
-| MOVIE-01 | TBD | Pending |
-| MOVIE-02 | TBD | Pending |
-| MOVIE-03 | TBD | Pending |
-| MOVIE-04 | TBD | Pending |
-| OUT-03 | TBD | Pending |
-| OUT-04 | TBD | Pending |
-| GEN-06 | TBD | Pending |
-| GEN-07 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
-| UI-04 | TBD | Pending |
+| SAVE-01 | Phase 9: App Shell & Clip Library | Pending |
+| SAVE-02 | Phase 9: App Shell & Clip Library | Pending |
+| SAVE-03 | Phase 9: App Shell & Clip Library | Pending |
+| MOVIE-01 | Phase 10: Movie Data & Timeline UI | Pending |
+| MOVIE-02 | Phase 10: Movie Data & Timeline UI | Pending |
+| MOVIE-03 | Phase 11: Movie Preview, Render & Export | Pending |
+| MOVIE-04 | Phase 11: Movie Preview, Render & Export | Pending |
+| OUT-03 | Phase 11: Movie Preview, Render & Export | Pending |
+| OUT-04 | Phase 11: Movie Preview, Render & Export | Pending |
+| GEN-06 | Phase 12: Continuation Generation | Pending |
+| GEN-07 | Phase 12: Continuation Generation | Pending |
+| UI-01 | Phase 9: App Shell & Clip Library | Pending |
+| UI-02 | Phase 12: Continuation Generation | Pending |
+| UI-03 | Phase 10: Movie Data & Timeline UI | Pending |
+| UI-04 | Phase 10: Movie Data & Timeline UI | Pending |
 
 **Coverage:**
 - v2.0 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15 (pending roadmap creation)
+- Mapped to phases: 15
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-29 after initial definition*
+*Last updated: 2026-01-29 -- traceability updated with phase mappings*

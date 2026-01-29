@@ -2,7 +2,7 @@
 
 ## Overview
 
-RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution.
+RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity.
 
 ## Phases
 
@@ -12,7 +12,8 @@ RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-### v1.0 (Complete)
+<details>
+<summary>v1.0 (Complete)</summary>
 
 - [x] **Phase 1: Foundation & Auth** - Users can securely access their accounts via Clerk
 - [x] **Phase 2: Generation Pipeline** - Users can generate animation code from text prompts
@@ -20,13 +21,28 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Templates & Discovery** - Users can browse and select templates as starting points
 - [x] **Phase 5: Render Pipeline** - Users can render and download MP4 videos
 
-### v1.1 (Complete)
+</details>
+
+<details>
+<summary>v1.1 (Complete)</summary>
 
 - [x] **Phase 6: Code Generation & Safe Execution** - Users can generate full Remotion JSX with validated, sandboxed execution
 - [x] **Phase 7: Editing & Iteration** - Users can edit code and refine via chat
 - [x] **Phase 8: Export & Polish** - Users can export source code for standalone use
 
+</details>
+
+### v2.0 — Scenes, Timeline & Movie Editor
+
+- [ ] **Phase 9: App Shell & Clip Library** - Users can save, organize, and reopen their compositions from a persistent clip library
+- [ ] **Phase 10: Movie Data & Timeline UI** - Users can create movies and arrange scenes on a horizontal timeline
+- [ ] **Phase 11: Movie Preview, Render & Export** - Users can preview, render, and export full movies as MP4 or Remotion projects
+- [ ] **Phase 12: Continuation Generation** - Users can generate visually continuous next scenes from existing clips
+
 ## Phase Details
+
+<details>
+<summary>v1.0 Phase Details (Complete)</summary>
 
 ### Phase 1: Foundation & Auth
 **Goal**: Users can securely access their accounts and maintain sessions across browsers
@@ -108,6 +124,11 @@ Plans:
 - [x] 05-03-PLAN.md - UI components (RenderButton, RenderProgress, DownloadButton)
 - [x] 05-04-PLAN.md - Create page integration and end-to-end verification
 
+</details>
+
+<details>
+<summary>v1.1 Phase Details (Complete)</summary>
+
 ### Phase 6: Code Generation & Safe Execution
 **Goal**: Users can generate full Remotion JSX code that executes safely in a validated sandbox
 **Depends on**: Phase 5 (existing generation pipeline, Lambda infrastructure)
@@ -157,24 +178,98 @@ Plans:
 - [x] 08-01-PLAN.md -- Export utility library (JSZip, import detection, single-file + zip generators)
 - [x] 08-02-PLAN.md -- Export buttons UI + create page wiring + human verification
 
+</details>
+
+### Phase 9: App Shell & Clip Library
+**Goal**: Users can save their compositions as reusable clips and navigate between app sections through a persistent sidebar
+**Depends on**: Phase 8 (existing code generation, validation, and editor infrastructure)
+**Requirements**: UI-01, SAVE-01, SAVE-02, SAVE-03
+**Success Criteria** (what must be TRUE):
+  1. User sees a persistent sidebar with navigation links (Home, Create, Library, Movie, Templates) on all authenticated pages
+  2. User can click "Save" on the create page to store the current composition as a named clip
+  3. User can open the Library page and see all saved clips in a grid with names and thumbnails
+  4. User can open a saved clip from the library, which loads its code back into the editor for preview and re-rendering
+  5. User can delete a clip from the library
+**Plans**: 3-4 plans
+
+Plans:
+- [ ] 09-01-PLAN.md - TBD (plan during phase planning)
+- [ ] 09-02-PLAN.md - TBD
+- [ ] 09-03-PLAN.md - TBD
+
+### Phase 10: Movie Data & Timeline UI
+**Goal**: Users can create movies, add clips as scenes, and arrange them on a horizontal timeline with drag-to-reorder
+**Depends on**: Phase 9 (clips must exist before movies can reference them)
+**Requirements**: MOVIE-01, MOVIE-02, UI-03, UI-04
+**Success Criteria** (what must be TRUE):
+  1. User can create a new movie from the Movie page or navigation
+  2. User can add clips from the library as scenes in a movie
+  3. User sees scenes displayed as blocks on a horizontal timeline with durations
+  4. User can drag scenes to reorder them on the timeline
+  5. User can remove a scene from the timeline
+**Plans**: 3-4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md - TBD (plan during phase planning)
+- [ ] 10-02-PLAN.md - TBD
+- [ ] 10-03-PLAN.md - TBD
+
+### Phase 11: Movie Preview, Render & Export
+**Goal**: Users can preview a full movie as one continuous video, render it to MP4, and export individual clips or the entire movie
+**Depends on**: Phase 10 (movie data model and timeline must exist)
+**Requirements**: MOVIE-03, MOVIE-04, OUT-03, OUT-04
+**Success Criteria** (what must be TRUE):
+  1. User can click "Preview" on the movie page and watch all scenes play in sequence in one player
+  2. User can scrub through the full movie preview and see the corresponding scene highlighted on the timeline
+  3. User can render the full movie to a single MP4 and download it
+  4. User can export a single clip as MP4 or Remotion source from the library or create page
+  5. User can export the full movie as one MP4 or as a multi-composition Remotion project zip
+**Plans**: 3-4 plans
+
+Plans:
+- [ ] 11-01-PLAN.md - TBD (plan during phase planning)
+- [ ] 11-02-PLAN.md - TBD
+- [ ] 11-03-PLAN.md - TBD
+
+### Phase 12: Continuation Generation
+**Goal**: Users can generate visually continuous next scenes where the new animation picks up from where the previous clip ended
+**Depends on**: Phase 11 (clips, movies, and preview must be functional; continuation adds to this workflow)
+**Requirements**: GEN-06, GEN-07, UI-02
+**Success Criteria** (what must be TRUE):
+  1. User can click "Generate next scene" from a clip on the create page or timeline
+  2. System analyzes the previous clip's code and extracts its end state (final frame positions, colors, text)
+  3. Claude generates a continuation composition that starts from the previous clip's visual end state
+  4. User sees the continuation preview and can accept, regenerate, or edit it before adding to the movie
+  5. Create page shows contextual actions: quick-save, "Add to movie," and "Generate next scene" based on current state
+**Plans**: 2-3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md - TBD (plan during phase planning)
+- [ ] 12-02-PLAN.md - TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 2/2 | Complete | 2026-01-27 |
-| 2. Generation Pipeline | 3/3 | Complete | 2026-01-27 |
-| 3. Preview System | 1/1 | Complete | 2026-01-28 |
-| 4. Templates & Discovery | 2/2 | Complete | 2026-01-28 |
-| 5. Render Pipeline | 4/4 | Complete | 2026-01-28 |
-| 6. Code Generation & Safe Execution | 4/4 | Complete | 2026-01-29 |
-| 7. Editing & Iteration | 4/4 | Complete | 2026-01-29 |
-| 8. Export & Polish | 2/2 | Complete | 2026-01-29 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation & Auth | v1.0 | 2/2 | Complete | 2026-01-27 |
+| 2. Generation Pipeline | v1.0 | 3/3 | Complete | 2026-01-27 |
+| 3. Preview System | v1.0 | 1/1 | Complete | 2026-01-28 |
+| 4. Templates & Discovery | v1.0 | 2/2 | Complete | 2026-01-28 |
+| 5. Render Pipeline | v1.0 | 4/4 | Complete | 2026-01-28 |
+| 6. Code Generation & Safe Execution | v1.1 | 4/4 | Complete | 2026-01-29 |
+| 7. Editing & Iteration | v1.1 | 4/4 | Complete | 2026-01-29 |
+| 8. Export & Polish | v1.1 | 2/2 | Complete | 2026-01-29 |
+| 9. App Shell & Clip Library | v2.0 | 0/~3 | Not started | - |
+| 10. Movie Data & Timeline UI | v2.0 | 0/~3 | Not started | - |
+| 11. Movie Preview, Render & Export | v2.0 | 0/~3 | Not started | - |
+| 12. Continuation Generation | v2.0 | 0/~2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
-*v1.1 requirements: 11 mapped*
-*Updated: 2026-01-29 - Phase 8 complete (2/2 plans, human verified). v1.1 milestone complete.*
+*v1.1 requirements: 11 mapped (complete)*
+*v2.0 requirements: 15 mapped*
+*Updated: 2026-01-29 — v2.0 milestone roadmap created (Phases 9-12)*
