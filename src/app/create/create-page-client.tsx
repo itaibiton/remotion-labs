@@ -10,6 +10,7 @@ import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
 import { PreviewPlayer } from "@/components/preview/preview-player";
 import { CodeDisplay } from "@/components/code-editor/code-display";
+import { useDebouncedValidation } from "@/hooks/use-debounced-validation";
 import type { Template } from "@/lib/templates";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -42,6 +43,37 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
   const [lastPrompt, setLastPrompt] = useState<string>("");
 
+  // Editor editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCode, setEditedCode] = useState<string | null>(null);
+  const [skipValidation, setSkipValidation] = useState(true);
+
+  // Current code: edited version if editing, otherwise generation code
+  const currentCode = editedCode ?? lastGeneration?.code ?? "";
+
+  // Debounced validation on user edits
+  const { isValid, errors, resetToValid } = useDebouncedValidation(
+    currentCode,
+    500,
+    skipValidation
+  );
+
+  const handleEditToggle = useCallback(() => {
+    setIsEditing((prev) => {
+      if (!prev) {
+        // Entering edit mode: initialize edited code from current
+        setEditedCode(lastGeneration?.code ?? "");
+        setSkipValidation(false);
+      }
+      return !prev;
+    });
+  }, [lastGeneration?.code]);
+
+  const handleCodeChange = useCallback((code: string) => {
+    setEditedCode(code);
+    setSkipValidation(false);
+  }, []);
+
   // Store user in Convex on first visit (handles both new signups and existing users)
   useEffect(() => {
     storeUser().catch(console.error);
@@ -52,6 +84,11 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
       setLastPrompt(prompt);
       setError(null);
       setIsGenerating(true);
+      // Reset editing state on new generation
+      setIsEditing(false);
+      setEditedCode(null);
+      setSkipValidation(true);
+      resetToValid();
 
       // Step through: analyzing -> generating
       setCurrentStep("analyzing");
@@ -98,7 +135,7 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
         setCurrentStep(null);
       }
     },
-    [generate, error?.retryCount]
+    [generate, error?.retryCount, resetToValid]
   );
 
   const handleRetry = useCallback(() => {
@@ -169,7 +206,15 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
 
             {/* Code */}
             <div>
-              <CodeDisplay code={lastGeneration.code} />
+              <CodeDisplay
+                code={currentCode}
+                originalCode={lastGeneration.code}
+                isEditing={isEditing}
+                onEditToggle={handleEditToggle}
+                onChange={handleCodeChange}
+                errors={errors}
+                isValid={isValid}
+              />
             </div>
           </div>
 
