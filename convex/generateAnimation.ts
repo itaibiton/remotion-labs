@@ -333,6 +333,7 @@ export const generate = action({
   },
   handler: async (ctx, args): Promise<{
     id: Id<"generations">;
+    rawCode: string;
     code: string;
     durationInFrames: number;
     fps: number;
@@ -385,6 +386,9 @@ export const generate = action({
         .trim();
     }
 
+    // Preserve original JSX for editor display (before any transformation)
+    const rawCode = code;
+
     // Extract metadata from comments
     const durationMatch = code.match(/\/\/\s*DURATION:\s*(\d+)/);
     const fpsMatch = code.match(/\/\/\s*FPS:\s*(\d+)/);
@@ -417,6 +421,7 @@ export const generate = action({
         userId: identity.tokenIdentifier,
         prompt: args.prompt,
         code: transformed.code,
+        rawCode,
         durationInFrames,
         fps,
         status: "success" as const,
@@ -426,6 +431,7 @@ export const generate = action({
 
     return {
       id: generationId,
+      rawCode,
       code: transformed.code,
       durationInFrames,
       fps,

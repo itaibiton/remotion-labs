@@ -15,6 +15,8 @@ export default defineSchema({
     prompt: v.string(),
     // v1.1: Full Remotion JSX code (transformed to JS)
     code: v.optional(v.string()),
+    // v1.1: Original JSX code before transformation (for editor display)
+    rawCode: v.optional(v.string()),
     // v1.0 legacy: Animation props for fixed templates (deprecated)
     animationProps: v.optional(v.object({
       text: v.string(),
