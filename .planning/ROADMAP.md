@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v1.1 (In Progress)
 
-- [ ] **Phase 6: Code Generation & Safe Execution** - Users can generate full Remotion JSX with validated, sandboxed execution
+- [x] **Phase 6: Code Generation & Safe Execution** - Users can generate full Remotion JSX with validated, sandboxed execution
 - [ ] **Phase 7: Editing & Iteration** - Users can edit code and refine via chat
 - [ ] **Phase 8: Export & Polish** - Users can export source code for standalone use
 
@@ -121,10 +121,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 06-01-PLAN.md - Code validation infrastructure (acorn, ast-guard, sucrase, whitelist)
-- [ ] 06-02-PLAN.md - DynamicCode composition + code executor (Function constructor, scope injection)
-- [ ] 06-03-PLAN.md - Enhanced Claude prompt + generation action update (replace props with JSX)
-- [ ] 06-04-PLAN.md - Monaco editor integration + create page updates + verification
+- [x] 06-01-PLAN.md - Code validation infrastructure (acorn, ast-guard, sucrase, whitelist)
+- [x] 06-02-PLAN.md - DynamicCode composition + code executor (Function constructor, scope injection)
+- [x] 06-03-PLAN.md - Enhanced Claude prompt + generation action update (replace props with JSX)
+- [x] 06-04-PLAN.md - Monaco editor integration + create page updates + verification
 
 ### Phase 7: Editing & Iteration
 **Goal**: Users can modify generated code and refine animations through conversation
@@ -159,7 +159,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Preview System | 1/1 | Complete | 2026-01-28 |
 | 4. Templates & Discovery | 2/2 | Complete | 2026-01-28 |
 | 5. Render Pipeline | 4/4 | Complete | 2026-01-28 |
-| 6. Code Generation & Safe Execution | 0/4 | Not Started | - |
+| 6. Code Generation & Safe Execution | 4/4 | Complete | 2026-01-29 |
 | 7. Editing & Iteration | 0/? | Not Started | - |
 | 8. Export & Polish | 0/? | Not Started | - |
 
@@ -167,4 +167,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped*
-*Updated: 2026-01-28 for v1.1 milestone*
+*Updated: 2026-01-29 - Phase 6 complete*
