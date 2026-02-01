@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 15 in progress (image upload & input bar)
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 15 complete (image upload & input bar)
 
 ## Current Position
 
 Phase: 15 of 17 (Image Upload & Input Bar)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-01 -- Completed 15-02-PLAN.md (image upload hook and UI)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 -- Completed 15-03-PLAN.md (input bar integration with image upload)
 
-Progress: [#########           ] 54% (7/13 plans)
+Progress: [##########          ] 62% (8/13 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [#########           ] 54% (7/13 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 37
-- Total execution time: ~157.0 min
+- Total plans completed: 38
+- Total execution time: ~160.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -42,7 +42,7 @@ Progress: [#########           ] 54% (7/13 plans)
 | 12-continuation-generation | 2/2 | 10 min | 5.0 min |
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
 | 14-variations | 2/2 | 6 min | 3.0 min |
-| 15-image-upload-input-bar | 2/3 | 5 min | 2.5 min |
+| 15-image-upload-input-bar | 3/3 | 8 min | 2.7 min |
 
 ## Accumulated Context
 
@@ -79,6 +79,9 @@ v0.2.0 decisions:
 - useCallback wrapping for all hook methods to enable stable references in consumers
 - Sequential uploads in useImageUpload (not Promise.all) to avoid overwhelming Convex endpoint
 - ImageAttachment is presentational (props-driven, no internal hook usage)
+- Variation selector inline in InputBar toolbar (not in settings panel) for quick access
+- Spread operator for optional referenceImageIds to Convex actions (avoids passing undefined)
+- InputBar is single composition point for all generation input controls
 
 ### Pending Todos
 
@@ -95,12 +98,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T21:07Z
-Stopped at: Completed 15-02-PLAN.md (image upload hook and UI)
+Last session: 2026-02-01T21:14Z
+Stopped at: Completed 15-03-PLAN.md (input bar integration with image upload)
 Resume file: None
 
-Next step: Execute 15-03-PLAN.md (input bar integration with image upload)
+Next step: Execute Phase 16 or Phase 17
 
 ---
-*15-02 complete -- 2026-02-01*
-*useImageUpload hook with add/remove/upload/clear lifecycle and ImageAttachment thumbnail chip component with status overlays*
+*15-03 complete -- 2026-02-01*
+*Unified InputBar with drag-drop, paste, image upload, settings toggle, variation selector, and generate button wired into create page*
