@@ -264,7 +264,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 8. Export & Polish | v1.1 | 2/2 | Complete | 2026-01-29 |
 | 9. App Shell & Clip Library | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 10. Movie Data & Timeline UI | v2.0 | 3/3 | Complete | 2026-02-01 |
-| 11. Movie Preview, Render & Export | v2.0 | 0/~3 | Not started | - |
+| 11. Movie Preview, Render & Export | v2.0 | 0/3 | Planned | - |
 | 12. Continuation Generation | v2.0 | 0/~2 | Not started | - |
 
 ---
@@ -272,4 +272,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped*
-*Updated: 2026-02-01 -- Phase 10 complete (3/3 plans, verified)*
+*Updated: 2026-02-01 -- Phase 11 planned (3 plans in 2 waves)*

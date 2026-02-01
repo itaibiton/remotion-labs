@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 10 of 12 (Movie Data & Timeline UI) -- COMPLETE
-Plan: 3 of 3 in phase 10 (all plans complete)
-Status: Phase 10 complete. All 5 success criteria met. Ready for Phase 11 (Movie Preview & Render).
-Last activity: 2026-02-01 -- Completed 10-03-PLAN.md (Timeline UI)
+Phase: 11 of 12 (Movie Preview, Render & Export) -- PLANNED
+Plan: 0 of 3 in phase 11 (3 plans ready, 2 waves)
+Status: Phase 11 planned. Ready for execution.
+Last activity: 2026-02-01 -- Planned Phase 11 (3 plans, plan-checked, blocker fixed)
 
 Progress: [================..] 91% (28/~33 plans across all milestones)
 
@@ -86,7 +86,7 @@ Last session: 2026-02-01
 Stopped at: Completed 10-03-PLAN.md (Timeline UI) -- Phase 10 complete
 Resume file: None
 
-Next step: `/gsd:plan-phase 11` (Movie Preview, Render & Export)
+Next step: `/gsd:execute-phase 11` (Movie Preview, Render & Export)
 
 ---
-*Phase 10 complete -- 2026-02-01*
+*Phase 11 planned -- 2026-02-01*
