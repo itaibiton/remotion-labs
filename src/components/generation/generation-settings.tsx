@@ -16,6 +16,7 @@ const ASPECT_RATIO_ICONS: Record<AspectRatioKey, React.ReactNode> = {
 
 const DURATION_OPTIONS = [1, 2, 3, 5, 10] as const;
 const FPS_OPTIONS = [15, 24, 30, 60] as const;
+const VARIATION_OPTIONS = [1, 2, 3, 4] as const;
 
 interface GenerationSettingsPanelProps {
   settings: GenerationSettings;
@@ -94,6 +95,27 @@ export function GenerationSettingsPanel({
               onClick={() => onUpdateSetting("fps", fps)}
             >
               {fps}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Variations */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-muted-foreground">
+          Variations
+        </label>
+        <div className="flex gap-2">
+          {VARIATION_OPTIONS.map((count) => (
+            <Button
+              key={count}
+              variant={
+                settings.variationCount === count ? "default" : "outline"
+              }
+              size="sm"
+              onClick={() => onUpdateSetting("variationCount", count)}
+            >
+              {count}
             </Button>
           ))}
         </div>

@@ -6,12 +6,14 @@ export interface GenerationSettings {
   aspectRatio: "16:9" | "1:1" | "9:16";
   durationInSeconds: number;
   fps: number;
+  variationCount: number;
 }
 
 export const DEFAULT_SETTINGS: GenerationSettings = {
   aspectRatio: "16:9",
   durationInSeconds: 3,
   fps: 30,
+  variationCount: 1,
 };
 
 const STORAGE_KEY = "remotionlab-generation-settings";
