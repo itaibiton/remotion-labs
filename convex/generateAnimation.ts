@@ -439,6 +439,48 @@ const MyComposition = () => {
 Now generate a continuation based on the user's request.`;
 
 // ============================================================================
+// Image Content Block Builder
+// ============================================================================
+
+type ImageContentBlock = { type: "image"; source: { type: "url"; url: string } };
+type TextContentBlock = { type: "text"; text: string };
+type UserContent = string | Array<ImageContentBlock | TextContentBlock>;
+
+/**
+ * Builds the multi-part content array for Claude's Messages API.
+ * Images are placed before the text prompt (Claude best practice).
+ *
+ * @param ctx - Convex action context with storage access
+ * @param prompt - User's text prompt
+ * @param referenceImageIds - Optional array of Convex storage IDs for reference images
+ * @returns A string (if no images) or content block array (if images present)
+ */
+async function buildUserContent(
+  ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } },
+  prompt: string,
+  referenceImageIds?: Id<"_storage">[],
+): Promise<UserContent> {
+  if (!referenceImageIds || referenceImageIds.length === 0) {
+    return prompt;
+  }
+
+  const content: Array<ImageContentBlock | TextContentBlock> = [];
+
+  for (const storageId of referenceImageIds) {
+    const url = await ctx.storage.getUrl(storageId);
+    if (url) {
+      content.push({
+        type: "image",
+        source: { type: "url", url },
+      });
+    }
+  }
+
+  content.push({ type: "text", text: prompt });
+  return content;
+}
+
+// ============================================================================
 // Shared Generation Helper (plain async function, NOT a Convex action)
 // ============================================================================
 
@@ -447,14 +489,14 @@ Now generate a continuation based on the user's request.`;
  * Used by both `generate` and `generateVariations` actions.
  *
  * @param client - Anthropic SDK client instance
- * @param prompt - User's prompt (sent as user message)
+ * @param promptOrContent - User's prompt string or multi-part content array (with images)
  * @param enhancedPrompt - System prompt with injected settings
  * @param temperature - Optional temperature override (omitted → Claude default)
  * @returns Validated and transformed code with metadata
  */
 async function generateSingleVariation(
   client: Anthropic,
-  prompt: string,
+  promptOrContent: UserContent,
   enhancedPrompt: string,
   temperature?: number,
 ): Promise<{ rawCode: string; code: string; durationInFrames: number; fps: number }> {
@@ -463,7 +505,7 @@ async function generateSingleVariation(
     model: "claude-sonnet-4-5-20250929",
     max_tokens: 4096,
     system: enhancedPrompt,
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: "user", content: promptOrContent }],
     ...(temperature !== undefined ? { temperature } : {}),
   });
 
@@ -533,6 +575,7 @@ async function generateSingleVariation(
 export const generate = action({
   args: {
     prompt: v.string(),
+    referenceImageIds: v.optional(v.array(v.id("_storage"))),
     aspectRatio: v.optional(v.string()),
     durationInSeconds: v.optional(v.number()),
     fps: v.optional(v.number()),
@@ -580,10 +623,13 @@ export const generate = action({
       `- Use // DURATION: ${targetFrames} and // FPS: ${targetFps} in your output\n` +
       `- Design your layout for ${aspectRatio} aspect ratio`;
 
+    // Build user content (includes reference images if provided)
+    const userContent = await buildUserContent(ctx, args.prompt, args.referenceImageIds);
+
     // Call the shared helper (no temperature override → uses Claude default)
     const result = await generateSingleVariation(
       client,
-      args.prompt,
+      userContent,
       enhancedPrompt,
     );
 
@@ -604,6 +650,7 @@ export const generate = action({
         createdAt: Date.now(),
         aspectRatio,
         durationInSeconds: targetDuration,
+        referenceImageIds: args.referenceImageIds,
       }
     );
 
@@ -630,6 +677,7 @@ export const generate = action({
 export const generateVariations = action({
   args: {
     prompt: v.string(),
+    referenceImageIds: v.optional(v.array(v.id("_storage"))),
     variationCount: v.number(),
     aspectRatio: v.optional(v.string()),
     durationInSeconds: v.optional(v.number()),
@@ -692,11 +740,14 @@ export const generateVariations = action({
     // Capture consistent timestamp before starting parallel calls
     const createdAt = Date.now();
 
+    // Build user content (includes reference images if provided)
+    const userContent = await buildUserContent(ctx, args.prompt, args.referenceImageIds);
+
     // Create variation promises with per-promise error handling
     const variationPromises = Array.from(
       { length: args.variationCount },
       (_, index) =>
-        generateSingleVariation(client, args.prompt, enhancedPrompt, temperature)
+        generateSingleVariation(client, userContent, enhancedPrompt, temperature)
           .then(async (result) => {
             // Store successful variation
             const id = await ctx.runMutation(internal.generations.store, {
@@ -713,6 +764,7 @@ export const generateVariations = action({
               variationCount: args.variationCount,
               aspectRatio,
               durationInSeconds: targetDuration,
+              referenceImageIds: args.referenceImageIds,
             });
             return {
               id: String(id),
@@ -736,6 +788,7 @@ export const generateVariations = action({
               variationIndex: index,
               variationCount: args.variationCount,
               aspectRatio,
+              referenceImageIds: args.referenceImageIds,
               durationInSeconds: targetDuration,
             });
             return null;
