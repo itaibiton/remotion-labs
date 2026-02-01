@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 15 complete (image upload & input bar)
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 16 in progress (per-creation actions)
 
 ## Current Position
 
-Phase: 15 of 17 (Image Upload & Input Bar)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 -- Completed 15-03-PLAN.md (input bar integration with image upload)
+Phase: 16 of 17 (Per-Creation Actions)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-01 -- Completed 16-01-PLAN.md (action dropdown with save, delete, rerun)
 
-Progress: [##########          ] 62% (8/13 plans)
+Progress: [###############     ] 69% (9/13 plans)
 
 ## Milestone History
 
@@ -43,6 +43,7 @@ Progress: [##########          ] 62% (8/13 plans)
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
 | 14-variations | 2/2 | 6 min | 3.0 min |
 | 15-image-upload-input-bar | 3/3 | 8 min | 2.7 min |
+| 16-per-creation-actions | 1/2 | 5 min | 5.0 min |
 
 ## Accumulated Context
 
@@ -82,6 +83,11 @@ v0.2.0 decisions:
 - Variation selector inline in InputBar toolbar (not in settings panel) for quick access
 - Spread operator for optional referenceImageIds to Convex actions (avoids passing undefined)
 - InputBar is single composition point for all generation input controls
+- AlertDialog sibling of DropdownMenu (not nested inside portal) for proper rendering
+- Direct save from feed action (no dialog) -- auto-names from prompt text
+- Rerun preserves all original generation settings (aspect ratio, duration, fps, variation count)
+- Per-variation overlay actions shown on hover with opacity transition
+- Batch-level actions use first variation as representative
 
 ### Pending Todos
 
@@ -98,12 +104,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T21:14Z
-Stopped at: Completed 15-03-PLAN.md (input bar integration with image upload)
+Last session: 2026-02-01T21:47Z
+Stopped at: Completed 16-01-PLAN.md (action dropdown with save, delete, rerun)
 Resume file: None
 
-Next step: Plan Phase 16 (Per-Creation Actions)
+Next step: Execute 16-02-PLAN.md (remaining per-creation actions)
 
 ---
-*15-03 complete -- 2026-02-01*
-*Unified InputBar with drag-drop, paste, image upload, settings toggle, variation selector, and generate button wired into create page*
+*16-01 complete -- 2026-02-01*
+*Per-generation action dropdown with save-to-library, delete (confirmation), and rerun wired through feed into create page*
