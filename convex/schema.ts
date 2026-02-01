@@ -38,6 +38,19 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_created", ["userId", "createdAt"]),
 
+  clips: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    code: v.string(),           // Transformed JS (for execution/preview)
+    rawCode: v.string(),        // Original JSX (for editor display)
+    durationInFrames: v.number(),
+    fps: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_updated", ["userId", "updatedAt"]),
+
   renders: defineTable({
     userId: v.string(),
     generationId: v.id("generations"),
