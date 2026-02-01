@@ -17,8 +17,10 @@ import { toast } from "sonner";
 import { ExportButtons } from "@/components/export/export-buttons";
 import { SaveClipDialog } from "@/components/library/save-clip-dialog";
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
+import { Save, FastForward, Film } from "lucide-react";
 import { ClipRenderButton } from "@/components/render/clip-render-button";
+import { AddToMovieDialog } from "@/components/library/add-to-movie-dialog";
+import { useRouter } from "next/navigation";
 
 type GenerationStep = "analyzing" | "generating" | "validating" | null;
 
@@ -38,12 +40,15 @@ interface GenerationResult {
 interface CreateContentProps {
   selectedTemplate: Template | null;
   clipId?: string;
+  sourceClipId?: string;
 }
 
-function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
+function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
+  const continuationAction = useAction(api.generateAnimation.generateContinuation);
+  const router = useRouter();
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState<GenerationStep>(null);
@@ -58,6 +63,10 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
 
   // Save clip dialog state
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  // Continuation and contextual action state
+  const [showAddToMovieDialog, setShowAddToMovieDialog] = useState(false);
+  const [savedClipId, setSavedClipId] = useState<string | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -123,6 +132,16 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
       setChatMessages([]);
     }
   }, [clipData, clipId]);
+
+  // Source clip query for continuation mode context display
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sourceClipData = useQuery(
+    api.clips.get,
+    sourceClipId ? { id: sourceClipId as any } : "skip"
+  );
+
+  // Effective clip ID: from URL param (editing existing) or from just-saved clip
+  const effectiveClipId = clipId ?? savedClipId;
 
   const handleGenerate = useCallback(
     async (prompt: string) => {
@@ -241,9 +260,59 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
     [editorCode, chatMessages, refine]
   );
 
+  const handleContinuationGenerate = useCallback(
+    async (prompt: string) => {
+      if (!sourceClipId) return;
+      setError(null);
+      setIsGenerating(true);
+      setIsEditing(false);
+      setEditedCode(null);
+      setSkipValidation(true);
+      validation.resetToValid();
+      setChatMessages([]);
+      setSavedClipId(null);
+
+      setCurrentStep("analyzing");
+      await new Promise((r) => setTimeout(r, 500));
+      setCurrentStep("generating");
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await continuationAction({
+          sourceClipId: sourceClipId as any,
+          prompt: prompt || undefined,
+        });
+
+        setCurrentStep("validating");
+        await new Promise((r) => setTimeout(r, 300));
+
+        setLastGeneration({
+          id: "continuation",
+          rawCode: result.rawCode,
+          code: result.code,
+          durationInFrames: result.durationInFrames,
+          fps: result.fps,
+        });
+        setLastPrompt(prompt || "Continuation from previous scene");
+        toast.success("Continuation generated!");
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : "Continuation failed";
+        setError({ message: errorMessage, retryCount: (error?.retryCount ?? 0) + 1 });
+        toast.error("Continuation generation failed");
+      } finally {
+        setIsGenerating(false);
+        setCurrentStep(null);
+      }
+    },
+    [sourceClipId, continuationAction, error?.retryCount, validation]
+  );
+
   const handleUnifiedSubmit = useCallback(
     async (text: string) => {
-      if (!lastGeneration) {
+      if (sourceClipId && !lastGeneration) {
+        // Continuation mode: first submission generates continuation
+        await handleContinuationGenerate(text);
+      } else if (!lastGeneration) {
         await handleGenerate(text);
       } else if (text.toLowerCase().startsWith("start over:")) {
         const newPrompt = text.replace(/^start over:\s*/i, "").trim();
@@ -260,7 +329,7 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
         await handleRefine(text);
       }
     },
-    [lastGeneration, handleGenerate, handleRefine, validation]
+    [sourceClipId, lastGeneration, handleGenerate, handleContinuationGenerate, handleRefine, validation]
   );
 
   const handleRetry = useCallback(() => {
@@ -269,14 +338,28 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
     }
   }, [lastPrompt, handleGenerate]);
 
-  const promptPlaceholder = selectedTemplate
-    ? "Describe how you'd like to customize this template..."
-    : undefined; // Let PromptInput choose based on hasExistingCode
+  const promptPlaceholder = sourceClipId
+    ? "Describe what should happen next (or press Enter for automatic continuation)..."
+    : selectedTemplate
+      ? "Describe how you'd like to customize this template..."
+      : undefined; // Let PromptInput choose based on hasExistingCode
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6">
+      {/* Continuation context banner */}
+      {sourceClipId && sourceClipData && !isGenerating && !lastGeneration && (
+        <div className="w-full max-w-2xl mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+          <p className="text-sm font-medium">
+            Generating continuation from: {sourceClipData.name}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            The next scene will start where this clip&apos;s animation ends.
+          </p>
+        </div>
+      )}
+
       {/* Template context banner */}
-      {selectedTemplate && !isGenerating && !lastGeneration && (
+      {selectedTemplate && !sourceClipId && !isGenerating && !lastGeneration && (
         <div className="w-full max-w-2xl mb-6 p-4 bg-muted/50 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
@@ -369,31 +452,41 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
             <div className="pt-2 border-t">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {clipId
+                  {effectiveClipId
                     ? "Render this clip to MP4 via cloud rendering"
                     : "Save as a clip first to enable MP4 rendering"}
                 </p>
                 <ClipRenderButton
-                  clipId={clipId ?? ""}
-                  disabled={!clipId || !lastGeneration}
+                  clipId={effectiveClipId ?? ""}
+                  disabled={!effectiveClipId || !lastGeneration}
                 />
               </div>
             </div>
 
-            {/* Save clip */}
+            {/* Contextual actions */}
             <div className="pt-2 border-t">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Save this composition to your library
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSaveDialog(true)}
-                >
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Save as Clip -- always available */}
+                <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(true)}>
                   <Save className="h-4 w-4 mr-2" />
                   Save as Clip
                 </Button>
+
+                {/* Add to Movie -- available when clip is saved */}
+                {effectiveClipId && (
+                  <Button variant="outline" size="sm" onClick={() => setShowAddToMovieDialog(true)}>
+                    <Film className="h-4 w-4 mr-2" />
+                    Add to Movie
+                  </Button>
+                )}
+
+                {/* Generate Next Scene -- available when clip is saved */}
+                {effectiveClipId && (
+                  <Button variant="outline" size="sm" onClick={() => router.push(`/create?sourceClipId=${effectiveClipId}`)}>
+                    <FastForward className="h-4 w-4 mr-2" />
+                    Generate Next Scene
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -442,7 +535,16 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
         durationInFrames={lastGeneration?.durationInFrames ?? 90}
         fps={lastGeneration?.fps ?? 30}
         defaultName={lastPrompt.slice(0, 50) || "Untitled Clip"}
+        onSaved={(newClipId) => setSavedClipId(newClipId)}
       />
+
+      {effectiveClipId && (
+        <AddToMovieDialog
+          open={showAddToMovieDialog}
+          onOpenChange={setShowAddToMovieDialog}
+          clipId={effectiveClipId}
+        />
+      )}
     </div>
   );
 }
@@ -450,9 +552,10 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
 interface CreatePageClientProps {
   selectedTemplate: Template | null;
   clipId?: string;
+  sourceClipId?: string;
 }
 
-export function CreatePageClient({ selectedTemplate, clipId }: CreatePageClientProps) {
+export function CreatePageClient({ selectedTemplate, clipId, sourceClipId }: CreatePageClientProps) {
   return (
     <div className="flex-1 flex flex-col">
       <AuthLoading>
@@ -468,7 +571,7 @@ export function CreatePageClient({ selectedTemplate, clipId }: CreatePageClientP
       </Unauthenticated>
 
       <Authenticated>
-        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} />
+        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} />
       </Authenticated>
     </div>
   );
