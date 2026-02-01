@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Timeline } from "./timeline";
 import { AddScenePanel } from "./add-scene-panel";
 import { MoviePreviewPlayer } from "@/components/movie/movie-preview-player";
+import { MovieRenderButton } from "@/components/movie/movie-render-button";
+import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
 
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
@@ -118,6 +120,21 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     [validScenes]
   );
 
+  // Build export scenes array with rawCode for zip export
+  const exportScenes = useMemo(
+    () =>
+      scenesWithClips
+        .filter((s) => s.clip !== null)
+        .map((s) => ({
+          rawCode: s.clip!.rawCode,
+          name: s.clip!.name,
+          durationInFrames: s.clip!.durationInFrames,
+          fps: s.clip!.fps,
+        })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(scenesWithClips)]
+  );
+
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Header */}
@@ -132,7 +149,18 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               : "Empty"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <MovieRenderButton
+            movieId={movieId}
+            disabled={validScenes.length === 0}
+          />
+          <MovieExportButtons
+            movieName={movie.name}
+            scenes={exportScenes}
+            totalDurationInFrames={totalDurationInFrames}
+            fps={movie.fps}
+            disabled={validScenes.length === 0}
+          />
           <Button onClick={() => setShowAddScene(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Scene
