@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 11 of 12 (Movie Preview, Render & Export) -- IN PROGRESS
-Plan: 1 of 3 in phase 11 (wave 1: plan 01 complete)
-Status: In progress. Plan 11-01 (Movie Preview Player) complete.
-Last activity: 2026-02-01 -- Completed 11-01-PLAN.md (Movie Preview Player)
+Plan: 2 of 3 in phase 11 (wave 1: plans 01 + 02 complete, plan 03 remaining)
+Status: In progress. Plans 11-01 (Movie Preview Player) and 11-02 (Render Pipeline) complete.
+Last activity: 2026-02-01 -- Completed 11-02-PLAN.md (Movie Render Pipeline)
 
-Progress: [=================.] 94% (29/~33 plans across all milestones)
+Progress: [=================.] 94% (30/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [=================.] 94% (29/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 29
-- Total execution time: ~126.0 min
+- Total plans completed: 30
+- Total execution time: ~128.0 min
 
 **v1.1 Breakdown:**
 
@@ -45,7 +45,7 @@ Progress: [=================.] 94% (29/~33 plans across all milestones)
 |-------|-------|-------|----------|
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
 | 10-movie-data-timeline-ui | 3/3 | 7.0 min | 2.3 min |
-| 11-movie-preview-render-export | 1/3 | 3 min | 3.0 min |
+| 11-movie-preview-render-export | 2/3 | 5 min | 2.5 min |
 
 ## Accumulated Context
 
@@ -72,6 +72,9 @@ Recent decisions affecting v2.0:
 - useSyncExternalStore for Remotion Player frame tracking, not useState polling (11-01)
 - Filter null clips from validScenes for partially-loaded movies (11-01)
 - JSON.stringify dependency for useMemo on scenesWithClips, consistent with timeline pattern (11-01)
+- Optional generationId/movieId/clipId on renders table for polymorphic render tracking (11-02)
+- MOVIE_RENDER_LIMITS: 120s video, 240s Lambda timeout, 20 scene max, 3s poll (11-02)
+- startClipRender uses DynamicCode composition; startMovieRender uses MovieComposition (11-02)
 
 ### Pending Todos
 
@@ -82,15 +85,15 @@ None.
 - AWS Lambda setup pending -- code integration complete but not tested with real Lambda
 - Function constructor security needs adversarial testing before production
 - End-state extraction for continuation generation is HIGH-RISK novel work (research flag)
-- Lambda timeout/payload limits need adjustment for multi-scene movie rendering
+- Lambda bundle must register MovieComposition and DynamicCode compositions for movie/clip renders to work
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 11-01-PLAN.md (Movie Preview Player)
+Stopped at: Completed 11-02-PLAN.md (Movie Render Pipeline)
 Resume file: None
 
-Next step: Execute 11-02-PLAN.md (Render & Export) -- wave 1
+Next step: Execute 11-03-PLAN.md (Movie Export) -- wave 2
 
 ---
-*Plan 11-01 complete -- 2026-02-01*
+*Plan 11-02 complete -- 2026-02-01*
