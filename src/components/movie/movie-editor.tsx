@@ -62,44 +62,19 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     }
   };
 
-  // Loading state
-  if (movie === undefined) {
-    return (
-      <div className="flex-1 flex flex-col h-full">
-        <div className="border-b px-6 py-4">
-          <div className="h-7 bg-muted animate-pulse rounded w-48 mb-2" />
-          <div className="h-4 bg-muted animate-pulse rounded w-32" />
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  // Not found state
-  if (movie === null) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-center">
-        <div>
-          <Film className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-lg font-semibold mb-1">Movie not found</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            This movie may have been deleted or the link is invalid.
-          </p>
-          <Button asChild>
-            <Link href="/movie">Back to Movies</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   // Prepare scenes data with corresponding clips for the timeline
-  const scenesWithClips = movie.scenes.map((scene, index) => ({
-    clipId: scene.clipId,
-    clip: movie.sceneClips[index] ?? null,
-  }));
+  // Must be above early returns so hooks below are always called
+  const scenesWithClips = useMemo(
+    () =>
+      movie
+        ? movie.scenes.map((scene, index) => ({
+            clipId: scene.clipId,
+            clip: movie.sceneClips[index] ?? null,
+          }))
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [movie ? JSON.stringify(movie.scenes) : null, movie?.sceneClips]
+  );
 
   // Build valid scenes array for the preview player (only scenes with loaded clips)
   const validScenes = useMemo(
@@ -134,6 +109,39 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(scenesWithClips)]
   );
+
+  // Loading state
+  if (movie === undefined) {
+    return (
+      <div className="flex-1 flex flex-col h-full">
+        <div className="border-b px-6 py-4">
+          <div className="h-7 bg-muted animate-pulse rounded w-48 mb-2" />
+          <div className="h-4 bg-muted animate-pulse rounded w-32" />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (movie === null) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-center">
+        <div>
+          <Film className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-lg font-semibold mb-1">Movie not found</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            This movie may have been deleted or the link is invalid.
+          </p>
+          <Button asChild>
+            <Link href="/movie">Back to Movies</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full">
