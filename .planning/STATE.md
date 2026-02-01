@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 11 complete, Phase 12 remaining)
+**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 12 in progress)
 
 ## Current Position
 
-Phase: 12 of 12 (Continuation Generation) -- PLANNED
-Plan: 0 of 2 in phase 12 (2 plans in 2 waves)
-Status: Phase 12 planned. Research complete, plans verified. Ready for execution.
-Last activity: 2026-02-01 -- Phase 12 planning complete (research + 2 plans + verification passed)
+Phase: 12 of 12 (Continuation Generation) -- IN PROGRESS
+Plan: 1 of 2 in phase 12 (2 plans in 2 waves)
+Status: Plan 12-01 complete. generateContinuation backend ready. Plan 12-02 (UI) remaining.
+Last activity: 2026-02-01 -- Completed 12-01-PLAN.md (continuation generation backend)
 
-Progress: [==================.] 97% (31/~33 plans across all milestones)
+Progress: [==================.] 97% (32/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [==================.] 97% (31/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 31
-- Total execution time: ~136.0 min
+- Total plans completed: 32
+- Total execution time: ~138.0 min
 
 **v1.1 Breakdown:**
 
@@ -46,6 +46,7 @@ Progress: [==================.] 97% (31/~33 plans across all milestones)
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
 | 10-movie-data-timeline-ui | 3/3 | 7.0 min | 2.3 min |
 | 11-movie-preview-render-export | 3/3 | 13 min | 4.3 min |
+| 12-continuation-generation | 1/2 | 2 min | 2.0 min |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting v2.0:
 - Inline progress/download UI in MovieRenderButton rather than reusing shared components (11-03)
 - Duplicate generateTsConfig/generateRemotionConfig in export-movie-zip rather than modifying export-project-zip (11-03)
 - Export instructions modal after zip download to guide user through setup (11-03)
+- CONTINUATION_SYSTEM_PROMPT inlined as const in generateAnimation.ts, matching existing prompt pattern (12-01)
+- generateContinuation returns directly (no DB persist), matching refine action pattern (12-01)
+- fps always 30 for continuation consistency (12-01)
 
 ### Pending Todos
 
@@ -87,16 +91,16 @@ None.
 
 - AWS Lambda setup pending -- code integration complete but not tested with real Lambda
 - Function constructor security needs adversarial testing before production
-- End-state extraction uses LLM code reading (not static AST analysis) -- validated in 12-RESEARCH.md
+- End-state extraction uses LLM code reading (not static AST analysis) -- implemented in 12-01
 - Lambda bundle must register MovieComposition and DynamicCode compositions for movie/clip renders to work
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Phase 12 planning complete (research + 2 plans verified)
+Stopped at: Completed 12-01-PLAN.md (continuation generation backend)
 Resume file: None
 
-Next step: `/gsd:execute-phase 12` to execute continuation generation
+Next step: Execute 12-02-PLAN.md (continuation UI -- create page flow, timeline buttons, add-to-movie)
 
 ---
-*Phase 12 planned -- 2026-02-01*
+*Plan 12-01 complete -- 2026-02-01*
