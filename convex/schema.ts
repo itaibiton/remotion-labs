@@ -51,6 +51,21 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_updated", ["userId", "updatedAt"]),
 
+  movies: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    scenes: v.array(v.object({
+      clipId: v.id("clips"),
+      durationOverride: v.optional(v.number()),
+    })),
+    totalDurationInFrames: v.number(),
+    fps: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_updated", ["userId", "updatedAt"]),
+
   renders: defineTable({
     userId: v.string(),
     generationId: v.id("generations"),
