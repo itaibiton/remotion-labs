@@ -1,14 +1,62 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Film } from "lucide-react";
+import { Film, Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Timeline } from "./timeline";
+import { AddScenePanel } from "./add-scene-panel";
 
 export function MovieEditor({ movieId }: { movieId: string }) {
+  const [showAddScene, setShowAddScene] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const movie = useQuery(api.movies.getWithClips, { id: movieId as any });
+  const addScene = useMutation(api.movies.addScene);
+  const removeScene = useMutation(api.movies.removeScene);
+  const reorderScenes = useMutation(api.movies.reorderScenes);
+
+  const handleAddClip = async (clipId: string) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await addScene({ movieId: movie!._id as any, clipId: clipId as any });
+      toast.success("Scene added");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add scene"
+      );
+    }
+  };
+
+  const handleRemoveScene = async (sceneIndex: number) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await removeScene({ movieId: movie!._id as any, sceneIndex });
+      toast.success("Scene removed");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove scene"
+      );
+    }
+  };
+
+  const handleReorder = async (newScenes: Array<{ clipId: string }>) => {
+    try {
+      await reorderScenes({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        movieId: movie!._id as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sceneOrder: newScenes.map((s) => ({ clipId: s.clipId as any })),
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reorder"
+      );
+    }
+  };
 
   // Loading state
   if (movie === undefined) {
@@ -43,6 +91,12 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     );
   }
 
+  // Prepare scenes data with corresponding clips for the timeline
+  const scenesWithClips = movie.scenes.map((scene, index) => ({
+    clipId: scene.clipId,
+    clip: movie.sceneClips[index] ?? null,
+  }));
+
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Header */}
@@ -58,11 +112,14 @@ export function MovieEditor({ movieId }: { movieId: string }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Placeholder for future preview/render buttons (Phase 11) */}
+          <Button onClick={() => setShowAddScene(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Scene
+          </Button>
         </div>
       </div>
 
-      {/* Timeline area - placeholder for Plan 03 */}
+      {/* Timeline area */}
       <div className="flex-1 flex flex-col">
         {movie.scenes.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-center">
@@ -72,18 +129,29 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               <p className="text-sm text-muted-foreground mb-4">
                 Add clips from your library to build your movie
               </p>
-              {/* Add Scene button - will be wired in Plan 03 */}
+              <Button onClick={() => setShowAddScene(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Scene
+              </Button>
             </div>
           </div>
         ) : (
           <div className="p-6">
-            {/* Timeline component will be rendered here in Plan 03 */}
-            <p className="text-muted-foreground text-sm">
-              Timeline: {movie.scenes.length} scenes loaded
-            </p>
+            <Timeline
+              scenes={scenesWithClips}
+              onReorder={handleReorder}
+              onRemove={handleRemoveScene}
+            />
           </div>
         )}
       </div>
+
+      {/* Add Scene Dialog */}
+      <AddScenePanel
+        open={showAddScene}
+        onOpenChange={setShowAddScene}
+        onAddClip={handleAddClip}
+      />
     </div>
   );
 }
