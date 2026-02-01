@@ -45,7 +45,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### v0.2.0 -- Create Page Overhaul
 
 - [x] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
-- [ ] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
+- [x] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
 - [ ] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
 - [ ] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
 - [ ] **Phase 17: Prequel Generation** - Users can generate animations that lead into an existing clip's start state
@@ -292,8 +292,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md -- Parallel generation action (batchId orchestration, temperature 0.9, variation count)
-- [ ] 14-02-PLAN.md -- Variation grid in feed rows, selection/expansion UI, and variation count selector
+- [x] 14-01-PLAN.md -- Parallel generation action (helper extraction, Promise.all, temperature 0.9)
+- [x] 14-02-PLAN.md -- Variation grid in feed rows, selection/expansion UI, and variation count selector
 
 ### Phase 15: Image Upload & Input Bar
 **Goal**: Users can attach reference images and use a unified input bar with all generation controls
@@ -360,7 +360,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 11. Movie Preview, Render & Export | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 12. Continuation Generation | v2.0 | 2/2 | Complete | 2026-02-01 |
 | 13. Generation Feed & Settings | v0.2.0 | 3/3 | Complete | 2026-02-01 |
-| 14. Variations | v0.2.0 | 0/2 | Not started | - |
+| 14. Variations | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 15. Image Upload & Input Bar | v0.2.0 | 0/3 | Not started | - |
 | 16. Per-Creation Actions | v0.2.0 | 0/2 | Not started | - |
 | 17. Prequel Generation | v0.2.0 | 0/2 | Not started | - |

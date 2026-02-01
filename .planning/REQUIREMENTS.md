@@ -51,8 +51,8 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Variations
 
-- [ ] **VAR-01**: User can choose number of variations (1-4) per generation; system produces that many distinct compositions from one prompt via parallel Claude calls
-- [ ] **VAR-02**: User can select a specific variation to preview full-size, edit, save, or use as basis for continuation
+- [x] **VAR-01**: User can choose number of variations (1-4) per generation; system produces that many distinct compositions from one prompt via parallel Claude calls
+- [x] **VAR-02**: User can select a specific variation to preview full-size, edit, save, or use as basis for continuation
 
 ### Generation Settings
 
@@ -122,8 +122,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FEED-02 | Phase 13 | Complete |
 | SET-01 | Phase 13 | Complete |
 | SET-02 | Phase 13 | Complete |
-| VAR-01 | Phase 14 | Pending |
-| VAR-02 | Phase 14 | Pending |
+| VAR-01 | Phase 14 | Complete |
+| VAR-02 | Phase 14 | Complete |
 | UPLOAD-01 | Phase 15 | Pending |
 | INPUT-01 | Phase 15 | Pending |
 | ACT-01 | Phase 16 | Pending |
