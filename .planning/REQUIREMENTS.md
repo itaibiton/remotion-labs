@@ -17,13 +17,13 @@ Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roa
 
 - [x] **MOVIE-01**: User can create/open a movie with an ordered list of scenes, each referencing a clip
 - [x] **MOVIE-02**: Horizontal timeline UI shows scenes in order with duration bars; user can reorder, remove, and add scenes
-- [ ] **MOVIE-03**: User can preview the full movie (all scenes in sequence) in one Remotion Player via Series composition
-- [ ] **MOVIE-04**: User can render the full movie to one MP4 via Lambda
+- [x] **MOVIE-03**: User can preview the full movie (all scenes in sequence) in one Remotion Player via Series composition
+- [x] **MOVIE-04**: User can render the full movie to one MP4 via Lambda
 
 ### Export
 
-- [ ] **OUT-03**: User can export a single clip as MP4 and/or Remotion source without rendering the whole movie
-- [ ] **OUT-04**: User can export the full movie as one MP4 and/or Remotion project (multi-composition)
+- [x] **OUT-03**: User can export a single clip as MP4 and/or Remotion source without rendering the whole movie
+- [x] **OUT-04**: User can export the full movie as one MP4 and/or Remotion project (multi-composition)
 
 ### Continuation Generation
 
@@ -35,7 +35,7 @@ Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roa
 - [x] **UI-01**: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
 - [ ] **UI-02**: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
 - [x] **UI-03**: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
-- [ ] **UI-04**: Video preview shows a timeline bar with playhead, duration display, and scrub capability (partially: timeline exists, playhead/scrub in Phase 11)
+- [x] **UI-04**: Video preview shows a timeline bar with playhead, duration display, and scrub capability
 
 ## Future Requirements
 
@@ -79,16 +79,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAVE-03 | Phase 9: App Shell & Clip Library | Complete |
 | MOVIE-01 | Phase 10: Movie Data & Timeline UI | Complete |
 | MOVIE-02 | Phase 10: Movie Data & Timeline UI | Complete |
-| MOVIE-03 | Phase 11: Movie Preview, Render & Export | Pending |
-| MOVIE-04 | Phase 11: Movie Preview, Render & Export | Pending |
-| OUT-03 | Phase 11: Movie Preview, Render & Export | Pending |
-| OUT-04 | Phase 11: Movie Preview, Render & Export | Pending |
+| MOVIE-03 | Phase 11: Movie Preview, Render & Export | Complete |
+| MOVIE-04 | Phase 11: Movie Preview, Render & Export | Complete |
+| OUT-03 | Phase 11: Movie Preview, Render & Export | Complete |
+| OUT-04 | Phase 11: Movie Preview, Render & Export | Complete |
 | GEN-06 | Phase 12: Continuation Generation | Pending |
 | GEN-07 | Phase 12: Continuation Generation | Pending |
 | UI-01 | Phase 9: App Shell & Clip Library | Complete |
 | UI-02 | Phase 12: Continuation Generation | Pending |
 | UI-03 | Phase 10: Movie Data & Timeline UI | Complete |
-| UI-04 | Phase 10: Movie Data & Timeline UI | Partial (playhead/scrub in Phase 11) |
+| UI-04 | Phase 11: Movie Preview, Render & Export | Complete |
 
 **Coverage:**
 - v2.0 requirements: 15 total
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-02-01 -- Phase 10 requirements marked Complete (MOVIE-01, MOVIE-02, UI-03; UI-04 partial)*
+*Last updated: 2026-02-01 -- Phase 11 requirements marked Complete (MOVIE-03, MOVIE-04, OUT-03, OUT-04, UI-04)*
