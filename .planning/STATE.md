@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 16 in progress (per-creation actions)
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 16 complete, Phase 17 next (prequel generation)
 
 ## Current Position
 
 Phase: 16 of 17 (Per-Creation Actions)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-01 -- Completed 16-01-PLAN.md (action dropdown with save, delete, rerun)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 -- Completed 16-02-PLAN.md (extend-next action wiring)
 
-Progress: [###############     ] 69% (9/13 plans)
+Progress: [################    ] 77% (10/13 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [###############     ] 69% (9/13 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 38
-- Total execution time: ~160.0 min
+- Total plans completed: 39
+- Total execution time: ~162.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -43,7 +43,7 @@ Progress: [###############     ] 69% (9/13 plans)
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
 | 14-variations | 2/2 | 6 min | 3.0 min |
 | 15-image-upload-input-bar | 3/3 | 8 min | 2.7 min |
-| 16-per-creation-actions | 1/2 | 5 min | 5.0 min |
+| 16-per-creation-actions | 2/2 | 7 min | 3.5 min |
 
 ## Accumulated Context
 
@@ -88,6 +88,9 @@ v0.2.0 decisions:
 - Rerun preserves all original generation settings (aspect ratio, duration, fps, variation count)
 - Per-variation overlay actions shown on hover with opacity transition
 - Batch-level actions use first variation as representative
+- Extend Next auto-saves generation as clip before navigation (reuses clips.save mutation)
+- No Extend Previous button until Phase 17 builds prequel backend
+- Save-then-navigate pattern: auto-save as clip, toast feedback, router.push to continuation URL
 
 ### Pending Todos
 
@@ -104,12 +107,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T21:47Z
-Stopped at: Completed 16-01-PLAN.md (action dropdown with save, delete, rerun)
+Last session: 2026-02-01T21:51Z
+Stopped at: Completed 16-02-PLAN.md (extend-next action wiring -- Phase 16 complete)
 Resume file: None
 
-Next step: Execute 16-02-PLAN.md (remaining per-creation actions)
+Next step: Execute Phase 17 (prequel generation)
 
 ---
-*16-01 complete -- 2026-02-01*
-*Per-generation action dropdown with save-to-library, delete (confirmation), and rerun wired through feed into create page*
+*16-02 complete -- 2026-02-01*
+*Extend Next dropdown action auto-saves generation as clip and navigates to continuation mode*
