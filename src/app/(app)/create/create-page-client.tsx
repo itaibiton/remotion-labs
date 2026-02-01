@@ -43,14 +43,16 @@ interface CreateContentProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
+  mode?: string;
 }
 
-function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContentProps) {
+function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
   const generateVariationsAction = useAction(api.generateAnimation.generateVariations);
   const continuationAction = useAction(api.generateAnimation.generateContinuation);
+  const prequelAction = useAction(api.generateAnimation.generatePrequel);
   const removeGeneration = useMutation(api.generations.remove);
   const saveClip = useMutation(api.clips.save);
   const router = useRouter();
@@ -354,10 +356,60 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     [sourceClipId, continuationAction, error?.retryCount, validation]
   );
 
+  const handlePrequelGenerate = useCallback(
+    async (prompt: string) => {
+      if (!sourceClipId) return;
+      setError(null);
+      setIsGenerating(true);
+      setIsEditing(false);
+      setEditedCode(null);
+      setSkipValidation(true);
+      validation.resetToValid();
+      setChatMessages([]);
+      setSavedClipId(null);
+
+      setCurrentStep("analyzing");
+      await new Promise((r) => setTimeout(r, 500));
+      setCurrentStep("generating");
+
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await prequelAction({
+          sourceClipId: sourceClipId as any,
+          prompt: prompt || undefined,
+        });
+
+        setCurrentStep("validating");
+        await new Promise((r) => setTimeout(r, 300));
+
+        setLastGeneration({
+          id: "prequel",
+          rawCode: result.rawCode,
+          code: result.code,
+          durationInFrames: result.durationInFrames,
+          fps: result.fps,
+        });
+        setLastPrompt(prompt || "Prequel leading into target scene");
+        toast.success("Prequel generated!");
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : "Prequel failed";
+        setError({ message: errorMessage, retryCount: (error?.retryCount ?? 0) + 1 });
+        toast.error("Prequel generation failed");
+      } finally {
+        setIsGenerating(false);
+        setCurrentStep(null);
+      }
+    },
+    [sourceClipId, prequelAction, error?.retryCount, validation]
+  );
+
   const handleUnifiedSubmit = useCallback(
     async (text: string, imageIds: string[]) => {
       const imgIds = imageIds.length > 0 ? imageIds : undefined;
-      if (sourceClipId && !lastGeneration) {
+      if (sourceClipId && mode === "prequel" && !lastGeneration) {
+        // Prequel mode: first submission generates prequel (no images)
+        await handlePrequelGenerate(text);
+      } else if (sourceClipId && !lastGeneration) {
         // Continuation mode: first submission generates continuation (no images)
         await handleContinuationGenerate(text);
       } else if (!lastGeneration) {
@@ -378,7 +430,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         await handleRefine(text);
       }
     },
-    [sourceClipId, lastGeneration, handleGenerate, handleContinuationGenerate, handleRefine, validation]
+    [sourceClipId, mode, lastGeneration, handleGenerate, handleContinuationGenerate, handlePrequelGenerate, handleRefine, validation]
   );
 
   const handleRetry = useCallback(() => {
@@ -452,6 +504,27 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       router.push(`/create?sourceClipId=${clipId}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start continuation");
+    }
+  }, [saveClip, router]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleExtendPreviousGeneration = useCallback(async (generation: any) => {
+    if (!generation.code || !generation.rawCode) {
+      toast.error("Cannot extend: generation has no code");
+      return;
+    }
+    try {
+      const clipId = await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved as clip -- opening prequel generation...");
+      router.push(`/create?sourceClipId=${clipId}&mode=prequel`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to start prequel generation");
     }
   }, [saveClip, router]);
 
@@ -545,7 +618,9 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     }
   }, [generate, generateVariationsAction, validation]);
 
-  const promptPlaceholder = sourceClipId
+  const promptPlaceholder = sourceClipId && mode === "prequel"
+    ? "Describe what should lead into this scene (or press Enter for automatic prequel)..."
+    : sourceClipId
     ? "Describe what should happen next (or press Enter for automatic continuation)..."
     : selectedTemplate
       ? "Describe how you'd like to customize this template..."
@@ -557,10 +632,14 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       {sourceClipId && sourceClipData && !isGenerating && !lastGeneration && (
         <div className="w-full max-w-2xl mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <p className="text-sm font-medium">
-            Generating continuation from: {sourceClipData.name}
+            {mode === "prequel"
+              ? `Generating prequel for: ${sourceClipData.name}`
+              : `Generating continuation from: ${sourceClipData.name}`}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            The next scene will start where this clip&apos;s animation ends.
+            {mode === "prequel"
+              ? "The new scene will lead into this clip\u0027s opening frame."
+              : "The next scene will start where this clip\u0027s animation ends."}
           </p>
         </div>
       )}
@@ -747,6 +826,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
             onDeleteGeneration={handleDeleteGeneration}
             onRerunGeneration={handleRerunGeneration}
             onExtendNextGeneration={handleExtendNextGeneration}
+            onExtendPreviousGeneration={handleExtendPreviousGeneration}
           />
         </div>
       )}
@@ -777,9 +857,10 @@ interface CreatePageClientProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
+  mode?: string;
 }
 
-export function CreatePageClient({ selectedTemplate, clipId, sourceClipId }: CreatePageClientProps) {
+export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, mode }: CreatePageClientProps) {
   return (
     <div className="flex-1 flex flex-col">
       <AuthLoading>
@@ -795,7 +876,7 @@ export function CreatePageClient({ selectedTemplate, clipId, sourceClipId }: Cre
       </Unauthenticated>
 
       <Authenticated>
-        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} />
+        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} mode={mode} />
       </Authenticated>
     </div>
   );
