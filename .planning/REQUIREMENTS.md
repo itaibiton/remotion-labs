@@ -1,11 +1,12 @@
-# Requirements: RemotionLab v2.0
+# Requirements: RemotionLab v0.2.0
 
-**Defined:** 2026-01-29
+**Defined:** 2026-02-01
 **Core Value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
-## v2.0 Requirements
+## v2.0 Requirements (Complete)
 
-Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roadmap phases.
+<details>
+<summary>v2.0 — Scenes, Timeline & Movie Editor (15/15 complete)</summary>
 
 ### Save & Library
 
@@ -37,9 +38,47 @@ Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roa
 - [x] **UI-03**: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
 - [x] **UI-04**: Video preview shows a timeline bar with playhead, duration display, and scrub capability
 
+</details>
+
+## v0.2.0 Requirements — Create Page Overhaul
+
+Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases starting from Phase 13.
+
+### Generation Feed
+
+- [ ] **FEED-01**: Create page displays all past generations as a scrolling feed (newest first), each row showing variation thumbnails and prompt text
+- [ ] **FEED-02**: Each generation row shows 1-4 variation previews in a grid layout with the prompt/metadata on the side
+
+### Variations
+
+- [ ] **VAR-01**: User can choose number of variations (1-4) per generation; system produces that many distinct compositions from one prompt via parallel Claude calls
+- [ ] **VAR-02**: User can select a specific variation to preview full-size, edit, save, or use as basis for continuation
+
+### Generation Settings
+
+- [ ] **SET-01**: User can configure aspect ratio (portrait 9:16, square 1:1, landscape 16:9) from a settings panel before generating
+- [ ] **SET-02**: User can configure duration and FPS from the settings panel; settings persist as user defaults via localStorage
+
+### Image Upload
+
+- [ ] **UPLOAD-01**: User can attach 1-3 reference images to a prompt; images are uploaded to Convex file storage and passed to Claude as visual context for generation
+
+### Per-Creation Actions
+
+- [ ] **ACT-01**: Each generation has extend-next (continuation from end state) and extend-previous (prequel leading into start state) actions
+- [ ] **ACT-02**: Each generation has save (to clip library), delete (from feed), and rerun (regenerate with same prompt/settings) actions
+
+### Input Bar
+
+- [ ] **INPUT-01**: Input bar redesigned with prompt textarea, image upload button, settings toggle button, and variation count selector
+
+### Prequel Generation
+
+- [ ] **PREQUEL-01**: System can analyze a clip's code to extract its start state (frame 0 visual state) and generate a prequel animation that ends at that start state
+
 ## Future Requirements
 
-Deferred to v2.1+. Tracked but not in current roadmap.
+Deferred to v0.3+. Tracked but not in current roadmap.
 
 ### Transitions
 
@@ -52,6 +91,11 @@ Deferred to v2.1+. Tracked but not in current roadmap.
 - **POLISH-02**: Scene-aware prompt context (Claude knows about surrounding scenes when generating)
 - **POLISH-03**: Timeline playhead syncs with preview Player position during scrub
 
+### Feed Enhancement
+
+- **FEED-03**: Feed supports infinite scroll with virtualization for 100+ generations
+- **FEED-04**: Feed has date-based navigation (jump to specific day's generations)
+
 ## Out of Scope
 
 Explicitly excluded. Documented to prevent scope creep.
@@ -63,10 +107,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | Visual drag-and-drop to trim scene duration | Duration is set by code, not timeline handles |
 | Real-time collaboration | Solo creation first; Convex reactive queries enable later |
 | Sharing/publishing movies | Distribution feature, not creation; export MP4 suffices |
-| Storyboard view | Timeline is the primary view; library serves as overview |
-| Undo/redo for timeline operations | Simple operations with confirmation; incremental later |
 | Payments/subscriptions | Focus on core value first |
-| Custom transitions (code-based) | Preset transitions only; code editor for transitions is too complex |
+| Feed virtualization (v0.2) | Simple pagination sufficient for MVP; add when performance demands |
+| Image generation (not animation) | RemotionLab generates motion graphics code, not static images |
+| Custom aspect ratios (arbitrary) | 3 presets (16:9, 1:1, 9:16) sufficient for MVP |
 
 ## Traceability
 
@@ -74,27 +118,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAVE-01 | Phase 9: App Shell & Clip Library | Complete |
-| SAVE-02 | Phase 9: App Shell & Clip Library | Complete |
-| SAVE-03 | Phase 9: App Shell & Clip Library | Complete |
-| MOVIE-01 | Phase 10: Movie Data & Timeline UI | Complete |
-| MOVIE-02 | Phase 10: Movie Data & Timeline UI | Complete |
-| MOVIE-03 | Phase 11: Movie Preview, Render & Export | Complete |
-| MOVIE-04 | Phase 11: Movie Preview, Render & Export | Complete |
-| OUT-03 | Phase 11: Movie Preview, Render & Export | Complete |
-| OUT-04 | Phase 11: Movie Preview, Render & Export | Complete |
-| GEN-06 | Phase 12: Continuation Generation | Complete |
-| GEN-07 | Phase 12: Continuation Generation | Complete |
-| UI-01 | Phase 9: App Shell & Clip Library | Complete |
-| UI-02 | Phase 12: Continuation Generation | Complete |
-| UI-03 | Phase 10: Movie Data & Timeline UI | Complete |
-| UI-04 | Phase 11: Movie Preview, Render & Export | Complete |
+| FEED-01 | TBD | Pending |
+| FEED-02 | TBD | Pending |
+| VAR-01 | TBD | Pending |
+| VAR-02 | TBD | Pending |
+| SET-01 | TBD | Pending |
+| SET-02 | TBD | Pending |
+| UPLOAD-01 | TBD | Pending |
+| ACT-01 | TBD | Pending |
+| ACT-02 | TBD | Pending |
+| INPUT-01 | TBD | Pending |
+| PREQUEL-01 | TBD | Pending |
 
 **Coverage:**
-- v2.0 requirements: 15 total
-- Mapped to phases: 15
-- Unmapped: 0
+- v0.2.0 requirements: 11 total
+- Mapped to phases: 0 (pending roadmap creation)
+- Unmapped: 11
 
 ---
-*Requirements defined: 2026-01-29*
-*Last updated: 2026-02-01 -- Phase 12 requirements marked Complete (GEN-06, GEN-07, UI-02). All v2.0 requirements complete.*
+*Requirements defined: 2026-02-01*
+*Last updated: 2026-02-01 -- v0.2.0 requirements defined, pending roadmap mapping*
