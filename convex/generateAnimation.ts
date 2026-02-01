@@ -618,6 +618,145 @@ export const generate = action({
 });
 
 // ============================================================================
+// Variations Action (parallel generation)
+// ============================================================================
+
+/**
+ * Generate 1-4 distinct Remotion compositions from a single prompt.
+ * Runs Claude API calls in parallel with temperature 0.9 for diversity.
+ * Each variation is stored with a shared batchId and unique variationIndex.
+ * Per-promise error handling ensures partial failures don't lose successful results.
+ */
+export const generateVariations = action({
+  args: {
+    prompt: v.string(),
+    variationCount: v.number(),
+    aspectRatio: v.optional(v.string()),
+    durationInSeconds: v.optional(v.number()),
+    fps: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<{
+    batchId: string;
+    variations: Array<{
+      id: string;
+      rawCode: string;
+      code: string;
+      durationInFrames: number;
+      fps: number;
+      variationIndex: number;
+    }>;
+  }> => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("You must be logged in to generate animations");
+    }
+
+    // Validate inputs
+    if (args.prompt.length > 2000) {
+      throw new Error("Prompt too long. Please use 2000 characters or less.");
+    }
+    if (args.variationCount < 1 || args.variationCount > 4) {
+      throw new Error("Variation count must be between 1 and 4.");
+    }
+
+    // Create Anthropic client
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "ANTHROPIC_API_KEY not configured. Please set it in your Convex environment variables."
+      );
+    }
+
+    const client = new Anthropic({ apiKey });
+
+    // Resolve generation settings with defaults
+    const aspectRatio = args.aspectRatio ?? "16:9";
+    const dimensions = ASPECT_RATIO_MAP[aspectRatio] ?? { width: 1920, height: 1080 };
+    const targetDuration = args.durationInSeconds ?? 3;
+    const targetFps = args.fps ?? 30;
+    const targetFrames = Math.round(targetDuration * targetFps);
+
+    // Inject settings into system prompt
+    const enhancedPrompt = SYSTEM_PROMPT +
+      `\n\nIMPORTANT COMPOSITION SETTINGS:\n` +
+      `- Dimensions: ${dimensions.width}x${dimensions.height} (${aspectRatio})\n` +
+      `- Duration: ${targetFrames} frames at ${targetFps} FPS\n` +
+      `- Use // DURATION: ${targetFrames} and // FPS: ${targetFps} in your output\n` +
+      `- Design your layout for ${aspectRatio} aspect ratio`;
+
+    // Generate batchId and set temperature for variation diversity
+    const batchId = crypto.randomUUID();
+    const temperature = 0.9;
+
+    // Capture consistent timestamp before starting parallel calls
+    const createdAt = Date.now();
+
+    // Create variation promises with per-promise error handling
+    const variationPromises = Array.from(
+      { length: args.variationCount },
+      (_, index) =>
+        generateSingleVariation(client, args.prompt, enhancedPrompt, temperature)
+          .then(async (result) => {
+            // Store successful variation
+            const id = await ctx.runMutation(internal.generations.store, {
+              userId: identity.tokenIdentifier,
+              prompt: args.prompt,
+              code: result.code,
+              rawCode: result.rawCode,
+              durationInFrames: result.durationInFrames,
+              fps: targetFps,
+              status: "success" as const,
+              createdAt,
+              batchId,
+              variationIndex: index,
+              variationCount: args.variationCount,
+              aspectRatio,
+              durationInSeconds: targetDuration,
+            });
+            return {
+              id: String(id),
+              rawCode: result.rawCode,
+              code: result.code,
+              durationInFrames: result.durationInFrames,
+              fps: targetFps,
+              variationIndex: index,
+            };
+          })
+          .catch(async (error) => {
+            // Store failed variation so user sees partial results
+            await ctx.runMutation(internal.generations.store, {
+              userId: identity.tokenIdentifier,
+              prompt: args.prompt,
+              status: "failed" as const,
+              errorMessage:
+                error instanceof Error ? error.message : "Generation failed",
+              createdAt,
+              batchId,
+              variationIndex: index,
+              variationCount: args.variationCount,
+              aspectRatio,
+              durationInSeconds: targetDuration,
+            });
+            return null;
+          })
+    );
+
+    const results = await Promise.all(variationPromises);
+
+    // Filter out failed variations (nulls) for the return value
+    const successfulVariations = results.filter(
+      (r): r is NonNullable<typeof r> => r !== null
+    );
+
+    return {
+      batchId,
+      variations: successfulVariations,
+    };
+  },
+});
+
+// ============================================================================
 // Refinement Action (multi-turn chat)
 // ============================================================================
 
