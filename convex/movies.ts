@@ -105,7 +105,8 @@ export const getWithClips = query({
 
     return {
       ...movie,
-      sceneClips: clips.filter(Boolean),
+      // Preserve null entries so sceneClips[i] corresponds to scenes[i]
+      sceneClips: clips,
     };
   },
 });
