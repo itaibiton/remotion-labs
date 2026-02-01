@@ -70,5 +70,38 @@
 
 **Last phase:** 8
 
+### v2.0 - Scenes, Timeline & Movie Editor (2026-01-29 → 2026-02-01)
+
+**Goal:** Evolve from single-clip creation into a multi-scene movie editor with clip library, horizontal timeline, full-movie rendering, and continuation-based generation.
+
+**Phases:**
+9. App Shell & Clip Library - Sidebar navigation, clip save/list/open/delete
+10. Movie Data & Timeline UI - Movie CRUD, horizontal timeline, drag-to-reorder, add-scene panel
+11. Movie Preview, Render & Export - Full-movie Remotion Player, movie MP4 render via Lambda, movie project zip export
+12. Continuation Generation - End-state extraction via LLM code reading, continuation prompt, prequel generation, create page contextual actions
+
+**Requirements delivered:** 15/15
+- SAVE-01 through SAVE-03 (clip library)
+- MOVIE-01 through MOVIE-04 (movie editor, timeline, preview, render)
+- OUT-03, OUT-04 (clip and movie export)
+- GEN-06, GEN-07 (continuation generation)
+- UI-01 through UI-04 (app shell, create page actions, timeline page, video timeline bar)
+
+**Stats:**
+- 4 phases, 11 plans
+- Total execution time: 36 min across 11 plans
+
+**Key decisions:**
+- Inline scenes array on movie document (not join table)
+- MovieComposition with Series for sequential scene playback
+- useSyncExternalStore for frame-synced timeline highlighting
+- LLM code reading for end-state extraction (not static AST)
+- Horizontal timeline with fixed 160px scene blocks
+- @dnd-kit for drag-to-reorder scenes
+- Polymorphic renders table (optional generationId/movieId/clipId)
+- Export instructions modal post-download
+
+**Last phase:** 12
+
 ---
 *Milestone history for RemotionLab*

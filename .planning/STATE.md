@@ -4,18 +4,18 @@
 
 See: .planning/PROJECT.md (updated 2026-02-01)
 
-**Release: v0.1.0**
+**Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.1.0 COMPLETE -- all 3 milestones delivered
+**Current focus:** v0.2.0 Create Page Overhaul -- milestone defined, pending research & requirements
 
 ## Current Position
 
-Phase: 12 of 12 (Continuation Generation) -- COMPLETE
-Plan: 2 of 2 in phase 12 (2 plans in 2 waves)
-Status: v0.1.0 RELEASED. All phases complete. All milestones delivered.
-Last activity: 2026-02-01 -- v0.1.0 release (continuation generation UI complete)
+Phase: Pre-planning (v0.2.0 milestone)
+Plan: N/A
+Status: Milestone defined. PROJECT.md updated. Awaiting research and requirements definition.
+Last activity: 2026-02-01 -- v0.2.0 milestone kickoff
 
-Progress: [====================] 100% (33/33 plans across all milestones)
+Progress: [                    ] 0% (0/? plans)
 
 ## Milestone History
 
@@ -24,7 +24,7 @@ Progress: [====================] 100% (33/33 plans across all milestones)
 | v1.0 Core Validation | 5 | 12 | 14/14 | 2026-01-27 -> 2026-01-28 |
 | v1.1 Full Code Generation | 3 | 10 | 11/11 | 2026-01-28 -> 2026-01-29 |
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
-| **Total** | **12** | **33** | **40** | 2026-01-27 -> 2026-02-01 |
+| **Total (shipped)** | **12** | **33** | **40** | 2026-01-27 -> 2026-02-01 |
 
 ## Performance Metrics
 
@@ -54,38 +54,13 @@ Progress: [====================] 100% (33/33 plans across all milestones)
 ### Decisions
 
 All decisions documented in PROJECT.md Key Decisions table.
-Recent decisions affecting v2.0:
-- Serialize end-state from code (static analysis of JSX for continuation generation) -- Pending validation
-- Horizontal timeline UI (traditional video-editor-style track with duration bars) -- IMPLEMENTED
-- (app) route group pattern to scope shell layout to authenticated pages (09-01)
-- 5 nav items in sidebar including Movie placeholder for Phase 10 readiness (09-01)
-- clips.list returns [] for unauthenticated (graceful), clips.save throws (explicit auth) (09-02)
-- clips.get has no auth check for MVP simplicity -- loaded by ID from URL params (09-02)
-- Remotion Thumbnail renders middle frame for representative clip preview (09-03)
-- Clip loading in create page uses Convex conditional query with "skip" pattern (09-03)
-- Inline scenes array on movie document, not a join table (10-01)
-- Uniform fps enforcement at addScene time, default 30fps (10-01)
-- movies.get has no auth check, matches clips.get URL-param pattern (10-01)
-- Movie cards use Film icon placeholder (no single thumbnail for multi-scene movies) (10-02)
-- Create movie immediately navigates to editor page (10-02)
-- Optimistic local state for DnD reorder prevents flicker (useEffect sync from props) (10-03)
-- Fixed 160px scene blocks for MVP, not proportional to duration (10-03)
-- getWithClips preserves null entries for correct index correspondence (10-03)
-- useSyncExternalStore for Remotion Player frame tracking, not useState polling (11-01)
-- Filter null clips from validScenes for partially-loaded movies (11-01)
-- JSON.stringify dependency for useMemo on scenesWithClips, consistent with timeline pattern (11-01)
-- Optional generationId/movieId/clipId on renders table for polymorphic render tracking (11-02)
-- MOVIE_RENDER_LIMITS: 120s video, 240s Lambda timeout, 20 scene max, 3s poll (11-02)
-- startClipRender uses DynamicCode composition; startMovieRender uses MovieComposition (11-02)
-- Inline progress/download UI in MovieRenderButton rather than reusing shared components (11-03)
-- Duplicate generateTsConfig/generateRemotionConfig in export-movie-zip rather than modifying export-project-zip (11-03)
-- Export instructions modal after zip download to guide user through setup (11-03)
-- CONTINUATION_SYSTEM_PROMPT inlined as const in generateAnimation.ts, matching existing prompt pattern (12-01)
-- generateContinuation returns directly (no DB persist), matching refine action pattern (12-01)
-- fps always 30 for continuation consistency (12-01)
-- effectiveClipId = clipId ?? savedClipId for contextual action visibility (12-02)
-- Continuation mode detected by sourceClipId presence in URL search params (12-02)
-- AddToMovieDialog follows add-scene-panel pattern (lists movies, calls movies.addScene) (12-02)
+v0.2.0 decisions (from questioning):
+- Create page IS the history (Midjourney-style scrolling feed of all generations)
+- Library stays separate for explicitly saved clips
+- 1-4 variations per prompt (method TBD -- needs research)
+- Extend Previous = generate prequel (animation leading into clip's start state)
+- Settings: Duration + FPS + Aspect Ratio
+- Image/file upload for reference-based generation
 
 ### Pending Todos
 
@@ -97,15 +72,18 @@ None.
 - Function constructor security needs adversarial testing before production
 - End-state extraction uses LLM code reading (not static AST analysis) -- implemented in 12-01
 - Lambda bundle must register MovieComposition and DynamicCode compositions for movie/clip renders to work
+- Variations approach needs research: parallel Claude calls vs single call with multiple outputs vs temperature-based
+- Prequel generation (start-state extraction) is new -- needs research on feasibility and approach
+- Image upload integration with Claude API (vision) needs research
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 12-02-PLAN.md (continuation generation UI) -- ALL PHASES COMPLETE
+Stopped at: v0.2.0 milestone defined, PROJECT.md updated, ready for research
 Resume file: None
 
-Next step: v0.1.0 released. Ready for production testing, deployment, and user feedback.
+Next step: Spawn research agents to investigate variations approach, image upload integration, prequel generation, and create feed architecture.
 
 ---
-*v0.1.0 released -- 2026-02-01*
-*12 phases, 33 plans, 3 milestones, 40 requirements delivered.*
+*v0.2.0 milestone started -- 2026-02-01*
+*Create Page Overhaul: generation feed, variations, settings, upload, prequel generation*

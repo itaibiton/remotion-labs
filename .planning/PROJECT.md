@@ -1,10 +1,10 @@
 # RemotionLab
 
-**Release: v0.1.0**
+**Release: v0.2.0**
 
 ## What This Is
 
-A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The interface combines chat-based generation with a code editor for fine-tuning, and exports standalone Remotion projects. Includes a multi-scene movie editor with a timeline, clip library, and continuation-based generation for scene-to-scene visual continuity.
+A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The create page is a scrolling feed of all generations (like Midjourney), with each prompt producing 1-4 variations, configurable settings (aspect ratio, duration, FPS), and per-creation actions (extend next/prev, save, delete, rerun). Includes a multi-scene movie editor with a timeline, clip library, and continuation-based generation for scene-to-scene visual continuity.
 
 ## Core Value
 
@@ -20,6 +20,11 @@ Claude generates complete Remotion JSX code. AST validation and sandboxed execut
 
 ### Milestone 3: Scenes, Timeline & Movie Editor (Phases 9-12)
 Clip library with save/open/delete, movie creation with horizontal timeline and drag-to-reorder scenes, full-movie preview and MP4 rendering, single-clip and multi-composition Remotion project export, continuation generation for visually continuous scene sequences.
+
+## In Progress (v0.2.0)
+
+### Milestone 4: Create Page Overhaul (Phases 13+)
+Redesign the create page as a scrolling generation feed (Midjourney-style). Each prompt produces 1-4 variations displayed in a grid row. Generation settings panel for aspect ratio, duration, and FPS. Image/file upload for reference-based prompts. Per-creation actions: extend next (continuation), extend previous (prequel), save to library, delete, rerun. Input bar redesign with prompt textarea, upload button, and settings toggle. Create page IS the history — all past generations visible in a scrolling feed. Library remains separate for explicitly saved clips.
 
 ## Requirements
 
@@ -68,6 +73,20 @@ Clip library with save/open/delete, movie creation with horizontal timeline and 
 - [x] UI-02: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
 - [x] UI-03: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
 - [x] UI-04: Video preview shows a timeline bar (playhead, duration, scrub)
+
+### Planned (Milestone 4 — Create Page Overhaul)
+
+- [ ] **FEED-01**: Create page displays all past generations as a scrolling feed (newest first), each showing prompt text and variation thumbnails
+- [ ] **FEED-02**: Each generation row shows 1-4 variation previews in a grid layout with the prompt/metadata on the side
+- [ ] **VAR-01**: User can choose number of variations (1-4) per generation; system produces that many distinct compositions from one prompt
+- [ ] **VAR-02**: User can select a specific variation to preview full-size, edit, save, or use as basis for continuation
+- [ ] **SET-01**: User can configure aspect ratio (portrait/square/landscape) from a settings panel before generating
+- [ ] **SET-02**: User can configure duration and FPS from the settings panel
+- [ ] **UPLOAD-01**: User can attach image/file to prompt as visual reference for generation
+- [ ] **ACT-01**: Each generation has extend-next action (continuation from end state) and extend-previous action (prequel leading into start state)
+- [ ] **ACT-02**: Each generation has save (to clip library), delete, and rerun actions
+- [ ] **INPUT-01**: Input bar redesigned with prompt textarea, image upload button, and settings toggle button
+- [ ] **PREQUEL-01**: System can analyze a clip's code to extract its start state and generate a prequel animation that ends at that start state
 
 ### Out of Scope
 
@@ -127,6 +146,10 @@ Clip library with save/open/delete, movie creation with horizontal timeline and 
 | No payments in MVP | Focus on core value, validate before monetizing | Active |
 | LLM code reading for end-state (v0.1) | Claude reads animation code to determine final visual state for continuations; static AST analysis rejected as infeasible | Validated |
 | Horizontal timeline UI (v0.1) | Traditional video-editor-style track with duration bars, not a simple list | Validated |
+| Create page as generation feed (v0.2) | Midjourney-style scrolling history of all generations, replacing single-generation view | Planned |
+| 1-4 variations per prompt (v0.2) | Multiple distinct compositions from one prompt, matching generative AI UX patterns | Planned |
+| Prequel generation (v0.2) | Generate animation that leads into a clip's start state, complementing continuation | Planned |
+| Image upload for prompt context (v0.2) | Reference images influence generation without requiring image rendering in output | Planned |
 
 ---
-*Last updated: 2026-02-01 — v0.1.0 release (all 3 milestones, 40 requirements delivered)*
+*Last updated: 2026-02-01 — v0.2.0 milestone started (Create Page Overhaul)*
