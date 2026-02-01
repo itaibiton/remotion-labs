@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 13 complete, Phase 14 next
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 14 in progress, Plan 01 complete
 
 ## Current Position
 
-Phase: 13 of 17 (Generation Feed & Settings)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 -- Completed 13-03-PLAN.md (generation feed UI)
+Phase: 14 of 17 (Variations)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-01 -- Completed 14-01-PLAN.md (variations backend)
 
-Progress: [#####               ] 25% (3/12 plans)
+Progress: [######              ] 33% (4/12 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [#####               ] 25% (3/12 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 33
-- Total execution time: ~146.0 min
+- Total plans completed: 34
+- Total execution time: ~149.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -41,6 +41,7 @@ Progress: [#####               ] 25% (3/12 plans)
 | 11-movie-preview-render-export | 3/3 | 13 min | 4.3 min |
 | 12-continuation-generation | 2/2 | 10 min | 5.0 min |
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
+| 14-variations | 1/2 | 3 min | 3.0 min |
 
 ## Accumulated Context
 
@@ -65,6 +66,9 @@ v0.2.0 decisions:
 - Feed shown below prompt only when no generation selected (clean home state)
 - Settings toggle always visible when not generating
 - Feed selection delegates to parent (callback pattern, not internal state)
+- Helper function extraction (not ctx.runAction) for Convex action code sharing
+- Optional temperature via spread operator to preserve default behavior for single generation
+- Consistent createdAt timestamp before Promise.all for feed ordering
 
 ### Pending Todos
 
@@ -80,13 +84,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T16:27Z
-Stopped at: Completed 13-03-PLAN.md (generation feed UI) -- Phase 13 complete
+Last session: 2026-02-01T17:02Z
+Stopped at: Completed 14-01-PLAN.md (variations backend)
 Resume file: None
 
-Next step: Execute Phase 14 -- Variations (parallel generation, variation grid UI)
+Next step: Execute 14-02 -- Variation grid UI, settings panel, create page wiring
 
 ---
-*13-03 complete -- 2026-02-01*
-*Generation feed UI: paginated feed with Remotion Thumbnails, settings panel toggle, settings-aware generation*
-*Phase 13 complete: schema + settings hooks + feed UI all delivered*
+*14-01 complete -- 2026-02-01*
+*Variations backend: generateSingleVariation helper + generateVariations action with parallel Claude calls, temperature 0.9, shared batchId, per-promise error handling*
