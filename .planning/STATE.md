@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 14 in progress, Plan 01 complete
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 14 complete, ready for Phase 15
 
 ## Current Position
 
 Phase: 14 of 17 (Variations)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-01 -- Completed 14-01-PLAN.md (variations backend)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 -- Completed 14-02-PLAN.md (variation UI)
 
-Progress: [######              ] 33% (4/12 plans)
+Progress: [#######             ] 38% (5/13 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [######              ] 33% (4/12 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 34
-- Total execution time: ~149.0 min
+- Total plans completed: 35
+- Total execution time: ~152.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -41,7 +41,7 @@ Progress: [######              ] 33% (4/12 plans)
 | 11-movie-preview-render-export | 3/3 | 13 min | 4.3 min |
 | 12-continuation-generation | 2/2 | 10 min | 5.0 min |
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
-| 14-variations | 1/2 | 3 min | 3.0 min |
+| 14-variations | 2/2 | 6 min | 3.0 min |
 
 ## Accumulated Context
 
@@ -69,6 +69,9 @@ v0.2.0 decisions:
 - Helper function extraction (not ctx.runAction) for Convex action code sharing
 - Optional temperature via spread operator to preserve default behavior for single generation
 - Consistent createdAt timestamp before Promise.all for feed ordering
+- VariationGrid uses stacked layout (metadata top, grid below) for better thumbnail space
+- groupByBatch preserves insertion order, only sorts within batches by variationIndex
+- First successful variation auto-selected for immediate preview after multi-generation
 
 ### Pending Todos
 
@@ -84,12 +87,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T17:02Z
-Stopped at: Completed 14-01-PLAN.md (variations backend)
+Last session: 2026-02-01T17:07Z
+Stopped at: Completed 14-02-PLAN.md (variation UI)
 Resume file: None
 
-Next step: Execute 14-02 -- Variation grid UI, settings panel, create page wiring
+Next step: Execute Phase 15 (next phase in roadmap)
 
 ---
-*14-01 complete -- 2026-02-01*
-*Variations backend: generateSingleVariation helper + generateVariations action with parallel Claude calls, temperature 0.9, shared batchId, per-promise error handling*
+*14-02 complete -- 2026-02-01*
+*Variation UI: settings variationCount selector, VariationGrid with CSS grid + V1-V4 badges, feed batchId grouping, generateVariations wiring with auto-select first success*
