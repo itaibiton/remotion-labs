@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
 - [x] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
-- [ ] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
+- [x] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
 - [ ] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
 - [ ] **Phase 17: Prequel Generation** - Users can generate animations that lead into an existing clip's start state
 
@@ -307,9 +307,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 15-01-PLAN.md -- Convex file upload flow (upload URL, EXIF stripping, storage) and Claude vision integration
-- [ ] 15-02-PLAN.md -- Image attachment UI (drop zone, thumbnail chips, paste handler)
-- [ ] 15-03-PLAN.md -- Input bar redesign composing all controls (prompt, upload, settings toggle, variation selector)
+- [x] 15-01-PLAN.md -- Convex file upload flow (upload URL, EXIF stripping, storage) and Claude vision integration
+- [x] 15-02-PLAN.md -- Image attachment UI (drop zone, thumbnail chips, paste handler)
+- [x] 15-03-PLAN.md -- Input bar redesign composing all controls (prompt, upload, settings toggle, variation selector)
 
 ### Phase 16: Per-Creation Actions
 **Goal**: Users can manage and extend any generation directly from the feed
@@ -361,7 +361,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 12. Continuation Generation | v2.0 | 2/2 | Complete | 2026-02-01 |
 | 13. Generation Feed & Settings | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 14. Variations | v0.2.0 | 2/2 | Complete | 2026-02-01 |
-| 15. Image Upload & Input Bar | v0.2.0 | 0/3 | Not started | - |
+| 15. Image Upload & Input Bar | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 16. Per-Creation Actions | v0.2.0 | 0/2 | Not started | - |
 | 17. Prequel Generation | v0.2.0 | 0/2 | Not started | - |
 

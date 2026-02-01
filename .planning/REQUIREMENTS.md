@@ -61,7 +61,7 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Image Upload
 
-- [ ] **UPLOAD-01**: User can attach 1-3 reference images to a prompt; images are uploaded to Convex file storage and passed to Claude as visual context for generation
+- [x] **UPLOAD-01**: User can attach 1-3 reference images to a prompt; images are uploaded to Convex file storage and passed to Claude as visual context for generation
 
 ### Per-Creation Actions
 
@@ -70,7 +70,7 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Input Bar
 
-- [ ] **INPUT-01**: Input bar redesigned with prompt textarea, image upload button, settings toggle button, and variation count selector
+- [x] **INPUT-01**: Input bar redesigned with prompt textarea, image upload button, settings toggle button, and variation count selector
 
 ### Prequel Generation
 
@@ -124,8 +124,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SET-02 | Phase 13 | Complete |
 | VAR-01 | Phase 14 | Complete |
 | VAR-02 | Phase 14 | Complete |
-| UPLOAD-01 | Phase 15 | Pending |
-| INPUT-01 | Phase 15 | Pending |
+| UPLOAD-01 | Phase 15 | Complete |
+| INPUT-01 | Phase 15 | Complete |
 | ACT-01 | Phase 16 | Pending |
 | ACT-02 | Phase 16 | Pending |
 | PREQUEL-01 | Phase 17 | Pending |
