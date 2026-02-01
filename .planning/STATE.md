@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 10: Scenes & Timeline)
+**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 10 COMPLETE, Phase 11 next)
 
 ## Current Position
 
-Phase: 10 of 12 (Movie Data & Timeline UI) -- IN PROGRESS
-Plan: 2 of 3 in phase 10 (plans 01-02 complete, 1 remaining)
-Status: In progress. Movie list page & editor shell complete. Next: Timeline UI (Plan 03).
-Last activity: 2026-02-01 -- Completed 10-02-PLAN.md (Movie List Page & Editor Shell)
+Phase: 10 of 12 (Movie Data & Timeline UI) -- COMPLETE
+Plan: 3 of 3 in phase 10 (all plans complete)
+Status: Phase 10 complete. All 5 success criteria met. Ready for Phase 11 (Movie Preview & Render).
+Last activity: 2026-02-01 -- Completed 10-03-PLAN.md (Timeline UI)
 
-Progress: [===============...] 88% (27/~33 plans across all milestones)
+Progress: [================..] 91% (28/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [===============...] 88% (27/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 27
-- Total execution time: ~119.3 min
+- Total plans completed: 28
+- Total execution time: ~123.0 min
 
 **v1.1 Breakdown:**
 
@@ -44,7 +44,7 @@ Progress: [===============...] 88% (27/~33 plans across all milestones)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
-| 10-movie-data-timeline-ui | 2/3 | 3.3 min | 1.7 min |
+| 10-movie-data-timeline-ui | 3/3 | 7.0 min | 2.3 min |
 
 ## Accumulated Context
 
@@ -53,7 +53,7 @@ Progress: [===============...] 88% (27/~33 plans across all milestones)
 All decisions documented in PROJECT.md Key Decisions table.
 Recent decisions affecting v2.0:
 - Serialize end-state from code (static analysis of JSX for continuation generation) -- Pending validation
-- Horizontal timeline UI (traditional video-editor-style track with duration bars) -- Pending
+- Horizontal timeline UI (traditional video-editor-style track with duration bars) -- IMPLEMENTED
 - (app) route group pattern to scope shell layout to authenticated pages (09-01)
 - 5 nav items in sidebar including Movie placeholder for Phase 10 readiness (09-01)
 - clips.list returns [] for unauthenticated (graceful), clips.save throws (explicit auth) (09-02)
@@ -65,6 +65,9 @@ Recent decisions affecting v2.0:
 - movies.get has no auth check, matches clips.get URL-param pattern (10-01)
 - Movie cards use Film icon placeholder (no single thumbnail for multi-scene movies) (10-02)
 - Create movie immediately navigates to editor page (10-02)
+- Optimistic local state for DnD reorder prevents flicker (useEffect sync from props) (10-03)
+- Fixed 160px scene blocks for MVP, not proportional to duration (10-03)
+- getWithClips preserves null entries for correct index correspondence (10-03)
 
 ### Pending Todos
 
@@ -80,10 +83,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-02-PLAN.md (Movie List Page & Editor Shell)
+Stopped at: Completed 10-03-PLAN.md (Timeline UI) -- Phase 10 complete
 Resume file: None
 
-Next step: Execute 10-03-PLAN.md (Timeline UI)
+Next step: Phase 11 (Movie Preview & Render)
 
 ---
-*Updated after 10-02 execution -- 2026-02-01*
+*Updated after 10-03 execution -- 2026-02-01*
