@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { PromptInput } from "@/components/generation/prompt-input";
+import { InputBar } from "@/components/generation/input-bar";
 import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
 import { PreviewPlayer } from "@/components/preview/preview-player";
@@ -17,11 +17,10 @@ import { toast } from "sonner";
 import { ExportButtons } from "@/components/export/export-buttons";
 import { SaveClipDialog } from "@/components/library/save-clip-dialog";
 import { Button } from "@/components/ui/button";
-import { Save, FastForward, Film, Settings2 } from "lucide-react";
+import { Save, FastForward, Film } from "lucide-react";
 import { ClipRenderButton } from "@/components/render/clip-render-button";
 import { AddToMovieDialog } from "@/components/library/add-to-movie-dialog";
 import { GenerationFeed } from "@/components/generation/generation-feed";
-import { GenerationSettingsPanel } from "@/components/generation/generation-settings";
 import { useGenerationSettings } from "@/hooks/use-generation-settings";
 import { useRouter } from "next/navigation";
 
@@ -54,7 +53,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   const continuationAction = useAction(api.generateAnimation.generateContinuation);
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useGenerationSettings();
-  const [showSettings, setShowSettings] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState<GenerationStep>(null);
@@ -150,7 +148,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   const effectiveClipId = clipId ?? savedClipId;
 
   const handleGenerate = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, referenceImageIds?: string[]) => {
       setLastPrompt(prompt);
       setError(null);
       setIsGenerating(true);
@@ -176,6 +174,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
             aspectRatio: settings.aspectRatio,
             durationInSeconds: settings.durationInSeconds,
             fps: settings.fps,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ...(referenceImageIds ? { referenceImageIds: referenceImageIds as any } : {}),
           });
 
           setCurrentStep("validating");
@@ -204,6 +204,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
             aspectRatio: settings.aspectRatio,
             durationInSeconds: settings.durationInSeconds,
             fps: settings.fps,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ...(referenceImageIds ? { referenceImageIds: referenceImageIds as any } : {}),
           });
 
           // Validating step after successful generation
@@ -351,12 +353,13 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   );
 
   const handleUnifiedSubmit = useCallback(
-    async (text: string) => {
+    async (text: string, imageIds: string[]) => {
+      const imgIds = imageIds.length > 0 ? imageIds : undefined;
       if (sourceClipId && !lastGeneration) {
-        // Continuation mode: first submission generates continuation
+        // Continuation mode: first submission generates continuation (no images)
         await handleContinuationGenerate(text);
       } else if (!lastGeneration) {
-        await handleGenerate(text);
+        await handleGenerate(text, imgIds);
       } else if (text.toLowerCase().startsWith("start over:")) {
         const newPrompt = text.replace(/^start over:\s*/i, "").trim();
         setChatMessages([]);
@@ -366,9 +369,10 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         setSkipValidation(true);
         validation.resetToValid();
         if (newPrompt) {
-          await handleGenerate(newPrompt);
+          await handleGenerate(newPrompt, imgIds);
         }
       } else {
+        // Refinements don't use images
         await handleRefine(text);
       }
     },
@@ -402,7 +406,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     ? "Describe what should happen next (or press Enter for automatic continuation)..."
     : selectedTemplate
       ? "Describe how you'd like to customize this template..."
-      : undefined; // Let PromptInput choose based on hasExistingCode
+      : undefined; // Let InputBar choose based on hasExistingCode
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6">
@@ -575,40 +579,18 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         </div>
       )}
 
-      {/* Settings toggle + panel */}
+      {/* Input bar - visible when not generating */}
       {!isGenerating && (
-        <div className="w-full max-w-2xl mb-4">
-          <div className="flex items-center justify-end mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSettings(!showSettings)}
-            >
-              <Settings2 className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-          </div>
-          {showSettings && (
-            <div className="p-4 border rounded-lg mb-4">
-              <GenerationSettingsPanel
-                settings={settings}
-                onUpdateSetting={updateSetting}
-                onReset={resetSettings}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Prompt input - visible when not generating */}
-      {!isGenerating && (
-        <PromptInput
+        <InputBar
           onSubmit={handleUnifiedSubmit}
           isGenerating={isGenerating}
           isRefining={isRefining}
           hasExistingCode={!!lastGeneration}
           disabled={false}
           placeholder={promptPlaceholder}
+          settings={settings}
+          onUpdateSetting={updateSetting}
+          onResetSettings={resetSettings}
         />
       )}
 
