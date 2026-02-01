@@ -8,6 +8,7 @@ import {
   type AspectRatioKey,
 } from "@/lib/aspect-ratios";
 import { AlertCircle } from "lucide-react";
+import { GenerationRowActions } from "./generation-row-actions";
 
 interface Generation {
   _id: string;
@@ -29,6 +30,9 @@ interface Generation {
 interface VariationGridProps {
   variations: Generation[];
   onSelectVariation: (generation: Generation) => void;
+  onSave: (generation: Generation) => void;
+  onDelete: (generation: Generation) => void;
+  onRerun: (generation: Generation) => void;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -51,6 +55,9 @@ function formatRelativeTime(timestamp: number): string {
 export function VariationGrid({
   variations,
   onSelectVariation,
+  onSave,
+  onDelete,
+  onRerun,
 }: VariationGridProps) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -93,9 +100,17 @@ export function VariationGrid({
             </span>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground whitespace-nowrap">
-          {formatRelativeTime(firstVariation.createdAt)}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            {formatRelativeTime(firstVariation.createdAt)}
+          </p>
+          <GenerationRowActions
+            generation={firstVariation}
+            onSave={onSave}
+            onDelete={onDelete}
+            onRerun={onRerun}
+          />
+        </div>
       </div>
 
       {/* Thumbnail grid */}
@@ -110,7 +125,7 @@ export function VariationGrid({
             <button
               key={variation._id}
               type="button"
-              className="relative rounded-md overflow-hidden bg-black hover:ring-2 hover:ring-primary/50 transition-all"
+              className="relative rounded-md overflow-hidden bg-black hover:ring-2 hover:ring-primary/50 transition-all group/variation"
               style={{
                 aspectRatio: `${preset.width} / ${preset.height}`,
               }}
@@ -142,6 +157,18 @@ export function VariationGrid({
               <span className="absolute top-1 left-1 bg-black/70 text-white text-xs font-mono px-1.5 py-0.5 rounded">
                 V{(variation.variationIndex ?? i) + 1}
               </span>
+              {/* Action menu - top right corner */}
+              <div
+                className="absolute top-1 right-1 opacity-0 group-hover/variation:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GenerationRowActions
+                  generation={variation}
+                  onSave={onSave}
+                  onDelete={onDelete}
+                  onRerun={onRerun}
+                />
+              </div>
             </button>
           );
         })}
