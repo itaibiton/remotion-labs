@@ -46,8 +46,8 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Generation Feed
 
-- [ ] **FEED-01**: Create page displays all past generations as a scrolling feed (newest first), each row showing variation thumbnails and prompt text
-- [ ] **FEED-02**: Each generation row shows 1-4 variation previews in a grid layout with the prompt/metadata on the side
+- [x] **FEED-01**: Create page displays all past generations as a scrolling feed (newest first), each row showing variation thumbnails and prompt text
+- [x] **FEED-02**: Each generation row shows 1-4 variation previews in a grid layout with the prompt/metadata on the side
 
 ### Variations
 
@@ -56,8 +56,8 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Generation Settings
 
-- [ ] **SET-01**: User can configure aspect ratio (portrait 9:16, square 1:1, landscape 16:9) from a settings panel before generating
-- [ ] **SET-02**: User can configure duration and FPS from the settings panel; settings persist as user defaults via localStorage
+- [x] **SET-01**: User can configure aspect ratio (portrait 9:16, square 1:1, landscape 16:9) from a settings panel before generating
+- [x] **SET-02**: User can configure duration and FPS from the settings panel; settings persist as user defaults via localStorage
 
 ### Image Upload
 
@@ -118,10 +118,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FEED-01 | Phase 13 | Pending |
-| FEED-02 | Phase 13 | Pending |
-| SET-01 | Phase 13 | Pending |
-| SET-02 | Phase 13 | Pending |
+| FEED-01 | Phase 13 | Complete |
+| FEED-02 | Phase 13 | Complete |
+| SET-01 | Phase 13 | Complete |
+| SET-02 | Phase 13 | Complete |
 | VAR-01 | Phase 14 | Pending |
 | VAR-02 | Phase 14 | Pending |
 | UPLOAD-01 | Phase 15 | Pending |

@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v0.2.0 -- Create Page Overhaul
 
-- [ ] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
+- [x] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
 - [ ] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
 - [ ] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
 - [ ] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
@@ -276,9 +276,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 13-01-PLAN.md -- Schema updates (batchId, variationIndex, settings fields) and generation action changes
-- [ ] 13-02-PLAN.md -- Settings panel component with localStorage persistence
-- [ ] 13-03-PLAN.md -- Feed UI with paginated query, batchId grouping, and static thumbnails
+- [x] 13-01-PLAN.md -- Schema updates (batchId, variationIndex, settings fields) and generation action changes
+- [x] 13-02-PLAN.md -- Settings panel component with localStorage persistence
+- [x] 13-03-PLAN.md -- Feed UI with paginated query, Remotion thumbnails, and create page integration
 
 ### Phase 14: Variations
 **Goal**: Users can generate multiple distinct compositions from one prompt and choose among them
@@ -359,7 +359,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 10. Movie Data & Timeline UI | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 11. Movie Preview, Render & Export | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 12. Continuation Generation | v2.0 | 2/2 | Complete | 2026-02-01 |
-| 13. Generation Feed & Settings | v0.2.0 | 0/3 | Not started | - |
+| 13. Generation Feed & Settings | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 14. Variations | v0.2.0 | 0/2 | Not started | - |
 | 15. Image Upload & Input Bar | v0.2.0 | 0/3 | Not started | - |
 | 16. Per-Creation Actions | v0.2.0 | 0/2 | Not started | - |
