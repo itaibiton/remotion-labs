@@ -18,6 +18,7 @@ import { ExportButtons } from "@/components/export/export-buttons";
 import { SaveClipDialog } from "@/components/library/save-clip-dialog";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
+import { ClipRenderButton } from "@/components/render/clip-render-button";
 
 type GenerationStep = "analyzing" | "generating" | "validating" | null;
 
@@ -364,18 +365,18 @@ function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
               </button>
             </div>
 
-            {/* Render controls - temporarily disabled for code generation */}
+            {/* Render controls */}
             <div className="pt-2 border-t">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Happy with the preview? Render coming soon.
+                  {clipId
+                    ? "Render this clip to MP4 via cloud rendering"
+                    : "Save as a clip first to enable MP4 rendering"}
                 </p>
-                <button
-                  disabled
-                  className="px-4 py-2 text-sm bg-muted text-muted-foreground rounded-md cursor-not-allowed"
-                >
-                  Render (Coming Soon)
-                </button>
+                <ClipRenderButton
+                  clipId={clipId ?? ""}
+                  disabled={!clipId || !lastGeneration}
+                />
               </div>
             </div>
 
