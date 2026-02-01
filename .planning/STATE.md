@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 Phase: 13 of 17 (Generation Feed & Settings)
 Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-01 -- Completed 13-02-PLAN.md (generation settings infrastructure)
+Last activity: 2026-02-01 -- Completed 13-01-PLAN.md (schema & settings foundation)
 
 Progress: [###                 ] 17% (2/12 plans)
 
@@ -58,6 +58,9 @@ v0.2.0 decisions:
 - Custom useLocalStorage hook (not usehooks-ts) -- one hook not worth a dependency
 - GenerationSettingsPanel is presentational (props-driven, parent-controlled state)
 - Duration presets [1,2,3,5,10]s and FPS presets [15,24,30,60] as button groups
+- All new schema fields v.optional() for backward-compatible evolution
+- ASPECT_RATIO_MAP: 16:9=1920x1080, 1:1=1080x1080, 9:16=1080x1920
+- Settings injected as system prompt appendix (not user message)
 
 ### Pending Todos
 
@@ -73,12 +76,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T16:20Z
-Stopped at: Completed 13-02-PLAN.md (generation settings infrastructure)
+Last session: 2026-02-01T16:21Z
+Stopped at: Completed 13-01-PLAN.md (schema & settings foundation)
 Resume file: None
 
 Next step: Execute 13-03-PLAN.md -- create page assembly (wire feed + settings into create page)
 
 ---
-*13-02 complete -- 2026-02-01*
-*Settings infrastructure: aspect-ratios.ts, useLocalStorage, useGenerationSettings, GenerationSettingsPanel*
+*13-01 complete -- 2026-02-01*
+*Schema foundation: 7 optional fields, by_batchId index, listPaginated query, dimension-aware generate action*
