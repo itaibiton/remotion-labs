@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 11 in progress)
+**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 11 complete, Phase 12 remaining)
 
 ## Current Position
 
-Phase: 11 of 12 (Movie Preview, Render & Export) -- IN PROGRESS
-Plan: 2 of 3 in phase 11 (wave 1: plans 01 + 02 complete, plan 03 remaining)
-Status: In progress. Plans 11-01 (Movie Preview Player) and 11-02 (Render Pipeline) complete.
-Last activity: 2026-02-01 -- Completed 11-02-PLAN.md (Movie Render Pipeline)
+Phase: 11 of 12 (Movie Preview, Render & Export) -- COMPLETE
+Plan: 3 of 3 in phase 11 (all plans complete)
+Status: Phase 11 complete. Ready for Phase 12 (Continuation Generation).
+Last activity: 2026-02-01 -- Completed 11-03-PLAN.md (Movie Render & Export UI)
 
-Progress: [=================.] 94% (30/~33 plans across all milestones)
+Progress: [==================.] 97% (31/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [=================.] 94% (30/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 30
-- Total execution time: ~128.0 min
+- Total plans completed: 31
+- Total execution time: ~136.0 min
 
 **v1.1 Breakdown:**
 
@@ -45,7 +45,7 @@ Progress: [=================.] 94% (30/~33 plans across all milestones)
 |-------|-------|-------|----------|
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
 | 10-movie-data-timeline-ui | 3/3 | 7.0 min | 2.3 min |
-| 11-movie-preview-render-export | 2/3 | 5 min | 2.5 min |
+| 11-movie-preview-render-export | 3/3 | 13 min | 4.3 min |
 
 ## Accumulated Context
 
@@ -75,6 +75,9 @@ Recent decisions affecting v2.0:
 - Optional generationId/movieId/clipId on renders table for polymorphic render tracking (11-02)
 - MOVIE_RENDER_LIMITS: 120s video, 240s Lambda timeout, 20 scene max, 3s poll (11-02)
 - startClipRender uses DynamicCode composition; startMovieRender uses MovieComposition (11-02)
+- Inline progress/download UI in MovieRenderButton rather than reusing shared components (11-03)
+- Duplicate generateTsConfig/generateRemotionConfig in export-movie-zip rather than modifying export-project-zip (11-03)
+- Export instructions modal after zip download to guide user through setup (11-03)
 
 ### Pending Todos
 
@@ -90,10 +93,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 11-02-PLAN.md (Movie Render Pipeline)
+Stopped at: Completed 11-03-PLAN.md (Movie Render & Export UI) -- Phase 11 complete
 Resume file: None
 
-Next step: Execute 11-03-PLAN.md (Movie Export) -- wave 2
+Next step: Phase 12 (Continuation Generation) -- research and planning needed
 
 ---
-*Plan 11-02 complete -- 2026-02-01*
+*Phase 11 complete -- 2026-02-01*
