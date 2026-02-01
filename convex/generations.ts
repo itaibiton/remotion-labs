@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
@@ -17,6 +18,15 @@ export const store = internalMutation({
     status: v.union(v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),
+    // v0.2 Phase 13: batch/variation tracking
+    batchId: v.optional(v.string()),
+    variationIndex: v.optional(v.number()),
+    variationCount: v.optional(v.number()),
+    // v0.2 Phase 13: generation settings
+    aspectRatio: v.optional(v.string()),
+    durationInSeconds: v.optional(v.number()),
+    // v0.2 Phase 12: continuation tracking
+    continuationType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const generationId = await ctx.db.insert("generations", {
@@ -29,6 +39,12 @@ export const store = internalMutation({
       status: args.status,
       errorMessage: args.errorMessage,
       createdAt: args.createdAt,
+      batchId: args.batchId,
+      variationIndex: args.variationIndex,
+      variationCount: args.variationCount,
+      aspectRatio: args.aspectRatio,
+      durationInSeconds: args.durationInSeconds,
+      continuationType: args.continuationType,
     });
     return generationId;
   },
@@ -55,6 +71,30 @@ export const list = query({
       .take(50);
 
     return generations;
+  },
+});
+
+/**
+ * Paginated query for the generation feed
+ * Returns generations newest-first with cursor-based pagination
+ */
+export const listPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Must be logged in to view generations");
+    }
+
+    return await ctx.db
+      .query("generations")
+      .withIndex("by_user_created", (q) =>
+        q.eq("userId", identity.tokenIdentifier)
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
   },
 });
 

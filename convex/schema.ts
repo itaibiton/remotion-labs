@@ -34,9 +34,21 @@ export default defineSchema({
     status: v.union(v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),
+    // v0.2 Phase 13: batch/variation tracking
+    batchId: v.optional(v.string()),
+    variationIndex: v.optional(v.number()),
+    variationCount: v.optional(v.number()),
+    // v0.2 Phase 13: generation settings
+    aspectRatio: v.optional(v.string()),  // "16:9" | "1:1" | "9:16"
+    durationInSeconds: v.optional(v.number()),
+    // v0.2 Phase 15: image upload (placeholder)
+    referenceImageIds: v.optional(v.array(v.string())),
+    // v0.2 Phase 12: continuation tracking
+    continuationType: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_created", ["userId", "createdAt"]),
+    .index("by_user_created", ["userId", "createdAt"])
+    .index("by_batchId", ["batchId"]),
 
   clips: defineTable({
     userId: v.string(),
