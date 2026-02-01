@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Film, Plus } from "lucide-react";
@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Timeline } from "./timeline";
 import { AddScenePanel } from "./add-scene-panel";
+import { MoviePreviewPlayer } from "@/components/movie/movie-preview-player";
 
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
+  const [activeSceneIndex, setActiveSceneIndex] = useState<number>(-1);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const movie = useQuery(api.movies.getWithClips, { id: movieId as any });
@@ -97,6 +99,25 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     clip: movie.sceneClips[index] ?? null,
   }));
 
+  // Build valid scenes array for the preview player (only scenes with loaded clips)
+  const validScenes = useMemo(
+    () =>
+      scenesWithClips
+        .filter((s) => s.clip !== null)
+        .map((s) => ({
+          code: s.clip!.code,
+          durationInFrames: s.clip!.durationInFrames,
+          fps: s.clip!.fps,
+        })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(scenesWithClips)]
+  );
+
+  const totalDurationInFrames = useMemo(
+    () => validScenes.reduce((sum, s) => sum + s.durationInFrames, 0),
+    [validScenes]
+  );
+
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Header */}
@@ -136,13 +157,24 @@ export function MovieEditor({ movieId }: { movieId: string }) {
             </div>
           </div>
         ) : (
-          <div className="p-6">
-            <Timeline
-              scenes={scenesWithClips}
-              onReorder={handleReorder}
-              onRemove={handleRemoveScene}
-            />
-          </div>
+          <>
+            <div className="px-6 pt-6">
+              <MoviePreviewPlayer
+                scenes={validScenes}
+                fps={movie.fps}
+                totalDurationInFrames={totalDurationInFrames}
+                onActiveSceneChange={setActiveSceneIndex}
+              />
+            </div>
+            <div className="p-6">
+              <Timeline
+                scenes={scenesWithClips}
+                activeSceneIndex={activeSceneIndex}
+                onReorder={handleReorder}
+                onRemove={handleRemoveScene}
+              />
+            </div>
+          </>
         )}
       </div>
 

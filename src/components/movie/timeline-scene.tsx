@@ -17,6 +17,7 @@ interface TimelineSceneProps {
     fps: number;
   } | null;
   index: number;
+  isActive?: boolean;
   onRemove: (index: number) => void;
 }
 
@@ -24,6 +25,7 @@ export function TimelineScene({
   id,
   clip,
   index,
+  isActive,
   onRemove,
 }: TimelineSceneProps) {
   const [isMounted, setIsMounted] = useState(false);
@@ -53,7 +55,7 @@ export function TimelineScene({
       style={style}
       {...attributes}
       {...listeners}
-      className="group relative w-[160px] h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden cursor-grab active:cursor-grabbing"
+      className={`group relative w-[160px] h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden cursor-grab active:cursor-grabbing ${isActive ? "ring-2 ring-primary" : ""}`}
     >
       {/* Remove button */}
       <button

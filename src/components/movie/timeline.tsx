@@ -29,11 +29,12 @@ interface TimelineProps {
       fps: number;
     } | null;
   }>;
+  activeSceneIndex?: number;
   onReorder: (newScenes: Array<{ clipId: string }>) => void;
   onRemove: (sceneIndex: number) => void;
 }
 
-export function Timeline({ scenes, onReorder, onRemove }: TimelineProps) {
+export function Timeline({ scenes, activeSceneIndex, onReorder, onRemove }: TimelineProps) {
   // Optimistic local state to prevent flicker on reorder
   const [localScenes, setLocalScenes] = useState(scenes);
 
@@ -86,6 +87,7 @@ export function Timeline({ scenes, onReorder, onRemove }: TimelineProps) {
                 id={`scene-${index}`}
                 clip={scene.clip}
                 index={index}
+                isActive={index === activeSceneIndex}
                 onRemove={onRemove}
               />
             ))}
