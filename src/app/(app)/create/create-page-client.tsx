@@ -50,6 +50,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
+  const generateVariationsAction = useAction(api.generateAnimation.generateVariations);
   const continuationAction = useAction(api.generateAnimation.generateContinuation);
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useGenerationSettings();
@@ -167,38 +168,70 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       setCurrentStep("generating");
 
       try {
-        const result = await generate({
-          prompt,
-          aspectRatio: settings.aspectRatio,
-          durationInSeconds: settings.durationInSeconds,
-          fps: settings.fps,
-        });
+        if (settings.variationCount > 1) {
+          // Multi-variation: use generateVariations action
+          const result = await generateVariationsAction({
+            prompt,
+            variationCount: settings.variationCount,
+            aspectRatio: settings.aspectRatio,
+            durationInSeconds: settings.durationInSeconds,
+            fps: settings.fps,
+          });
 
-        // Validating step after successful generation
-        setCurrentStep("validating");
-        await new Promise((resolve) => setTimeout(resolve, 300));
+          setCurrentStep("validating");
+          await new Promise((resolve) => setTimeout(resolve, 300));
 
-        // Validate result has required fields
-        if (!result || typeof result !== "object") {
-          throw new Error("Invalid response from generation service");
+          // Select first successful variation for immediate preview
+          const firstSuccess = result.variations[0];
+          if (firstSuccess) {
+            setLastGeneration({
+              id: firstSuccess.id,
+              rawCode: firstSuccess.rawCode,
+              code: firstSuccess.code,
+              durationInFrames: firstSuccess.durationInFrames,
+              fps: firstSuccess.fps,
+            });
+            toast.success(
+              `Generated ${result.variations.length} variation${result.variations.length > 1 ? "s" : ""}!`
+            );
+          } else {
+            throw new Error("All variations failed to generate");
+          }
+        } else {
+          // Single generation: use existing generate action (unchanged)
+          const result = await generate({
+            prompt,
+            aspectRatio: settings.aspectRatio,
+            durationInSeconds: settings.durationInSeconds,
+            fps: settings.fps,
+          });
+
+          // Validating step after successful generation
+          setCurrentStep("validating");
+          await new Promise((resolve) => setTimeout(resolve, 300));
+
+          // Validate result has required fields
+          if (!result || typeof result !== "object") {
+            throw new Error("Invalid response from generation service");
+          }
+
+          const generationResult: GenerationResult = {
+            id: String(result.id),
+            rawCode: result.rawCode,
+            code: result.code,
+            // Provide defaults for safety (should always be present from action)
+            durationInFrames: result.durationInFrames ?? 90,
+            fps: result.fps ?? 30,
+          };
+
+          // Validate we have actual code
+          if (!generationResult.code) {
+            throw new Error("Generation did not return code");
+          }
+
+          setLastGeneration(generationResult);
+          toast.success("Animation generated successfully!");
         }
-
-        const generationResult: GenerationResult = {
-          id: String(result.id),
-          rawCode: result.rawCode,
-          code: result.code,
-          // Provide defaults for safety (should always be present from action)
-          durationInFrames: result.durationInFrames ?? 90,
-          fps: result.fps ?? 30,
-        };
-
-        // Validate we have actual code
-        if (!generationResult.code) {
-          throw new Error("Generation did not return code");
-        }
-
-        setLastGeneration(generationResult);
-        toast.success("Animation generated successfully!");
       } catch (e) {
         const errorMessage =
           e instanceof Error ? e.message : "Generation failed";
@@ -212,7 +245,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         setCurrentStep(null);
       }
     },
-    [generate, error?.retryCount, validation, settings.aspectRatio, settings.durationInSeconds, settings.fps]
+    [generate, generateVariationsAction, error?.retryCount, validation, settings.aspectRatio, settings.durationInSeconds, settings.fps, settings.variationCount]
   );
 
   const handleRefine = useCallback(
