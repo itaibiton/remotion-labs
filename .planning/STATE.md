@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 16 complete, Phase 17 next (prequel generation)
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 17 in progress (prequel generation)
 
 ## Current Position
 
-Phase: 16 of 17 (Per-Creation Actions)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 -- Completed 16-02-PLAN.md (extend-next action wiring)
+Phase: 17 of 17 (Prequel Generation)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-01 -- Completed 17-01-PLAN.md (prequel backend -- PREQUEL_SYSTEM_PROMPT + generatePrequel)
 
-Progress: [################    ] 77% (10/13 plans)
+Progress: [#################   ] 85% (11/13 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [################    ] 77% (10/13 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 39
-- Total execution time: ~162.0 min
+- Total plans completed: 40
+- Total execution time: ~164.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -44,6 +44,7 @@ Progress: [################    ] 77% (10/13 plans)
 | 14-variations | 2/2 | 6 min | 3.0 min |
 | 15-image-upload-input-bar | 3/3 | 8 min | 2.7 min |
 | 16-per-creation-actions | 2/2 | 7 min | 3.5 min |
+| 17-prequel-generation | 1/2 | 2 min | 2.0 min |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ v0.2.0 decisions:
 - Extend Next auto-saves generation as clip before navigation (reuses clips.save mutation)
 - No Extend Previous button until Phase 17 builds prequel backend
 - Save-then-navigate pattern: auto-save as clip, toast feedback, router.push to continuation URL
+- PREQUEL_SYSTEM_PROMPT as separate constant (not parameterized shared prompt with continuation)
+- generatePrequel as standalone action (not shared action with mode flag)
+- TARGET SCENE CODE framing in prequel user messages (vs PREVIOUS SCENE CODE for continuation)
 
 ### Pending Todos
 
@@ -107,12 +111,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T21:51Z
-Stopped at: Completed 16-02-PLAN.md (extend-next action wiring -- Phase 16 complete)
+Last session: 2026-02-01T22:16Z
+Stopped at: Completed 17-01-PLAN.md (prequel backend)
 Resume file: None
 
-Next step: Execute Phase 17 (prequel generation)
+Next step: Execute 17-02-PLAN.md (prequel UI wiring -- Extend Previous button + create page prequel mode)
 
 ---
-*16-02 complete -- 2026-02-01*
-*Extend Next dropdown action auto-saves generation as clip and navigates to continuation mode*
+*17-01 complete -- 2026-02-01*
+*PREQUEL_SYSTEM_PROMPT and generatePrequel action added to convex/generateAnimation.ts*
