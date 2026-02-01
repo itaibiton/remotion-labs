@@ -22,6 +22,9 @@ interface GenerationRowProps {
     status: "success" | "failed";
     errorMessage?: string;
     createdAt: number;
+    batchId?: string;
+    variationIndex?: number;
+    variationCount?: number;
   };
   onSelect: (generation: GenerationRowProps["generation"]) => void;
 }
