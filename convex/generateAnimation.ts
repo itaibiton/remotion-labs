@@ -85,6 +85,16 @@ FORBIDDEN:
 Now generate a Remotion composition based on the user's request.`;
 
 // ============================================================================
+// Aspect Ratio → Dimensions Map
+// ============================================================================
+
+const ASPECT_RATIO_MAP: Record<string, { width: number; height: number }> = {
+  "16:9": { width: 1920, height: 1080 },
+  "1:1": { width: 1080, height: 1080 },
+  "9:16": { width: 1080, height: 1920 },
+};
+
+// ============================================================================
 // Validation Pipeline (inlined for Convex bundler compatibility)
 // ============================================================================
 
@@ -439,6 +449,9 @@ Now generate a continuation based on the user's request.`;
 export const generate = action({
   args: {
     prompt: v.string(),
+    aspectRatio: v.optional(v.string()),
+    durationInSeconds: v.optional(v.number()),
+    fps: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<{
     id: Id<"generations">;
@@ -468,11 +481,26 @@ export const generate = action({
 
     const client = new Anthropic({ apiKey });
 
+    // Resolve generation settings with defaults
+    const aspectRatio = args.aspectRatio ?? "16:9";
+    const dimensions = ASPECT_RATIO_MAP[aspectRatio] ?? { width: 1920, height: 1080 };
+    const targetDuration = args.durationInSeconds ?? 3;
+    const targetFps = args.fps ?? 30;
+    const targetFrames = Math.round(targetDuration * targetFps);
+
+    // Inject settings into system prompt
+    const enhancedPrompt = SYSTEM_PROMPT +
+      `\n\nIMPORTANT COMPOSITION SETTINGS:\n` +
+      `- Dimensions: ${dimensions.width}x${dimensions.height} (${aspectRatio})\n` +
+      `- Duration: ${targetFrames} frames at ${targetFps} FPS\n` +
+      `- Use // DURATION: ${targetFrames} and // FPS: ${targetFps} in your output\n` +
+      `- Design your layout for ${aspectRatio} aspect ratio`;
+
     // Call Claude API
     const response = await client.messages.create({
       model: "claude-sonnet-4-5-20250929",
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
+      system: enhancedPrompt,
       messages: [{ role: "user", content: args.prompt }],
     });
 
@@ -507,7 +535,7 @@ export const generate = action({
 
     // Clamp values for safety
     const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
-    const fps = 30; // Always 30 fps for consistency
+    const fps = targetFps;
 
     // Validate the code
     const validation = validateRemotionCode(code);
@@ -523,7 +551,7 @@ export const generate = action({
       throw new Error(transformed.error || "Code transformation failed");
     }
 
-    // Store the successful generation
+    // Store the successful generation with settings metadata
     const generationId: Id<"generations"> = await ctx.runMutation(
       internal.generations.store,
       {
@@ -535,6 +563,8 @@ export const generate = action({
         fps,
         status: "success" as const,
         createdAt: Date.now(),
+        aspectRatio,
+        durationInSeconds: targetDuration,
       }
     );
 
