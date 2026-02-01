@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 9: App Shell & Clip Library)
+**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 10: Scenes & Timeline)
 
 ## Current Position
 
-Phase: 9 of 12 (App Shell & Clip Library)
-Plan: 2 of 3 in current phase
-Status: In progress (Plans 09-01 and 09-02 complete, 09-03 remaining)
-Last activity: 2026-02-01 -- Completed 09-02-PLAN.md (Clips Backend & Save Flow)
+Phase: 9 of 12 (App Shell & Clip Library) -- COMPLETE
+Plan: 3 of 3 in phase 9 (all complete)
+Status: Phase 9 complete. Ready for Phase 10.
+Last activity: 2026-02-01 -- Completed 09-03-PLAN.md (Clip Library Page)
 
-Progress: [==========........] 79% (24/~33 plans across all milestones)
+Progress: [=============.....] 82% (25/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [==========........] 79% (24/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 24
-- Total execution time: ~114 min
+- Total plans completed: 25
+- Total execution time: ~116 min
 
 **v1.1 Breakdown:**
 
@@ -43,7 +43,7 @@ Progress: [==========........] 79% (24/~33 plans across all milestones)
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 09-app-shell-clip-library | 2/3 | 4 min | 2.0 min |
+| 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
 
 ## Accumulated Context
 
@@ -57,6 +57,8 @@ Recent decisions affecting v2.0:
 - 5 nav items in sidebar including Movie placeholder for Phase 10 readiness (09-01)
 - clips.list returns [] for unauthenticated (graceful), clips.save throws (explicit auth) (09-02)
 - clips.get has no auth check for MVP simplicity -- loaded by ID from URL params (09-02)
+- Remotion Thumbnail renders middle frame for representative clip preview (09-03)
+- Clip loading in create page uses Convex conditional query with "skip" pattern (09-03)
 
 ### Pending Todos
 
@@ -72,10 +74,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 09-02-PLAN.md
+Stopped at: Completed 09-03-PLAN.md (Phase 9 complete)
 Resume file: None
 
-Next step: Execute 09-03-PLAN.md (Clip Library Page)
+Next step: Begin Phase 10 planning (Scenes & Timeline)
 
 ---
-*Plan 09-02 complete -- 2026-02-01*
+*Phase 9 complete -- 2026-02-01*
