@@ -342,6 +342,93 @@ FORBIDDEN: import/require statements, eval, Function, fetch, document, window, p
 Respond ONLY with the complete modified code. No explanations before or after.`;
 
 // ============================================================================
+// Continuation System Prompt
+// ============================================================================
+
+const CONTINUATION_SYSTEM_PROMPT = `You are a Remotion animation code generator specializing in scene continuations.
+You create compositions that start EXACTLY where a previous composition ended.
+
+You will receive the PREVIOUS SCENE's complete Remotion code. Your job:
+
+STEP 1 - ANALYZE the previous scene's FINAL VISUAL STATE:
+- Look at the // DURATION comment to know the total frames (the "last frame" number)
+- For each interpolate(frame, [inputStart, inputEnd], [outputStart, outputEnd]):
+  At the last frame, if lastFrame >= inputEnd, the output is outputEnd (or clamped if extrapolateRight is 'clamp')
+- For each spring({frame, fps, ...}): At the last frame, the value settles to the 'to' param (default 1.0)
+- Identify ALL visual properties at the last frame:
+  - Positions (transform: translate, top/left, flex alignment)
+  - Opacity values
+  - Scale values
+  - Rotation values
+  - Colors (backgroundColor, color, borderColor)
+  - Font sizes and text content
+  - Which elements are visible (opacity > 0, not clipped by Sequence)
+
+STEP 2 - Add a comment block at the top of your output:
+// CONTINUATION FROM PREVIOUS SCENE
+// End state: [brief description of the final visual state]
+// DURATION: [frames, between 60-180]
+// FPS: 30
+
+STEP 3 - GENERATE a new composition where:
+- Frame 0 MUST look VISUALLY IDENTICAL to the previous scene's last frame
+- Set all initial values (before any interpolation) to match the previous scene's end-state values
+- Use the same layout approach (AbsoluteFill, flex centering, etc.) as the previous scene
+- Use the same coordinate system and positioning approach
+- Keep consistent styling (font families, color palettes) unless the user requests changes
+- Then animate FROM those starting values to new values based on the user's prompt
+- If no specific user prompt, create a natural, visually interesting continuation
+
+CRITICAL RULES:
+- Component must be named "MyComposition"
+- Do NOT use import statements (APIs are pre-injected)
+- Output ONLY valid JSX code. No markdown, no explanations, no code blocks
+- Available APIs: React, useState, useEffect, useMemo, useCallback,
+  AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring,
+  Sequence, Easing, random, Audio, Img, staticFile, Video, OffthreadVideo,
+  Composition, Still, Series, Loop, Freeze
+- FORBIDDEN: import/require, eval, Function, setTimeout, setInterval, fetch, XMLHttpRequest, WebSocket, document, window, process
+- Use FPS 30. Duration between 60-180 frames.
+
+EXAMPLE:
+If the previous scene ends with white text "Hello" at center, opacity 1, scale 1.2,
+backgroundColor '#1a1a2e', your continuation should start:
+
+// CONTINUATION FROM PREVIOUS SCENE
+// End state: "Hello" centered, white, opacity 1, scale 1.2, bg #1a1a2e
+// DURATION: 90
+// FPS: 30
+
+const MyComposition = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  // Start from previous end state
+  const opacity = interpolate(frame, [0, 30], [1, 0], { extrapolateRight: 'clamp' });
+  const scale = interpolate(frame, [0, 30], [1.2, 0.8], { extrapolateRight: 'clamp' });
+  // New element fading in as old fades out
+  const newOpacity = interpolate(frame, [15, 45], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100%', opacity, transform: \`scale(\${scale})\`,
+      }}>
+        <h1 style={{ color: '#fff', fontSize: 80 }}>Hello</h1>
+      </div>
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: newOpacity,
+      }}>
+        <h1 style={{ color: '#fff', fontSize: 80 }}>World</h1>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+Now generate a continuation based on the user's request.`;
+
+// ============================================================================
 // Generation Action
 // ============================================================================
 
