@@ -15,6 +15,9 @@ import type { Template } from "@/lib/templates";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ExportButtons } from "@/components/export/export-buttons";
+import { SaveClipDialog } from "@/components/library/save-clip-dialog";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 type GenerationStep = "analyzing" | "generating" | "validating" | null;
 
@@ -50,6 +53,9 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedCode, setEditedCode] = useState<string | null>(null);
   const [skipValidation, setSkipValidation] = useState(true);
+
+  // Save clip dialog state
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -346,6 +352,23 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
               </div>
             </div>
 
+            {/* Save clip */}
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Save this composition to your library
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSaveDialog(true)}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save as Clip
+                </Button>
+              </div>
+            </div>
+
             {/* Export controls */}
             <div className="pt-2 border-t">
               <div className="flex items-center justify-between">
@@ -382,6 +405,16 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
           placeholder={promptPlaceholder}
         />
       )}
+
+      <SaveClipDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        rawCode={editorCode}
+        code={previewCode}
+        durationInFrames={lastGeneration?.durationInFrames ?? 90}
+        fps={lastGeneration?.fps ?? 30}
+        defaultName={lastPrompt.slice(0, 50) || "Untitled Clip"}
+      />
     </div>
   );
 }
