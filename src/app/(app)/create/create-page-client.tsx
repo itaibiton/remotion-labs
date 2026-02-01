@@ -17,9 +17,12 @@ import { toast } from "sonner";
 import { ExportButtons } from "@/components/export/export-buttons";
 import { SaveClipDialog } from "@/components/library/save-clip-dialog";
 import { Button } from "@/components/ui/button";
-import { Save, FastForward, Film } from "lucide-react";
+import { Save, FastForward, Film, Settings2 } from "lucide-react";
 import { ClipRenderButton } from "@/components/render/clip-render-button";
 import { AddToMovieDialog } from "@/components/library/add-to-movie-dialog";
+import { GenerationFeed } from "@/components/generation/generation-feed";
+import { GenerationSettingsPanel } from "@/components/generation/generation-settings";
+import { useGenerationSettings } from "@/hooks/use-generation-settings";
 import { useRouter } from "next/navigation";
 
 type GenerationStep = "analyzing" | "generating" | "validating" | null;
@@ -49,6 +52,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   const refine = useAction(api.generateAnimation.refine);
   const continuationAction = useAction(api.generateAnimation.generateContinuation);
   const router = useRouter();
+  const { settings, updateSetting, resetSettings } = useGenerationSettings();
+  const [showSettings, setShowSettings] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState<GenerationStep>(null);
@@ -162,7 +167,12 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       setCurrentStep("generating");
 
       try {
-        const result = await generate({ prompt });
+        const result = await generate({
+          prompt,
+          aspectRatio: settings.aspectRatio,
+          durationInSeconds: settings.durationInSeconds,
+          fps: settings.fps,
+        });
 
         // Validating step after successful generation
         setCurrentStep("validating");
@@ -202,7 +212,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         setCurrentStep(null);
       }
     },
-    [generate, error?.retryCount, validation]
+    [generate, error?.retryCount, validation, settings.aspectRatio, settings.durationInSeconds, settings.fps]
   );
 
   const handleRefine = useCallback(
@@ -337,6 +347,23 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       handleGenerate(lastPrompt);
     }
   }, [lastPrompt, handleGenerate]);
+
+  const handleSelectGeneration = useCallback((generation: any) => {
+    if (generation.status === "failed" || !generation.code) return;
+    setLastGeneration({
+      id: String(generation._id),
+      rawCode: generation.rawCode ?? "",
+      code: generation.code,
+      durationInFrames: generation.durationInFrames ?? 90,
+      fps: generation.fps ?? 30,
+    });
+    setLastPrompt(generation.prompt);
+    setEditedCode(null);
+    setIsEditing(false);
+    setSkipValidation(true);
+    setChatMessages([]);
+    setSavedClipId(null);
+  }, []);
 
   const promptPlaceholder = sourceClipId
     ? "Describe what should happen next (or press Enter for automatic continuation)..."
@@ -515,6 +542,31 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         </div>
       )}
 
+      {/* Settings toggle + panel */}
+      {!isGenerating && (
+        <div className="w-full max-w-2xl mb-4">
+          <div className="flex items-center justify-end mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              <Settings2 className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          </div>
+          {showSettings && (
+            <div className="p-4 border rounded-lg mb-4">
+              <GenerationSettingsPanel
+                settings={settings}
+                onUpdateSetting={updateSetting}
+                onReset={resetSettings}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Prompt input - visible when not generating */}
       {!isGenerating && (
         <PromptInput
@@ -525,6 +577,14 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
           disabled={false}
           placeholder={promptPlaceholder}
         />
+      )}
+
+      {/* Generation Feed - shown when no generation is selected */}
+      {!isGenerating && !lastGeneration && (
+        <div className="w-full max-w-2xl mt-8">
+          <h3 className="text-sm font-medium text-muted-foreground mb-4">Past Generations</h3>
+          <GenerationFeed onSelectGeneration={handleSelectGeneration} />
+        </div>
       )}
 
       <SaveClipDialog
