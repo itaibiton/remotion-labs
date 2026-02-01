@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- roadmap created, ready to plan Phase 13
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 13 in progress
 
 ## Current Position
 
 Phase: 13 of 17 (Generation Feed & Settings)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-01 -- v0.2.0 roadmap created (5 phases, 12 plans, 11 requirements)
+Plan: 2 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-01 -- Completed 13-02-PLAN.md (generation settings infrastructure)
 
-Progress: [                    ] 0% (0/12 plans)
+Progress: [###                 ] 17% (2/12 plans)
 
 ## Milestone History
 
@@ -55,6 +55,9 @@ v0.2.0 decisions:
 - EXIF stripping on client before upload (piexifjs)
 - Default to 1 variation (users opt into more)
 - Prequel uses same LLM code-reading approach as continuation
+- Custom useLocalStorage hook (not usehooks-ts) -- one hook not worth a dependency
+- GenerationSettingsPanel is presentational (props-driven, parent-controlled state)
+- Duration presets [1,2,3,5,10]s and FPS presets [15,24,30,60] as button groups
 
 ### Pending Todos
 
@@ -70,12 +73,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: v0.2.0 roadmap created. 5 phases (13-17), 12 plans, 11 requirements mapped.
+Last session: 2026-02-01T16:20Z
+Stopped at: Completed 13-02-PLAN.md (generation settings infrastructure)
 Resume file: None
 
-Next step: `/gsd:plan-phase 13` -- plan Generation Feed & Settings phase.
+Next step: Execute 13-03-PLAN.md -- create page assembly (wire feed + settings into create page)
 
 ---
-*v0.2.0 roadmap created -- 2026-02-01*
-*Create Page Overhaul: generation feed, variations, settings, upload, input bar, actions, prequel*
+*13-02 complete -- 2026-02-01*
+*Settings infrastructure: aspect-ratios.ts, useLocalStorage, useGenerationSettings, GenerationSettingsPanel*
