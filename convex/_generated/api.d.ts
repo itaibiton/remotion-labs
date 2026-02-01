@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as clips from "../clips.js";
 import type * as generateAnimation from "../generateAnimation.js";
 import type * as generations from "../generations.js";
 import type * as lib_renderLimits from "../lib/renderLimits.js";
@@ -24,6 +25,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  clips: typeof clips;
   generateAnimation: typeof generateAnimation;
   generations: typeof generations;
   "lib/renderLimits": typeof lib_renderLimits;
