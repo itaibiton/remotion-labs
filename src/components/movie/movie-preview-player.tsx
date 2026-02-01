@@ -1,0 +1,87 @@
+"use client";
+
+import { useRef, useMemo, useEffect, useState } from "react";
+import { Player, type PlayerRef } from "@remotion/player";
+import {
+  MovieComposition,
+  type MovieScene,
+} from "@/remotion/compositions/MovieComposition";
+import { useCurrentPlayerFrame } from "@/hooks/use-current-player-frame";
+
+interface MoviePreviewPlayerProps {
+  scenes: MovieScene[];
+  fps: number;
+  totalDurationInFrames: number;
+  onActiveSceneChange?: (sceneIndex: number) => void;
+}
+
+export function MoviePreviewPlayer({
+  scenes,
+  fps,
+  totalDurationInFrames,
+  onActiveSceneChange,
+}: MoviePreviewPlayerProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  const playerRef = useRef<PlayerRef>(null);
+  const currentFrame = useCurrentPlayerFrame(playerRef);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Compute cumulative start/end frame offsets for each scene
+  const sceneTimings = useMemo(() => {
+    let offset = 0;
+    return scenes.map((scene) => {
+      const startFrame = offset;
+      const endFrame = offset + scene.durationInFrames;
+      offset = endFrame;
+      return { startFrame, endFrame };
+    });
+  }, [scenes]);
+
+  // Determine which scene is active based on current frame
+  const activeSceneIndex = useMemo(() => {
+    if (sceneTimings.length === 0) return -1;
+    for (let i = 0; i < sceneTimings.length; i++) {
+      const { startFrame, endFrame } = sceneTimings[i];
+      if (currentFrame >= startFrame && currentFrame < endFrame) {
+        return i;
+      }
+    }
+    // Fallback: if frame is at or past the end, highlight last scene
+    return sceneTimings.length - 1;
+  }, [currentFrame, sceneTimings]);
+
+  // Notify parent of active scene changes
+  useEffect(() => {
+    onActiveSceneChange?.(activeSceneIndex);
+  }, [activeSceneIndex, onActiveSceneChange]);
+
+  // Guard: don't render player for empty movies
+  if (totalDurationInFrames === 0) {
+    return null;
+  }
+
+  if (!isMounted) {
+    return <div className="aspect-video bg-black rounded-lg animate-pulse" />;
+  }
+
+  return (
+    <div className="rounded-lg overflow-hidden shadow-lg border">
+      <Player
+        ref={playerRef}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        component={MovieComposition as any}
+        inputProps={{ scenes }}
+        durationInFrames={totalDurationInFrames}
+        fps={fps}
+        compositionWidth={1920}
+        compositionHeight={1080}
+        style={{ width: "100%" }}
+        controls
+        loop
+      />
+    </div>
+  );
+}
