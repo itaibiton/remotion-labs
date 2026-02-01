@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- milestone defined, pending research & requirements
+**Current focus:** v0.2.0 Create Page Overhaul -- roadmap created, ready to plan Phase 13
 
 ## Current Position
 
-Phase: Pre-planning (v0.2.0 milestone)
-Plan: N/A
-Status: Milestone defined. PROJECT.md updated. Awaiting research and requirements definition.
-Last activity: 2026-02-01 -- v0.2.0 milestone kickoff
+Phase: 13 of 17 (Generation Feed & Settings)
+Plan: 0 of 3 in current phase
+Status: Ready to plan
+Last activity: 2026-02-01 -- v0.2.0 roadmap created (5 phases, 12 plans, 11 requirements)
 
-Progress: [                    ] 0% (0/? plans)
+Progress: [                    ] 0% (0/12 plans)
 
 ## Milestone History
 
@@ -32,14 +32,6 @@ Progress: [                    ] 0% (0/? plans)
 - Total plans completed: 33
 - Total execution time: ~146.0 min
 
-**v1.1 Breakdown:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 06-code-generation-safe-execution | 4 | 19 min | 4.8 min |
-| 07-editing-iteration | 4 | 14 min | 3.5 min |
-| 08-export-polish | 2 | 5 min | 2.5 min |
-
 **v2.0 Breakdown:**
 
 | Phase | Plans | Total | Avg/Plan |
@@ -54,13 +46,15 @@ Progress: [                    ] 0% (0/? plans)
 ### Decisions
 
 All decisions documented in PROJECT.md Key Decisions table.
-v0.2.0 decisions (from questioning):
-- Create page IS the history (Midjourney-style scrolling feed of all generations)
-- Library stays separate for explicitly saved clips
-- 1-4 variations per prompt (method TBD -- needs research)
-- Extend Previous = generate prequel (animation leading into clip's start state)
-- Settings: Duration + FPS + Aspect Ratio
-- Image/file upload for reference-based generation
+v0.2.0 decisions:
+- Create page IS the history (Midjourney-style scrolling feed)
+- One generation row per variation with batchId grouping
+- Static screenshots for feed thumbnails (live Player only for selected)
+- localStorage for settings defaults, per-generation for display/rerun
+- Parallel Claude API calls with temperature 0.9 for variations
+- EXIF stripping on client before upload (piexifjs)
+- Default to 1 variation (users opt into more)
+- Prequel uses same LLM code-reading approach as continuation
 
 ### Pending Todos
 
@@ -70,20 +64,18 @@ None.
 
 - AWS Lambda setup pending -- code integration complete but not tested with real Lambda
 - Function constructor security needs adversarial testing before production
-- End-state extraction uses LLM code reading (not static AST analysis) -- implemented in 12-01
-- Lambda bundle must register MovieComposition and DynamicCode compositions for movie/clip renders to work
-- Variations approach needs research: parallel Claude calls vs single call with multiple outputs vs temperature-based
-- Prequel generation (start-state extraction) is new -- needs research on feasibility and approach
-- Image upload integration with Claude API (vision) needs research
+- Feed performance with 50+ generations (test early with static thumbnails)
+- Claude API cost at scale with 4 variations (implement usage tracking)
+- Prequel quality for complex animations (user preview + edit as fallback)
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: v0.2.0 milestone defined, PROJECT.md updated, ready for research
+Stopped at: v0.2.0 roadmap created. 5 phases (13-17), 12 plans, 11 requirements mapped.
 Resume file: None
 
-Next step: Spawn research agents to investigate variations approach, image upload integration, prequel generation, and create feed architecture.
+Next step: `/gsd:plan-phase 13` -- plan Generation Feed & Settings phase.
 
 ---
-*v0.2.0 milestone started -- 2026-02-01*
-*Create Page Overhaul: generation feed, variations, settings, upload, prequel generation*
+*v0.2.0 roadmap created -- 2026-02-01*
+*Create Page Overhaul: generation feed, variations, settings, upload, input bar, actions, prequel*

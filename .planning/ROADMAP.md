@@ -2,7 +2,7 @@
 
 ## Overview
 
-RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity.
+RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity. v0.2.0 (11 requirements) overhauls the create page into a Midjourney-style scrolling feed with multi-variation generation, configurable settings, image upload for reference-based prompts, per-creation actions, and prequel generation.
 
 ## Phases
 
@@ -32,12 +32,23 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 </details>
 
-### v2.0 — Scenes, Timeline & Movie Editor
+<details>
+<summary>v2.0 (Complete)</summary>
 
 - [x] **Phase 9: App Shell & Clip Library** - Users can save, organize, and reopen their compositions from a persistent clip library
 - [x] **Phase 10: Movie Data & Timeline UI** - Users can create movies and arrange scenes on a horizontal timeline
 - [x] **Phase 11: Movie Preview, Render & Export** - Users can preview, render, and export full movies as MP4 or Remotion projects
 - [x] **Phase 12: Continuation Generation** - Users can generate visually continuous next scenes from existing clips
+
+</details>
+
+### v0.2.0 -- Create Page Overhaul
+
+- [ ] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
+- [ ] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
+- [ ] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
+- [ ] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
+- [ ] **Phase 17: Prequel Generation** - Users can generate animations that lead into an existing clip's start state
 
 ## Phase Details
 
@@ -180,6 +191,9 @@ Plans:
 
 </details>
 
+<details>
+<summary>v2.0 Phase Details (Complete)</summary>
+
 ### Phase 9: App Shell & Clip Library
 **Goal**: Users can save their compositions as reusable clips and navigate between app sections through a persistent sidebar
 **Depends on**: Phase 8 (existing code generation, validation, and editor infrastructure)
@@ -247,10 +261,89 @@ Plans:
 - [x] 12-01-PLAN.md -- Continuation system prompt + generateContinuation backend action
 - [x] 12-02-PLAN.md -- Continuation UI (create page mode, contextual actions, Generate Next buttons, Add to Movie dialog)
 
+</details>
+
+### Phase 13: Generation Feed & Settings
+**Goal**: Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
+**Depends on**: Phase 12 (existing create page, generation pipeline, and schema)
+**Requirements**: FEED-01, FEED-02, SET-01, SET-02
+**Success Criteria** (what must be TRUE):
+  1. User opens the create page and sees all past generations listed newest-first as a scrolling feed
+  2. Each generation row displays the prompt text and metadata (aspect ratio, duration, timestamp) alongside variation thumbnail(s)
+  3. User can open a settings panel and choose aspect ratio (9:16, 1:1, 16:9) before generating
+  4. User can set duration and FPS in the settings panel, and these persist as defaults across sessions via localStorage
+  5. Newly generated animations respect the configured aspect ratio, duration, and FPS
+**Plans**: 3 plans
+
+Plans:
+- [ ] 13-01-PLAN.md -- Schema updates (batchId, variationIndex, settings fields) and generation action changes
+- [ ] 13-02-PLAN.md -- Settings panel component with localStorage persistence
+- [ ] 13-03-PLAN.md -- Feed UI with paginated query, batchId grouping, and static thumbnails
+
+### Phase 14: Variations
+**Goal**: Users can generate multiple distinct compositions from one prompt and choose among them
+**Depends on**: Phase 13 (batchId data model and feed UI must exist)
+**Requirements**: VAR-01, VAR-02
+**Success Criteria** (what must be TRUE):
+  1. User can select 1-4 variations before generating; system produces that many distinct compositions via parallel Claude calls
+  2. Each generation row in the feed shows a grid of 1-4 variation thumbnails with V1-V4 badges
+  3. User can click a variation thumbnail to expand it full-size with preview player, code editor, and action buttons
+  4. Selected variation becomes the target for all downstream actions (save, render, continue, edit)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md -- Parallel generation action (batchId orchestration, temperature 0.9, variation count)
+- [ ] 14-02-PLAN.md -- Variation grid in feed rows, selection/expansion UI, and variation count selector
+
+### Phase 15: Image Upload & Input Bar
+**Goal**: Users can attach reference images and use a unified input bar with all generation controls
+**Depends on**: Phase 14 (settings and variations must exist for the input bar to integrate them)
+**Requirements**: UPLOAD-01, INPUT-01
+**Success Criteria** (what must be TRUE):
+  1. User can attach 1-3 reference images via click, drag-drop, or paste in the input area
+  2. Attached images show as thumbnail chips with remove buttons before submitting
+  3. Images are uploaded to Convex file storage with EXIF data stripped, and passed to Claude as visual context
+  4. Input bar displays prompt textarea, image upload button, settings toggle, variation count selector, and generate button in a cohesive layout
+**Plans**: 3 plans
+
+Plans:
+- [ ] 15-01-PLAN.md -- Convex file upload flow (upload URL, EXIF stripping, storage) and Claude vision integration
+- [ ] 15-02-PLAN.md -- Image attachment UI (drop zone, thumbnail chips, paste handler)
+- [ ] 15-03-PLAN.md -- Input bar redesign composing all controls (prompt, upload, settings toggle, variation selector)
+
+### Phase 16: Per-Creation Actions
+**Goal**: Users can manage and extend any generation directly from the feed
+**Depends on**: Phase 15 (all generation capabilities must exist; actions surface them per-row)
+**Requirements**: ACT-01, ACT-02
+**Success Criteria** (what must be TRUE):
+  1. User can click "Extend Next" on a generation to start a continuation from its end state
+  2. User can click "Extend Previous" on a generation to start a prequel generation (wired in Phase 17)
+  3. User can save a generation's selected variation to the clip library from the feed
+  4. User can delete a generation from the feed and rerun it with the same prompt and settings
+**Plans**: 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md -- Action bar/overlay component with save, delete, and rerun actions
+- [ ] 16-02-PLAN.md -- Extend-next and extend-previous action wiring (continuation entry points from feed rows)
+
+### Phase 17: Prequel Generation
+**Goal**: Users can generate animations that lead into an existing clip's visual start state
+**Depends on**: Phase 16 (extend-previous action button must exist as entry point)
+**Requirements**: PREQUEL-01
+**Success Criteria** (what must be TRUE):
+  1. User clicks "Extend Previous" on a generation and the system analyzes the clip's code to extract its frame-0 visual state
+  2. System generates a prequel animation whose final frame matches the target clip's opening frame
+  3. User can preview, edit, and save the prequel just like any other generation in the feed
+**Plans**: 2 plans
+
+Plans:
+- [ ] 17-01-PLAN.md -- Start-state extraction and PREQUEL_SYSTEM_PROMPT (mirrors continuation architecture)
+- [ ] 17-02-PLAN.md -- generatePrequel action wiring and extend-previous integration
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -266,10 +359,16 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 10. Movie Data & Timeline UI | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 11. Movie Preview, Render & Export | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 12. Continuation Generation | v2.0 | 2/2 | Complete | 2026-02-01 |
+| 13. Generation Feed & Settings | v0.2.0 | 0/3 | Not started | - |
+| 14. Variations | v0.2.0 | 0/2 | Not started | - |
+| 15. Image Upload & Input Bar | v0.2.0 | 0/3 | Not started | - |
+| 16. Per-Creation Actions | v0.2.0 | 0/2 | Not started | - |
+| 17. Prequel Generation | v0.2.0 | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
-*v2.0 requirements: 15 mapped*
-*Updated: 2026-02-01 -- Phase 12 complete. All v2.0 phases delivered.*
+*v2.0 requirements: 15 mapped (complete)*
+*v0.2.0 requirements: 11 mapped*
+*Updated: 2026-02-01 -- v0.2.0 roadmap created. 5 phases (13-17), 12 plans, 11 requirements.*

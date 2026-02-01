@@ -6,7 +6,7 @@
 ## v2.0 Requirements (Complete)
 
 <details>
-<summary>v2.0 — Scenes, Timeline & Movie Editor (15/15 complete)</summary>
+<summary>v2.0 -- Scenes, Timeline & Movie Editor (15/15 complete)</summary>
 
 ### Save & Library
 
@@ -40,7 +40,7 @@
 
 </details>
 
-## v0.2.0 Requirements — Create Page Overhaul
+## v0.2.0 Requirements -- Create Page Overhaul
 
 Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases starting from Phase 13.
 
@@ -118,23 +118,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FEED-01 | TBD | Pending |
-| FEED-02 | TBD | Pending |
-| VAR-01 | TBD | Pending |
-| VAR-02 | TBD | Pending |
-| SET-01 | TBD | Pending |
-| SET-02 | TBD | Pending |
-| UPLOAD-01 | TBD | Pending |
-| ACT-01 | TBD | Pending |
-| ACT-02 | TBD | Pending |
-| INPUT-01 | TBD | Pending |
-| PREQUEL-01 | TBD | Pending |
+| FEED-01 | Phase 13 | Pending |
+| FEED-02 | Phase 13 | Pending |
+| SET-01 | Phase 13 | Pending |
+| SET-02 | Phase 13 | Pending |
+| VAR-01 | Phase 14 | Pending |
+| VAR-02 | Phase 14 | Pending |
+| UPLOAD-01 | Phase 15 | Pending |
+| INPUT-01 | Phase 15 | Pending |
+| ACT-01 | Phase 16 | Pending |
+| ACT-02 | Phase 16 | Pending |
+| PREQUEL-01 | Phase 17 | Pending |
 
 **Coverage:**
 - v0.2.0 requirements: 11 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 11
+- Mapped to phases: 11/11
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-01*
-*Last updated: 2026-02-01 -- v0.2.0 requirements defined, pending roadmap mapping*
+*Last updated: 2026-02-01 -- v0.2.0 traceability complete. 11/11 requirements mapped to phases 13-17.*
