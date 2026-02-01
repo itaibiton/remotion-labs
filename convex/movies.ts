@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 
 /**
  * Compute total duration in frames from a scenes array.
@@ -84,6 +84,29 @@ export const get = query({
   handler: async (ctx, args) => {
     const movie = await ctx.db.get(args.id);
     return movie;
+  },
+});
+
+/**
+ * Internal query for action use (e.g., startMovieRender).
+ * Returns movie with all referenced clip documents.
+ */
+export const getWithClipsInternal = internalQuery({
+  args: {
+    id: v.id("movies"),
+  },
+  handler: async (ctx, args) => {
+    const movie = await ctx.db.get(args.id);
+    if (!movie) return null;
+
+    const clips = await Promise.all(
+      movie.scenes.map((scene) => ctx.db.get(scene.clipId))
+    );
+
+    return {
+      ...movie,
+      sceneClips: clips,
+    };
   },
 });
 

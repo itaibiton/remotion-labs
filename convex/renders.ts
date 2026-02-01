@@ -5,7 +5,9 @@ import { query, internalMutation, internalQuery } from "./_generated/server";
 export const create = internalMutation({
   args: {
     userId: v.string(),
-    generationId: v.id("generations"),
+    generationId: v.optional(v.id("generations")),
+    movieId: v.optional(v.id("movies")),
+    clipId: v.optional(v.id("clips")),
     renderId: v.string(),
     bucketName: v.string(),
     status: v.union(v.literal("pending"), v.literal("rendering")),
@@ -79,6 +81,18 @@ export const listByUser = query({
       .withIndex("by_user", (q) => q.eq("userId", identity.tokenIdentifier))
       .order("desc")
       .take(20);
+  },
+});
+
+// Public query for getting render by movie (to check if movie render exists)
+export const getByMovie = query({
+  args: { movieId: v.id("movies") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("renders")
+      .withIndex("by_movie", (q) => q.eq("movieId", args.movieId))
+      .order("desc")
+      .first();
   },
 });
 

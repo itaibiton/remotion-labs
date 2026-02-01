@@ -68,7 +68,9 @@ export default defineSchema({
 
   renders: defineTable({
     userId: v.string(),
-    generationId: v.id("generations"),
+    generationId: v.optional(v.id("generations")),
+    movieId: v.optional(v.id("movies")),
+    clipId: v.optional(v.id("clips")),
     renderId: v.string(), // Remotion Lambda render ID
     bucketName: v.string(), // S3 bucket
     status: v.union(
@@ -86,5 +88,6 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_generation", ["generationId"])
+    .index("by_movie", ["movieId"])
     .index("by_status", ["status"]),
 });
