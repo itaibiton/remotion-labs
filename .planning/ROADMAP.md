@@ -323,8 +323,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md -- Action bar/overlay component with save, delete, and rerun actions
-- [ ] 16-02-PLAN.md -- Extend-next and extend-previous action wiring (continuation entry points from feed rows)
+- [x] 16-01-PLAN.md -- Action bar/overlay component with save, delete, and rerun actions
+- [x] 16-02-PLAN.md -- Extend-next and extend-previous action wiring (continuation entry points from feed rows)
 
 ### Phase 17: Prequel Generation
 **Goal**: Users can generate animations that lead into an existing clip's visual start state
@@ -362,7 +362,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 13. Generation Feed & Settings | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 14. Variations | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 15. Image Upload & Input Bar | v0.2.0 | 3/3 | Complete | 2026-02-01 |
-| 16. Per-Creation Actions | v0.2.0 | 0/2 | Not started | - |
+| 16. Per-Creation Actions | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 17. Prequel Generation | v0.2.0 | 0/2 | Not started | - |
 
 ---

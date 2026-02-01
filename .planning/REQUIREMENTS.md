@@ -65,8 +65,8 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Per-Creation Actions
 
-- [ ] **ACT-01**: Each generation has extend-next (continuation from end state) and extend-previous (prequel leading into start state) actions
-- [ ] **ACT-02**: Each generation has save (to clip library), delete (from feed), and rerun (regenerate with same prompt/settings) actions
+- [x] **ACT-01**: Each generation has extend-next (continuation from end state) and extend-previous (prequel leading into start state) actions
+- [x] **ACT-02**: Each generation has save (to clip library), delete (from feed), and rerun (regenerate with same prompt/settings) actions
 
 ### Input Bar
 
@@ -126,8 +126,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VAR-02 | Phase 14 | Complete |
 | UPLOAD-01 | Phase 15 | Complete |
 | INPUT-01 | Phase 15 | Complete |
-| ACT-01 | Phase 16 | Pending |
-| ACT-02 | Phase 16 | Pending |
+| ACT-01 | Phase 16 | Complete |
+| ACT-02 | Phase 16 | Complete |
 | PREQUEL-01 | Phase 17 | Pending |
 
 **Coverage:**
