@@ -34,6 +34,7 @@ interface VariationGridProps {
   onDelete: (generation: Generation) => void;
   onRerun: (generation: Generation) => void;
   onExtendNext: (generation: Generation) => void;
+  onExtendPrevious: (generation: Generation) => void;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -60,6 +61,7 @@ export function VariationGrid({
   onDelete,
   onRerun,
   onExtendNext,
+  onExtendPrevious,
 }: VariationGridProps) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -112,6 +114,7 @@ export function VariationGrid({
             onDelete={onDelete}
             onRerun={onRerun}
             onExtendNext={onExtendNext}
+            onExtendPrevious={onExtendPrevious}
           />
         </div>
       </div>
@@ -171,6 +174,7 @@ export function VariationGrid({
                   onDelete={onDelete}
                   onRerun={onRerun}
                   onExtendNext={onExtendNext}
+                  onExtendPrevious={onExtendPrevious}
                 />
               </div>
             </button>

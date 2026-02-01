@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Save, RotateCcw, Trash2, FastForward } from "lucide-react";
+import { MoreHorizontal, Save, RotateCcw, Trash2, FastForward, Rewind } from "lucide-react";
 
 interface Generation {
   _id: string;
@@ -44,6 +44,7 @@ interface GenerationRowActionsProps {
   onDelete: (generation: Generation) => void;
   onRerun: (generation: Generation) => void;
   onExtendNext: (generation: Generation) => void;
+  onExtendPrevious: (generation: Generation) => void;
 }
 
 export function GenerationRowActions({
@@ -52,6 +53,7 @@ export function GenerationRowActions({
   onDelete,
   onRerun,
   onExtendNext,
+  onExtendPrevious,
 }: GenerationRowActionsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isFailed = generation.status === "failed";
@@ -84,6 +86,13 @@ export function GenerationRowActions({
           >
             <FastForward className="h-4 w-4" />
             Extend Next
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => onExtendPrevious(generation)}
+            disabled={isFailed || !generation.code}
+          >
+            <Rewind className="h-4 w-4" />
+            Extend Previous
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => onRerun(generation)}>
             <RotateCcw className="h-4 w-4" />

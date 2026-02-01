@@ -32,6 +32,7 @@ interface GenerationRowProps {
   onDelete: (generation: GenerationRowProps["generation"]) => void;
   onRerun: (generation: GenerationRowProps["generation"]) => void;
   onExtendNext: (generation: GenerationRowProps["generation"]) => void;
+  onExtendPrevious: (generation: GenerationRowProps["generation"]) => void;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -51,7 +52,7 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext }: GenerationRowProps) {
+export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious }: GenerationRowProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -145,6 +146,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
           onDelete={onDelete}
           onRerun={onRerun}
           onExtendNext={onExtendNext}
+          onExtendPrevious={onExtendPrevious}
         />
       </div>
     </div>

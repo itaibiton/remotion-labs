@@ -14,6 +14,7 @@ interface GenerationFeedProps {
   onDeleteGeneration: (generation: any) => void;
   onRerunGeneration: (generation: any) => void;
   onExtendNextGeneration: (generation: any) => void;
+  onExtendPreviousGeneration: (generation: any) => void;
 }
 
 interface BatchGroup {
@@ -57,6 +58,7 @@ export function GenerationFeed({
   onDeleteGeneration,
   onRerunGeneration,
   onExtendNextGeneration,
+  onExtendPreviousGeneration,
 }: GenerationFeedProps) {
   const { results, status, loadMore } = usePaginatedQuery(
     api.generations.listPaginated,
@@ -117,6 +119,7 @@ export function GenerationFeed({
               onDelete={onDeleteGeneration}
               onRerun={onRerunGeneration}
               onExtendNext={onExtendNextGeneration}
+              onExtendPrevious={onExtendPreviousGeneration}
             />
           );
         }
@@ -130,6 +133,7 @@ export function GenerationFeed({
             onDelete={onDeleteGeneration}
             onRerun={onRerunGeneration}
             onExtendNext={onExtendNextGeneration}
+            onExtendPrevious={onExtendPreviousGeneration}
           />
         );
       })}
