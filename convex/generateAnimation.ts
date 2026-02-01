@@ -439,6 +439,90 @@ const MyComposition = () => {
 Now generate a continuation based on the user's request.`;
 
 // ============================================================================
+// Shared Generation Helper (plain async function, NOT a Convex action)
+// ============================================================================
+
+/**
+ * Calls Claude API, extracts code, validates, and transforms the result.
+ * Used by both `generate` and `generateVariations` actions.
+ *
+ * @param client - Anthropic SDK client instance
+ * @param prompt - User's prompt (sent as user message)
+ * @param enhancedPrompt - System prompt with injected settings
+ * @param temperature - Optional temperature override (omitted → Claude default)
+ * @returns Validated and transformed code with metadata
+ */
+async function generateSingleVariation(
+  client: Anthropic,
+  prompt: string,
+  enhancedPrompt: string,
+  temperature?: number,
+): Promise<{ rawCode: string; code: string; durationInFrames: number; fps: number }> {
+  // Call Claude API (only include temperature if explicitly provided)
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-5-20250929",
+    max_tokens: 4096,
+    system: enhancedPrompt,
+    messages: [{ role: "user", content: prompt }],
+    ...(temperature !== undefined ? { temperature } : {}),
+  });
+
+  // Extract text content from response
+  const textContent = response.content.find((block) => block.type === "text");
+  if (!textContent || textContent.type !== "text") {
+    throw new Error(
+      "Failed to generate animation: No text response from AI. Please try again."
+    );
+  }
+
+  // Extract code from response - handle potential markdown code blocks
+  let code = textContent.text.trim();
+
+  // Strip markdown code blocks if present
+  if (code.startsWith("```")) {
+    code = code
+      .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
+      .replace(/\n?```\s*$/, "")
+      .trim();
+  }
+
+  // Preserve original JSX for editor display (before any transformation)
+  const rawCode = code;
+
+  // Extract metadata from comments
+  const durationMatch = code.match(/\/\/\s*DURATION:\s*(\d+)/);
+  const fpsMatch = code.match(/\/\/\s*FPS:\s*(\d+)/);
+
+  const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
+  const rawFps = fpsMatch ? parseInt(fpsMatch[1]) : 30;
+
+  // Clamp values for safety
+  const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
+  const fps = Math.min(Math.max(rawFps, 15), 60);
+
+  // Validate the code
+  const validation = validateRemotionCode(code);
+  if (!validation.valid) {
+    throw new Error(
+      `Code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
+    );
+  }
+
+  // Transform JSX to JavaScript
+  const transformed = transformJSX(code);
+  if (!transformed.success || !transformed.code) {
+    throw new Error(transformed.error || "Code transformation failed");
+  }
+
+  return {
+    rawCode,
+    code: transformed.code,
+    durationInFrames,
+    fps,
+  };
+}
+
+// ============================================================================
 // Generation Action
 // ============================================================================
 
@@ -496,60 +580,15 @@ export const generate = action({
       `- Use // DURATION: ${targetFrames} and // FPS: ${targetFps} in your output\n` +
       `- Design your layout for ${aspectRatio} aspect ratio`;
 
-    // Call Claude API
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 4096,
-      system: enhancedPrompt,
-      messages: [{ role: "user", content: args.prompt }],
-    });
+    // Call the shared helper (no temperature override → uses Claude default)
+    const result = await generateSingleVariation(
+      client,
+      args.prompt,
+      enhancedPrompt,
+    );
 
-    // Extract text content from response
-    const textContent = response.content.find((block) => block.type === "text");
-    if (!textContent || textContent.type !== "text") {
-      throw new Error(
-        "Failed to generate animation: No text response from AI. Please try again."
-      );
-    }
-
-    // Extract code from response - handle potential markdown code blocks
-    let code = textContent.text.trim();
-
-    // Strip markdown code blocks if present
-    if (code.startsWith("```")) {
-      code = code
-        .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
-        .replace(/\n?```\s*$/, "")
-        .trim();
-    }
-
-    // Preserve original JSX for editor display (before any transformation)
-    const rawCode = code;
-
-    // Extract metadata from comments
-    const durationMatch = code.match(/\/\/\s*DURATION:\s*(\d+)/);
-    const fpsMatch = code.match(/\/\/\s*FPS:\s*(\d+)/);
-
-    const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
-    const rawFps = fpsMatch ? parseInt(fpsMatch[1]) : 30;
-
-    // Clamp values for safety
-    const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
+    // Use the caller's target FPS (overrides whatever Claude put in comments)
     const fps = targetFps;
-
-    // Validate the code
-    const validation = validateRemotionCode(code);
-    if (!validation.valid) {
-      throw new Error(
-        `Code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
-      );
-    }
-
-    // Transform JSX to JavaScript
-    const transformed = transformJSX(code);
-    if (!transformed.success || !transformed.code) {
-      throw new Error(transformed.error || "Code transformation failed");
-    }
 
     // Store the successful generation with settings metadata
     const generationId: Id<"generations"> = await ctx.runMutation(
@@ -557,9 +596,9 @@ export const generate = action({
       {
         userId: identity.tokenIdentifier,
         prompt: args.prompt,
-        code: transformed.code,
-        rawCode,
-        durationInFrames,
+        code: result.code,
+        rawCode: result.rawCode,
+        durationInFrames: result.durationInFrames,
         fps,
         status: "success" as const,
         createdAt: Date.now(),
@@ -570,9 +609,9 @@ export const generate = action({
 
     return {
       id: generationId,
-      rawCode,
-      code: transformed.code,
-      durationInFrames,
+      rawCode: result.rawCode,
+      code: result.code,
+      durationInFrames: result.durationInFrames,
       fps,
     };
   },
