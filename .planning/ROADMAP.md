@@ -193,9 +193,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- App shell layout (sidebar + header) and route group migration of create/templates pages
-- [ ] 09-02-PLAN.md -- Convex clips backend (schema + CRUD) and save clip dialog on create page
-- [ ] 09-03-PLAN.md -- Library page with clip grid, thumbnails, open-in-editor, and delete
+- [x] 09-01-PLAN.md -- App shell layout (sidebar + header) and route group migration of create/templates pages
+- [x] 09-02-PLAN.md -- Convex clips backend (schema + CRUD) and save clip dialog on create page
+- [x] 09-03-PLAN.md -- Library page with clip grid, thumbnails, open-in-editor, and delete
 
 ### Phase 10: Movie Data & Timeline UI
 **Goal**: Users can create movies, add clips as scenes, and arrange them on a horizontal timeline with drag-to-reorder
@@ -262,7 +262,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Code Generation & Safe Execution | v1.1 | 4/4 | Complete | 2026-01-29 |
 | 7. Editing & Iteration | v1.1 | 4/4 | Complete | 2026-01-29 |
 | 8. Export & Polish | v1.1 | 2/2 | Complete | 2026-01-29 |
-| 9. App Shell & Clip Library | v2.0 | 0/3 | Planning complete | - |
+| 9. App Shell & Clip Library | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 10. Movie Data & Timeline UI | v2.0 | 0/~3 | Not started | - |
 | 11. Movie Preview, Render & Export | v2.0 | 0/~3 | Not started | - |
 | 12. Continuation Generation | v2.0 | 0/~2 | Not started | - |
@@ -272,4 +272,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped*
-*Updated: 2026-01-30 -- Phase 9 planned (3 plans in 3 waves)*
+*Updated: 2026-02-01 -- Phase 9 complete (3 plans executed, goal verified)*

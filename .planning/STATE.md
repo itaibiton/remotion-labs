@@ -77,7 +77,7 @@ Last session: 2026-02-01
 Stopped at: Completed 09-03-PLAN.md (Phase 9 complete)
 Resume file: None
 
-Next step: Begin Phase 10 planning (Scenes & Timeline)
+Next step: `/gsd:plan-phase 10` (Movie Data & Timeline UI)
 
 ---
 *Phase 9 complete -- 2026-02-01*

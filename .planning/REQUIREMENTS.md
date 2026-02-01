@@ -9,9 +9,9 @@ Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roa
 
 ### Save & Library
 
-- [ ] **SAVE-01**: User can quick-save the current composition as a named clip (code + metadata stored in Convex)
-- [ ] **SAVE-02**: User can list, open, and delete saved clips from a library page
-- [ ] **SAVE-03**: Saved clip stores composition code, duration, optional name/thumbnail; can be re-opened in editor and re-rendered
+- [x] **SAVE-01**: User can quick-save the current composition as a named clip (code + metadata stored in Convex)
+- [x] **SAVE-02**: User can list, open, and delete saved clips from a library page
+- [x] **SAVE-03**: Saved clip stores composition code, duration, optional name/thumbnail; can be re-opened in editor and re-rendered
 
 ### Timeline & Movie
 
@@ -32,7 +32,7 @@ Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roa
 
 ### UI & Navigation
 
-- [ ] **UI-01**: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
+- [x] **UI-01**: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
 - [ ] **UI-02**: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
 - [ ] **UI-03**: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
 - [ ] **UI-04**: Video preview shows a timeline bar with playhead, duration display, and scrub capability
@@ -74,9 +74,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAVE-01 | Phase 9: App Shell & Clip Library | Pending |
-| SAVE-02 | Phase 9: App Shell & Clip Library | Pending |
-| SAVE-03 | Phase 9: App Shell & Clip Library | Pending |
+| SAVE-01 | Phase 9: App Shell & Clip Library | Complete |
+| SAVE-02 | Phase 9: App Shell & Clip Library | Complete |
+| SAVE-03 | Phase 9: App Shell & Clip Library | Complete |
 | MOVIE-01 | Phase 10: Movie Data & Timeline UI | Pending |
 | MOVIE-02 | Phase 10: Movie Data & Timeline UI | Pending |
 | MOVIE-03 | Phase 11: Movie Preview, Render & Export | Pending |
@@ -85,7 +85,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUT-04 | Phase 11: Movie Preview, Render & Export | Pending |
 | GEN-06 | Phase 12: Continuation Generation | Pending |
 | GEN-07 | Phase 12: Continuation Generation | Pending |
-| UI-01 | Phase 9: App Shell & Clip Library | Pending |
+| UI-01 | Phase 9: App Shell & Clip Library | Complete |
 | UI-02 | Phase 12: Continuation Generation | Pending |
 | UI-03 | Phase 10: Movie Data & Timeline UI | Pending |
 | UI-04 | Phase 10: Movie Data & Timeline UI | Pending |
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-01-29 -- traceability updated with phase mappings*
+*Last updated: 2026-02-01 -- Phase 9 requirements marked Complete*
