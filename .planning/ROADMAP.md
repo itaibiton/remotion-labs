@@ -47,8 +47,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
 - [x] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
 - [x] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
-- [ ] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
-- [ ] **Phase 17: Prequel Generation** - Users can generate animations that lead into an existing clip's start state
+- [x] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
+- [x] **Phase 17: Prequel Generation** - Users can generate animations that lead into an existing clip's start state
 
 ## Phase Details
 
@@ -337,8 +337,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md -- Start-state extraction and PREQUEL_SYSTEM_PROMPT (mirrors continuation architecture)
-- [ ] 17-02-PLAN.md -- generatePrequel action wiring and extend-previous integration
+- [x] 17-01-PLAN.md -- Start-state extraction and PREQUEL_SYSTEM_PROMPT (mirrors continuation architecture)
+- [x] 17-02-PLAN.md -- generatePrequel action wiring and extend-previous integration
 
 ## Progress
 
@@ -363,7 +363,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 14. Variations | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 15. Image Upload & Input Bar | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 16. Per-Creation Actions | v0.2.0 | 2/2 | Complete | 2026-02-01 |
-| 17. Prequel Generation | v0.2.0 | 0/2 | Not started | - |
+| 17. Prequel Generation | v0.2.0 | 2/2 | Complete | 2026-02-02 |
 
 ---
 *Roadmap created: 2026-01-27*

@@ -74,7 +74,7 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 ### Prequel Generation
 
-- [ ] **PREQUEL-01**: System can analyze a clip's code to extract its start state (frame 0 visual state) and generate a prequel animation that ends at that start state
+- [x] **PREQUEL-01**: System can analyze a clip's code to extract its start state (frame 0 visual state) and generate a prequel animation that ends at that start state
 
 ## Future Requirements
 
@@ -128,7 +128,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INPUT-01 | Phase 15 | Complete |
 | ACT-01 | Phase 16 | Complete |
 | ACT-02 | Phase 16 | Complete |
-| PREQUEL-01 | Phase 17 | Pending |
+| PREQUEL-01 | Phase 17 | Complete |
 
 **Coverage:**
 - v0.2.0 requirements: 11 total
