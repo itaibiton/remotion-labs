@@ -241,11 +241,11 @@ Plans:
   3. Claude generates a continuation composition that starts from the previous clip's visual end state
   4. User sees the continuation preview and can accept, regenerate, or edit it before adding to the movie
   5. Create page shows contextual actions: quick-save, "Add to movie," and "Generate next scene" based on current state
-**Plans**: 2-3 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md - TBD (plan during phase planning)
-- [ ] 12-02-PLAN.md - TBD
+- [ ] 12-01-PLAN.md -- Continuation system prompt + generateContinuation backend action
+- [ ] 12-02-PLAN.md -- Continuation UI (create page mode, contextual actions, Generate Next buttons, Add to Movie dialog)
 
 ## Progress
 
@@ -265,11 +265,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 9. App Shell & Clip Library | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 10. Movie Data & Timeline UI | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 11. Movie Preview, Render & Export | v2.0 | 3/3 | Complete | 2026-02-01 |
-| 12. Continuation Generation | v2.0 | 0/~2 | Not started | - |
+| 12. Continuation Generation | v2.0 | 0/2 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped*
-*Updated: 2026-02-01 -- Phase 11 complete (3/3 plans, verified)*
+*Updated: 2026-02-01 -- Phase 12 planned (2 plans in 2 waves)*
