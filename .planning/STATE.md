@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 10 of 12 (Movie Data & Timeline UI) -- IN PROGRESS
-Plan: 1 of 3 in phase 10 (plan 01 complete, 2 remaining)
-Status: In progress. Movie data layer complete. Next: Movie list page & timeline UI.
-Last activity: 2026-02-01 -- Completed 10-01-PLAN.md (Movie Backend Data Layer)
+Plan: 2 of 3 in phase 10 (plans 01-02 complete, 1 remaining)
+Status: In progress. Movie list page & editor shell complete. Next: Timeline UI (Plan 03).
+Last activity: 2026-02-01 -- Completed 10-02-PLAN.md (Movie List Page & Editor Shell)
 
-Progress: [==============....] 85% (26/~33 plans across all milestones)
+Progress: [===============...] 88% (27/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [==============....] 85% (26/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 26
-- Total execution time: ~117.5 min
+- Total plans completed: 27
+- Total execution time: ~119.3 min
 
 **v1.1 Breakdown:**
 
@@ -44,7 +44,7 @@ Progress: [==============....] 85% (26/~33 plans across all milestones)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
-| 10-movie-data-timeline-ui | 1/3 | 1.5 min | 1.5 min |
+| 10-movie-data-timeline-ui | 2/3 | 3.3 min | 1.7 min |
 
 ## Accumulated Context
 
@@ -63,6 +63,8 @@ Recent decisions affecting v2.0:
 - Inline scenes array on movie document, not a join table (10-01)
 - Uniform fps enforcement at addScene time, default 30fps (10-01)
 - movies.get has no auth check, matches clips.get URL-param pattern (10-01)
+- Movie cards use Film icon placeholder (no single thumbnail for multi-scene movies) (10-02)
+- Create movie immediately navigates to editor page (10-02)
 
 ### Pending Todos
 
@@ -78,10 +80,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-01-PLAN.md (Movie Backend Data Layer)
+Stopped at: Completed 10-02-PLAN.md (Movie List Page & Editor Shell)
 Resume file: None
 
-Next step: Execute 10-02-PLAN.md (Movie List Page & Timeline UI)
+Next step: Execute 10-03-PLAN.md (Timeline UI)
 
 ---
-*Updated after 10-01 execution -- 2026-02-01*
+*Updated after 10-02 execution -- 2026-02-01*
