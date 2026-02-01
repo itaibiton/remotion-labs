@@ -23,6 +23,7 @@ export interface SaveClipDialogProps {
   durationInFrames: number;
   fps: number;
   defaultName: string;
+  onSaved?: (clipId: string) => void;
 }
 
 export function SaveClipDialog({
@@ -33,6 +34,7 @@ export function SaveClipDialog({
   durationInFrames,
   fps,
   defaultName,
+  onSaved,
 }: SaveClipDialogProps) {
   const [name, setName] = useState(defaultName);
   const [isSaving, setIsSaving] = useState(false);
@@ -51,7 +53,7 @@ export function SaveClipDialog({
 
     setIsSaving(true);
     try {
-      await saveClip({
+      const newClipId = await saveClip({
         name: trimmedName,
         code,
         rawCode,
@@ -59,6 +61,7 @@ export function SaveClipDialog({
         fps,
       });
       toast.success("Clip saved!");
+      onSaved?.(String(newClipId));
       onOpenChange(false);
     } catch (error) {
       toast.error(

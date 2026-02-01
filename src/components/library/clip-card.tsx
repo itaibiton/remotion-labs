@@ -5,7 +5,8 @@ import { Thumbnail } from "@remotion/player";
 import { DynamicCode } from "@/remotion/compositions/DynamicCode";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, FastForward } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,7 @@ export interface ClipCardProps {
 export function ClipCard({ clip, onOpen, onDelete }: ClipCardProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -81,6 +83,18 @@ export function ClipCard({ clip, onOpen, onDelete }: ClipCardProps) {
             >
               <ExternalLink className="h-3 w-3 mr-1" />
               Open
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/create?sourceClipId=${clip._id}`);
+              }}
+              title="Generate next scene"
+            >
+              <FastForward className="h-3 w-3" />
             </Button>
             <Button
               variant="outline"

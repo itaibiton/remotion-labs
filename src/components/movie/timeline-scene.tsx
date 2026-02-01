@@ -5,7 +5,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Thumbnail } from "@remotion/player";
 import { DynamicCode } from "@/remotion/compositions/DynamicCode";
-import { X } from "lucide-react";
+import { X, FastForward } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface TimelineSceneProps {
   id: string;
@@ -29,6 +30,7 @@ export function TimelineScene({
   onRemove,
 }: TimelineSceneProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -72,6 +74,22 @@ export function TimelineScene({
       >
         <X className="h-3.5 w-3.5" />
       </button>
+
+      {/* Generate next scene button */}
+      {clip && (
+        <button
+          className="absolute bottom-1 right-1 z-10 rounded-full bg-primary/80 text-primary-foreground p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            router.push(`/create?sourceClipId=${clip._id}`);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          title="Generate next scene"
+        >
+          <FastForward className="h-3 w-3" />
+        </button>
+      )}
 
       {clip ? (
         <>
