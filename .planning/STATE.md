@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-29)
 
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 10 COMPLETE, Phase 11 next)
+**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (Phase 11 in progress)
 
 ## Current Position
 
-Phase: 11 of 12 (Movie Preview, Render & Export) -- PLANNED
-Plan: 0 of 3 in phase 11 (3 plans ready, 2 waves)
-Status: Phase 11 planned. Ready for execution.
-Last activity: 2026-02-01 -- Planned Phase 11 (3 plans, plan-checked, blocker fixed)
+Phase: 11 of 12 (Movie Preview, Render & Export) -- IN PROGRESS
+Plan: 1 of 3 in phase 11 (wave 1: plan 01 complete)
+Status: In progress. Plan 11-01 (Movie Preview Player) complete.
+Last activity: 2026-02-01 -- Completed 11-01-PLAN.md (Movie Preview Player)
 
-Progress: [================..] 91% (28/~33 plans across all milestones)
+Progress: [=================.] 94% (29/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [================..] 91% (28/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 28
-- Total execution time: ~123.0 min
+- Total plans completed: 29
+- Total execution time: ~126.0 min
 
 **v1.1 Breakdown:**
 
@@ -45,6 +45,7 @@ Progress: [================..] 91% (28/~33 plans across all milestones)
 |-------|-------|-------|----------|
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
 | 10-movie-data-timeline-ui | 3/3 | 7.0 min | 2.3 min |
+| 11-movie-preview-render-export | 1/3 | 3 min | 3.0 min |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Recent decisions affecting v2.0:
 - Optimistic local state for DnD reorder prevents flicker (useEffect sync from props) (10-03)
 - Fixed 160px scene blocks for MVP, not proportional to duration (10-03)
 - getWithClips preserves null entries for correct index correspondence (10-03)
+- useSyncExternalStore for Remotion Player frame tracking, not useState polling (11-01)
+- Filter null clips from validScenes for partially-loaded movies (11-01)
+- JSON.stringify dependency for useMemo on scenesWithClips, consistent with timeline pattern (11-01)
 
 ### Pending Todos
 
@@ -83,10 +87,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-03-PLAN.md (Timeline UI) -- Phase 10 complete
+Stopped at: Completed 11-01-PLAN.md (Movie Preview Player)
 Resume file: None
 
-Next step: `/gsd:execute-phase 11` (Movie Preview, Render & Export)
+Next step: Execute 11-02-PLAN.md (Render & Export) -- wave 1
 
 ---
-*Phase 11 planned -- 2026-02-01*
+*Plan 11-01 complete -- 2026-02-01*
