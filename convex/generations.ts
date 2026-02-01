@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { query, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -111,5 +111,28 @@ export const get = query({
   handler: async (ctx, args) => {
     const generation = await ctx.db.get(args.id);
     return generation;
+  },
+});
+
+/**
+ * Remove a generation. Only the owning user can delete their generations.
+ * Follows the same pattern as clips.remove.
+ */
+export const remove = mutation({
+  args: {
+    id: v.id("generations"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const generation = await ctx.db.get(args.id);
+    if (!generation || generation.userId !== identity.tokenIdentifier) {
+      throw new Error("Generation not found");
+    }
+
+    await ctx.db.delete(args.id);
   },
 });
