@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 15 of 17 (Image Upload & Input Bar)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-01 -- Completed 15-01-PLAN.md (backend image upload pipeline)
+Last activity: 2026-02-01 -- Completed 15-02-PLAN.md (image upload hook and UI)
 
-Progress: [########            ] 46% (6/13 plans)
+Progress: [#########           ] 54% (7/13 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [########            ] 46% (6/13 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 36
-- Total execution time: ~155.0 min
+- Total plans completed: 37
+- Total execution time: ~157.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -42,7 +42,7 @@ Progress: [########            ] 46% (6/13 plans)
 | 12-continuation-generation | 2/2 | 10 min | 5.0 min |
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
 | 14-variations | 2/2 | 6 min | 3.0 min |
-| 15-image-upload-input-bar | 1/3 | 3 min | 3.0 min |
+| 15-image-upload-input-bar | 2/3 | 5 min | 2.5 min |
 
 ## Accumulated Context
 
@@ -76,6 +76,9 @@ v0.2.0 decisions:
 - Canvas toBlob for EXIF stripping (format-agnostic vs piexifjs JPEG-only)
 - URL-based image source for Claude Vision (Convex storage URLs are publicly accessible)
 - buildUserContent returns plain string when no images (avoids unnecessary content array)
+- useCallback wrapping for all hook methods to enable stable references in consumers
+- Sequential uploads in useImageUpload (not Promise.all) to avoid overwhelming Convex endpoint
+- ImageAttachment is presentational (props-driven, no internal hook usage)
 
 ### Pending Todos
 
@@ -92,12 +95,12 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T21:03Z
-Stopped at: Completed 15-01-PLAN.md (backend image upload pipeline)
+Last session: 2026-02-01T21:07Z
+Stopped at: Completed 15-02-PLAN.md (image upload hook and UI)
 Resume file: None
 
-Next step: Execute 15-02-PLAN.md (image upload hook and UI)
+Next step: Execute 15-03-PLAN.md (input bar integration with image upload)
 
 ---
-*15-01 complete -- 2026-02-01*
-*Backend image upload pipeline: Convex file upload mutation, canvas-based EXIF stripping, Claude Vision URL-based content blocks for reference images in generate/generateVariations*
+*15-02 complete -- 2026-02-01*
+*useImageUpload hook with add/remove/upload/clear lifecycle and ImageAttachment thumbnail chip component with status overlays*
