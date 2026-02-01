@@ -1113,3 +1113,117 @@ export const generateContinuation = action({
     };
   },
 });
+
+// ============================================================================
+// Prequel Generation Action
+// ============================================================================
+
+/**
+ * Generate a prequel scene that leads into an existing clip.
+ * Fetches the source clip's rawCode, sends it to Claude with the prequel
+ * system prompt, validates and transforms the output.
+ * Does NOT persist to database -- returns result directly like refine.
+ */
+export const generatePrequel = action({
+  args: {
+    sourceClipId: v.id("clips"),
+    prompt: v.optional(v.string()),
+  },
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
+    rawCode: string;
+    code: string;
+    durationInFrames: number;
+    fps: number;
+  }> => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("You must be logged in to generate prequels");
+    }
+
+    // Fetch the source clip's raw JSX
+    const sourceClip = await ctx.runQuery(internal.clips.getInternal, {
+      id: args.sourceClipId,
+    });
+    if (!sourceClip) {
+      throw new Error("Source clip not found");
+    }
+    if (!sourceClip.rawCode) {
+      throw new Error(
+        "Source clip has no raw code available for prequel generation"
+      );
+    }
+
+    // Create Anthropic client
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "ANTHROPIC_API_KEY not configured. Please set it in your Convex environment variables."
+      );
+    }
+
+    const client = new Anthropic({ apiKey });
+
+    // Build user message with target code + prequel request
+    const userContent = args.prompt
+      ? `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a prequel that leads into this scene: ${args.prompt}`
+      : `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a natural, visually interesting prequel that leads into this scene.`;
+
+    // Call Claude API with prequel system prompt
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 4096,
+      system: PREQUEL_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userContent }],
+    });
+
+    // Extract text content from response
+    const textContent = response.content.find((block) => block.type === "text");
+    if (!textContent || textContent.type !== "text") {
+      throw new Error(
+        "Failed to generate prequel: No text response from AI. Please try again."
+      );
+    }
+
+    // Clean code -- strip markdown code blocks if present
+    let rawCode = textContent.text.trim();
+    if (rawCode.startsWith("```")) {
+      rawCode = rawCode
+        .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
+        .replace(/\n?```\s*$/, "")
+        .trim();
+    }
+
+    // Extract metadata from comments
+    const durationMatch = rawCode.match(/\/\/\s*DURATION:\s*(\d+)/);
+    const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
+
+    // Clamp values for safety
+    const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
+    const fps = 30; // Always 30 fps for consistency
+
+    // Validate the prequel code
+    const validation = validateRemotionCode(rawCode);
+    if (!validation.valid) {
+      throw new Error(
+        `Prequel code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
+      );
+    }
+
+    // Transform JSX to JavaScript
+    const transformed = transformJSX(rawCode);
+    if (!transformed.success || !transformed.code) {
+      throw new Error(transformed.error || "Code transformation failed");
+    }
+
+    return {
+      rawCode,
+      code: transformed.code,
+      durationInFrames,
+      fps,
+    };
+  },
+});
