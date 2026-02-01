@@ -224,12 +224,12 @@ Plans:
   3. User can render the full movie to a single MP4 and download it
   4. User can export a single clip as MP4 or Remotion source from the library or create page
   5. User can export the full movie as one MP4 or as a multi-composition Remotion project zip
-**Plans**: 3-4 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 11-01-PLAN.md - TBD (plan during phase planning)
-- [ ] 11-02-PLAN.md - TBD
-- [ ] 11-03-PLAN.md - TBD
+- [ ] 11-01-PLAN.md -- Movie preview player with frame-synced timeline scene highlighting
+- [ ] 11-02-PLAN.md -- Movie render pipeline backend (schema, limits, startMovieRender action)
+- [ ] 11-03-PLAN.md -- Render + export UI wiring (MovieRenderButton, MovieExportButtons, movie zip generator)
 
 ### Phase 12: Continuation Generation
 **Goal**: Users can generate visually continuous next scenes where the new animation picks up from where the previous clip ended
