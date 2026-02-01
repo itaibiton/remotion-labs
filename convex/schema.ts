@@ -41,8 +41,8 @@ export default defineSchema({
     // v0.2 Phase 13: generation settings
     aspectRatio: v.optional(v.string()),  // "16:9" | "1:1" | "9:16"
     durationInSeconds: v.optional(v.number()),
-    // v0.2 Phase 15: image upload (placeholder)
-    referenceImageIds: v.optional(v.array(v.string())),
+    // v0.2 Phase 15: image upload
+    referenceImageIds: v.optional(v.array(v.id("_storage"))),
     // v0.2 Phase 12: continuation tracking
     continuationType: v.optional(v.string()),
   })

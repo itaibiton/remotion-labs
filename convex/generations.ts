@@ -25,6 +25,8 @@ export const store = internalMutation({
     // v0.2 Phase 13: generation settings
     aspectRatio: v.optional(v.string()),
     durationInSeconds: v.optional(v.number()),
+    // v0.2 Phase 15: image upload
+    referenceImageIds: v.optional(v.array(v.id("_storage"))),
     // v0.2 Phase 12: continuation tracking
     continuationType: v.optional(v.string()),
   },
@@ -44,6 +46,7 @@ export const store = internalMutation({
       variationCount: args.variationCount,
       aspectRatio: args.aspectRatio,
       durationInSeconds: args.durationInSeconds,
+      referenceImageIds: args.referenceImageIds,
       continuationType: args.continuationType,
     });
     return generationId;
