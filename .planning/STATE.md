@@ -2,17 +2,18 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-29)
+See: .planning/PROJECT.md (updated 2026-02-01)
 
+**Release: v0.1.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** Milestone v2.0 -- Scenes, Timeline & Movie Editor (COMPLETE)
+**Current focus:** v0.1.0 COMPLETE -- all 3 milestones delivered
 
 ## Current Position
 
 Phase: 12 of 12 (Continuation Generation) -- COMPLETE
 Plan: 2 of 2 in phase 12 (2 plans in 2 waves)
-Status: All phases complete. All milestones delivered.
-Last activity: 2026-02-01 -- Completed 12-02-PLAN.md (continuation generation UI)
+Status: v0.1.0 RELEASED. All phases complete. All milestones delivered.
+Last activity: 2026-02-01 -- v0.1.0 release (continuation generation UI complete)
 
 Progress: [====================] 100% (33/33 plans across all milestones)
 
@@ -103,8 +104,8 @@ Last session: 2026-02-01
 Stopped at: Completed 12-02-PLAN.md (continuation generation UI) -- ALL PHASES COMPLETE
 Resume file: None
 
-Next step: All milestones delivered. Project ready for production testing and deployment.
+Next step: v0.1.0 released. Ready for production testing, deployment, and user feedback.
 
 ---
-*Plan 12-02 complete -- 2026-02-01*
-*All 12 phases, 33 plans, 3 milestones delivered.*
+*v0.1.0 released -- 2026-02-01*
+*12 phases, 33 plans, 3 milestones, 40 requirements delivered.*

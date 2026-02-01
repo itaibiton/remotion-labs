@@ -1,20 +1,25 @@
 # RemotionLab
 
+**Release: v0.1.0**
+
 ## What This Is
 
-A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The interface combines chat-based generation with a code editor for fine-tuning, and exports standalone Remotion projects. v2.0 evolves from single-clip creation into a multi-scene movie editor with a timeline, clip library, and continuation-based generation.
+A web app where users create animated videos through text prompts, powered by Claude and Remotion. Think "Midjourney for animations" — users describe what they want, AI generates professional motion graphics as actual Remotion JSX code. The interface combines chat-based generation with a code editor for fine-tuning, and exports standalone Remotion projects. Includes a multi-scene movie editor with a timeline, clip library, and continuation-based generation for scene-to-scene visual continuity.
 
 ## Core Value
 
 Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
-## Shipped
+## Shipped (v0.1.0)
 
-### v1.0 — Core Validation (Phases 1-5)
+### Milestone 1: Core Validation (Phases 1-5)
 Authentication, template-based generation, preview, templates gallery, render pipeline with Lambda.
 
-### v1.1 — Full Code Generation (Phases 6-8)
+### Milestone 2: Full Code Generation (Phases 6-8)
 Claude generates complete Remotion JSX code. AST validation and sandboxed execution. Monaco editor with live validation, editable code, chat refinement. Export to standalone .tsx or full Remotion project zip.
+
+### Milestone 3: Scenes, Timeline & Movie Editor (Phases 9-12)
+Clip library with save/open/delete, movie creation with horizontal timeline and drag-to-reorder scenes, full-movie preview and MP4 rendering, single-clip and multi-composition Remotion project export, continuation generation for visually continuous scene sequences.
 
 ## Requirements
 
@@ -46,23 +51,23 @@ Claude generates complete Remotion JSX code. AST validation and sandboxed execut
 - [x] ITER-01: User can refine animation via chat
 - [x] ITER-02: System suggests fixes when code validation fails
 
-### Active (v2.0 — Scenes, Timeline & Movie Editor)
+### Validated (Milestone 3 — Scenes, Timeline & Movie Editor)
 
-- [ ] SAVE-01: User can quick-save the current composition as a named clip
-- [ ] SAVE-02: User can list, open, and delete saved clips from a library
-- [ ] SAVE-03: Saved clip stores composition code, duration, optional name/thumbnail; can be re-opened and re-rendered
-- [ ] MOVIE-01: User can create/open a movie with an ordered list of scenes
-- [ ] MOVIE-02: Horizontal timeline UI shows scenes in order with durations; user can reorder, remove, add scenes
-- [ ] MOVIE-03: User can preview the full movie (all scenes in sequence) in one Remotion Player
-- [ ] MOVIE-04: User can render the full movie to one MP4
-- [ ] OUT-03: User can export a single clip as MP4 and/or Remotion source without rendering the whole movie
-- [ ] OUT-04: User can export the full movie as one MP4 and/or Remotion project
-- [ ] GEN-06: User can trigger "Generate next scene" — system captures last frame state of a clip via code serialization
-- [ ] GEN-07: Claude generates continuation JSX that starts from the previous clip's end state
-- [ ] UI-01: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
-- [ ] UI-02: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
-- [ ] UI-03: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
-- [ ] UI-04: Video preview shows a timeline bar (playhead, duration, scrub)
+- [x] SAVE-01: User can quick-save the current composition as a named clip
+- [x] SAVE-02: User can list, open, and delete saved clips from a library
+- [x] SAVE-03: Saved clip stores composition code, duration, optional name/thumbnail; can be re-opened and re-rendered
+- [x] MOVIE-01: User can create/open a movie with an ordered list of scenes
+- [x] MOVIE-02: Horizontal timeline UI shows scenes in order with durations; user can reorder, remove, add scenes
+- [x] MOVIE-03: User can preview the full movie (all scenes in sequence) in one Remotion Player
+- [x] MOVIE-04: User can render the full movie to one MP4
+- [x] OUT-03: User can export a single clip as MP4 and/or Remotion source without rendering the whole movie
+- [x] OUT-04: User can export the full movie as one MP4 and/or Remotion project
+- [x] GEN-06: User can trigger "Generate next scene" — system captures last frame state of a clip via code serialization
+- [x] GEN-07: Claude generates continuation JSX that starts from the previous clip's end state
+- [x] UI-01: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
+- [x] UI-02: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
+- [x] UI-03: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
+- [x] UI-04: Video preview shows a timeline bar (playhead, duration, scrub)
 
 ### Out of Scope
 
@@ -120,8 +125,8 @@ Claude generates complete Remotion JSX code. AST validation and sandboxed execut
 | Stateless chat refinement | Conversation history managed client-side, action is pure | Validated |
 | JSZip client-side export | No server needed for project scaffold generation | Validated |
 | No payments in MVP | Focus on core value, validate before monetizing | Active |
-| Serialize end-state from code (v2.0) | Static analysis of JSX to extract final frame positions/styles/text for continuation generation | — Pending |
-| Horizontal timeline UI (v2.0) | Traditional video-editor-style track with duration bars, not a simple list | — Pending |
+| LLM code reading for end-state (v0.1) | Claude reads animation code to determine final visual state for continuations; static AST analysis rejected as infeasible | Validated |
+| Horizontal timeline UI (v0.1) | Traditional video-editor-style track with duration bars, not a simple list | Validated |
 
 ---
-*Last updated: 2026-01-29 after v2.0 milestone start*
+*Last updated: 2026-02-01 — v0.1.0 release (all 3 milestones, 40 requirements delivered)*
