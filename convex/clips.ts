@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 
 /**
  * Save a new clip to the user's library.
@@ -69,6 +69,19 @@ export const get = query({
   handler: async (ctx, args) => {
     const clip = await ctx.db.get(args.id);
     return clip;
+  },
+});
+
+/**
+ * Internal query for action use (e.g., startClipRender).
+ * Returns clip by ID without auth check.
+ */
+export const getInternal = internalQuery({
+  args: {
+    id: v.id("clips"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
 

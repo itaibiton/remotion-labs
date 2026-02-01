@@ -8,7 +8,7 @@ import {
   presignUrl,
 } from "@remotion/lambda/client";
 import { internal } from "./_generated/api";
-import { RENDER_LIMITS } from "./lib/renderLimits";
+import { RENDER_LIMITS, MOVIE_RENDER_LIMITS } from "./lib/renderLimits";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -190,6 +190,192 @@ export const pollProgress = internalAction({
         completedAt: Date.now(),
       });
     }
+  },
+});
+
+/**
+ * Start a movie render job on Remotion Lambda
+ * Fetches all scenes, validates limits, triggers Lambda with MovieComposition
+ */
+export const startMovieRender = action({
+  args: {
+    movieId: v.id("movies"),
+  },
+  handler: async (ctx, args): Promise<{ renderJobId: Id<"renders">; renderId: string }> => {
+    // Verify authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Must be authenticated to render");
+    }
+
+    // Check rate limit
+    const quotaOk = await ctx.runMutation(internal.userQuotas.checkRenderQuota, {
+      userId: identity.tokenIdentifier,
+    });
+    if (!quotaOk) {
+      throw new Error("Render quota exceeded. You can render up to 5 videos per hour. Please try again later.");
+    }
+
+    // Fetch movie with clips
+    const movie = await ctx.runQuery(internal.movies.getWithClipsInternal, {
+      id: args.movieId,
+    });
+    if (!movie) {
+      throw new Error("Movie not found");
+    }
+
+    // Build scenes array from clips (skip nulls for deleted clips)
+    const scenes = movie.sceneClips
+      .filter((clip: any): clip is NonNullable<typeof clip> => clip !== null)
+      .map((clip: any) => ({
+        code: clip.code as string,
+        durationInFrames: clip.durationInFrames as number,
+        fps: clip.fps as number,
+      }));
+
+    if (scenes.length === 0) {
+      throw new Error("Movie has no valid scenes");
+    }
+
+    if (scenes.length > MOVIE_RENDER_LIMITS.MAX_SCENES) {
+      throw new Error(`Movie has too many scenes. Maximum is ${MOVIE_RENDER_LIMITS.MAX_SCENES} scenes.`);
+    }
+
+    // Validate total duration
+    const totalFrames = scenes.reduce((sum: number, s: { durationInFrames: number }) => sum + s.durationInFrames, 0);
+    if (totalFrames > MOVIE_RENDER_LIMITS.MAX_DURATION_FRAMES) {
+      throw new Error(`Movie too long. Maximum duration is ${MOVIE_RENDER_LIMITS.MAX_DURATION_SECONDS} seconds.`);
+    }
+
+    // Get environment variables
+    const functionName = process.env.REMOTION_LAMBDA_FUNCTION_NAME;
+    const serveUrl = process.env.REMOTION_SERVE_URL;
+    const region = (process.env.REMOTION_AWS_REGION || "us-east-1") as "us-east-1";
+
+    if (!functionName || !serveUrl) {
+      throw new Error("Render service not configured. Please contact support.");
+    }
+
+    // Trigger Lambda render with MovieComposition
+    const { renderId, bucketName } = await renderMediaOnLambda({
+      region,
+      functionName,
+      serveUrl,
+      composition: "MovieComposition",
+      inputProps: { scenes },
+      codec: "h264",
+      timeoutInMilliseconds: MOVIE_RENDER_LIMITS.LAMBDA_TIMEOUT_MS,
+    });
+
+    // Store render job in database (with movieId instead of generationId)
+    const renderJobId = await ctx.runMutation(internal.renders.create, {
+      userId: identity.tokenIdentifier,
+      movieId: args.movieId,
+      renderId,
+      bucketName,
+      status: "rendering",
+      progress: 0,
+    });
+
+    // Schedule first progress poll
+    await ctx.scheduler.runAfter(
+      MOVIE_RENDER_LIMITS.POLL_INTERVAL_MS,
+      internal.triggerRender.pollProgress,
+      {
+        renderJobId,
+        renderId,
+        bucketName,
+        region,
+      }
+    );
+
+    return { renderJobId, renderId };
+  },
+});
+
+/**
+ * Start a single clip render job on Remotion Lambda
+ * Renders a DynamicCode composition for an individual clip from the library
+ */
+export const startClipRender = action({
+  args: {
+    clipId: v.id("clips"),
+  },
+  handler: async (ctx, args): Promise<{ renderJobId: Id<"renders">; renderId: string }> => {
+    // Verify authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Must be authenticated to render");
+    }
+
+    // Check rate limit
+    const quotaOk = await ctx.runMutation(internal.userQuotas.checkRenderQuota, {
+      userId: identity.tokenIdentifier,
+    });
+    if (!quotaOk) {
+      throw new Error("Render quota exceeded. You can render up to 5 videos per hour. Please try again later.");
+    }
+
+    // Fetch clip
+    const clip = await ctx.runQuery(internal.clips.getInternal, {
+      id: args.clipId,
+    });
+    if (!clip) {
+      throw new Error("Clip not found");
+    }
+
+    // Validate duration against single-clip limits
+    if (clip.durationInFrames > RENDER_LIMITS.MAX_DURATION_FRAMES) {
+      throw new Error(`Clip too long. Maximum duration is ${RENDER_LIMITS.MAX_DURATION_SECONDS} seconds.`);
+    }
+
+    // Get environment variables
+    const functionName = process.env.REMOTION_LAMBDA_FUNCTION_NAME;
+    const serveUrl = process.env.REMOTION_SERVE_URL;
+    const region = (process.env.REMOTION_AWS_REGION || "us-east-1") as "us-east-1";
+
+    if (!functionName || !serveUrl) {
+      throw new Error("Render service not configured. Please contact support.");
+    }
+
+    // Trigger Lambda render with DynamicCode composition
+    const { renderId, bucketName } = await renderMediaOnLambda({
+      region,
+      functionName,
+      serveUrl,
+      composition: "DynamicCode",
+      inputProps: {
+        code: clip.code,
+        durationInFrames: clip.durationInFrames,
+        fps: clip.fps,
+      },
+      codec: "h264",
+      timeoutInMilliseconds: RENDER_LIMITS.LAMBDA_TIMEOUT_MS,
+    });
+
+    // Store render job in database (with clipId)
+    const renderJobId = await ctx.runMutation(internal.renders.create, {
+      userId: identity.tokenIdentifier,
+      clipId: args.clipId,
+      renderId,
+      bucketName,
+      status: "rendering",
+      progress: 0,
+    });
+
+    // Schedule first progress poll
+    await ctx.scheduler.runAfter(
+      RENDER_LIMITS.POLL_INTERVAL_MS,
+      internal.triggerRender.pollProgress,
+      {
+        renderJobId,
+        renderId,
+        bucketName,
+        region,
+      }
+    );
+
+    return { renderJobId, renderId };
   },
 });
 
