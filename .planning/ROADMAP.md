@@ -34,10 +34,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v2.0 — Scenes, Timeline & Movie Editor
 
-- [ ] **Phase 9: App Shell & Clip Library** - Users can save, organize, and reopen their compositions from a persistent clip library
-- [ ] **Phase 10: Movie Data & Timeline UI** - Users can create movies and arrange scenes on a horizontal timeline
-- [ ] **Phase 11: Movie Preview, Render & Export** - Users can preview, render, and export full movies as MP4 or Remotion projects
-- [ ] **Phase 12: Continuation Generation** - Users can generate visually continuous next scenes from existing clips
+- [x] **Phase 9: App Shell & Clip Library** - Users can save, organize, and reopen their compositions from a persistent clip library
+- [x] **Phase 10: Movie Data & Timeline UI** - Users can create movies and arrange scenes on a horizontal timeline
+- [x] **Phase 11: Movie Preview, Render & Export** - Users can preview, render, and export full movies as MP4 or Remotion projects
+- [x] **Phase 12: Continuation Generation** - Users can generate visually continuous next scenes from existing clips
 
 ## Phase Details
 
@@ -244,8 +244,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md -- Continuation system prompt + generateContinuation backend action
-- [ ] 12-02-PLAN.md -- Continuation UI (create page mode, contextual actions, Generate Next buttons, Add to Movie dialog)
+- [x] 12-01-PLAN.md -- Continuation system prompt + generateContinuation backend action
+- [x] 12-02-PLAN.md -- Continuation UI (create page mode, contextual actions, Generate Next buttons, Add to Movie dialog)
 
 ## Progress
 
@@ -265,11 +265,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 9. App Shell & Clip Library | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 10. Movie Data & Timeline UI | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 11. Movie Preview, Render & Export | v2.0 | 3/3 | Complete | 2026-02-01 |
-| 12. Continuation Generation | v2.0 | 0/2 | Planned | - |
+| 12. Continuation Generation | v2.0 | 2/2 | Complete | 2026-02-01 |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped*
-*Updated: 2026-02-01 -- Phase 12 planned (2 plans in 2 waves)*
+*Updated: 2026-02-01 -- Phase 12 complete. All v2.0 phases delivered.*

@@ -27,13 +27,13 @@ Requirements for the Scenes, Timeline & Movie Editor milestone. Each maps to roa
 
 ### Continuation Generation
 
-- [ ] **GEN-06**: User can trigger "Generate next scene" from a clip; system captures the last frame state via code serialization
-- [ ] **GEN-07**: Claude generates continuation JSX that starts from the previous clip's end state with visual continuity
+- [x] **GEN-06**: User can trigger "Generate next scene" from a clip; system captures the last frame state via code serialization
+- [x] **GEN-07**: Claude generates continuation JSX that starts from the previous clip's end state with visual continuity
 
 ### UI & Navigation
 
 - [x] **UI-01**: App has a persistent shell with sidebar navigation (Home, Create, Library, Movie, Templates)
-- [ ] **UI-02**: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
+- [x] **UI-02**: Create page supports quick-save, "Add to movie," and "Generate next scene" actions
 - [x] **UI-03**: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
 - [x] **UI-04**: Video preview shows a timeline bar with playhead, duration display, and scrub capability
 
@@ -83,10 +83,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MOVIE-04 | Phase 11: Movie Preview, Render & Export | Complete |
 | OUT-03 | Phase 11: Movie Preview, Render & Export | Complete |
 | OUT-04 | Phase 11: Movie Preview, Render & Export | Complete |
-| GEN-06 | Phase 12: Continuation Generation | Pending |
-| GEN-07 | Phase 12: Continuation Generation | Pending |
+| GEN-06 | Phase 12: Continuation Generation | Complete |
+| GEN-07 | Phase 12: Continuation Generation | Complete |
 | UI-01 | Phase 9: App Shell & Clip Library | Complete |
-| UI-02 | Phase 12: Continuation Generation | Pending |
+| UI-02 | Phase 12: Continuation Generation | Complete |
 | UI-03 | Phase 10: Movie Data & Timeline UI | Complete |
 | UI-04 | Phase 11: Movie Preview, Render & Export | Complete |
 
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-29*
-*Last updated: 2026-02-01 -- Phase 11 requirements marked Complete (MOVIE-03, MOVIE-04, OUT-03, OUT-04, UI-04)*
+*Last updated: 2026-02-01 -- Phase 12 requirements marked Complete (GEN-06, GEN-07, UI-02). All v2.0 requirements complete.*
