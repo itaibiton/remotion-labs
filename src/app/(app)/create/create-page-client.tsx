@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { PromptInput } from "@/components/generation/prompt-input";
@@ -36,9 +36,10 @@ interface GenerationResult {
 
 interface CreateContentProps {
   selectedTemplate: Template | null;
+  clipId?: string;
 }
 
-function CreateContent({ selectedTemplate }: CreateContentProps) {
+function CreateContent({ selectedTemplate, clipId }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
@@ -95,6 +96,32 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
   useEffect(() => {
     storeUser().catch(console.error);
   }, [storeUser]);
+
+  // Load clip from URL param (when opening from library)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clipData = useQuery(
+    api.clips.get,
+    clipId ? { id: clipId as any } : "skip"
+  );
+
+  // Populate editor state when clip data loads
+  useEffect(() => {
+    if (clipData && clipId) {
+      setLastGeneration({
+        id: clipData._id,
+        rawCode: clipData.rawCode,
+        code: clipData.code,
+        durationInFrames: clipData.durationInFrames,
+        fps: clipData.fps,
+      });
+      setLastPrompt(clipData.name);
+      // Reset editing state for clean load
+      setEditedCode(null);
+      setIsEditing(false);
+      setSkipValidation(true);
+      setChatMessages([]);
+    }
+  }, [clipData, clipId]);
 
   const handleGenerate = useCallback(
     async (prompt: string) => {
@@ -424,7 +451,7 @@ interface CreatePageClientProps {
   clipId?: string;
 }
 
-export function CreatePageClient({ selectedTemplate }: CreatePageClientProps) {
+export function CreatePageClient({ selectedTemplate, clipId }: CreatePageClientProps) {
   return (
     <div className="flex-1 flex flex-col">
       <AuthLoading>
@@ -440,7 +467,7 @@ export function CreatePageClient({ selectedTemplate }: CreatePageClientProps) {
       </Unauthenticated>
 
       <Authenticated>
-        <CreateContent selectedTemplate={selectedTemplate} />
+        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} />
       </Authenticated>
     </div>
   );
