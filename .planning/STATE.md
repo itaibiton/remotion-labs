@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 13 in progress
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 13 complete, Phase 14 next
 
 ## Current Position
 
 Phase: 13 of 17 (Generation Feed & Settings)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-01 -- Completed 13-01-PLAN.md (schema & settings foundation)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 -- Completed 13-03-PLAN.md (generation feed UI)
 
-Progress: [###                 ] 17% (2/12 plans)
+Progress: [#####               ] 25% (3/12 plans)
 
 ## Milestone History
 
@@ -32,7 +32,7 @@ Progress: [###                 ] 17% (2/12 plans)
 - Total plans completed: 33
 - Total execution time: ~146.0 min
 
-**v2.0 Breakdown:**
+**v0.2.0 Breakdown:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -40,6 +40,7 @@ Progress: [###                 ] 17% (2/12 plans)
 | 10-movie-data-timeline-ui | 3/3 | 7.0 min | 2.3 min |
 | 11-movie-preview-render-export | 3/3 | 13 min | 4.3 min |
 | 12-continuation-generation | 2/2 | 10 min | 5.0 min |
+| 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
 
 ## Accumulated Context
 
@@ -61,6 +62,9 @@ v0.2.0 decisions:
 - All new schema fields v.optional() for backward-compatible evolution
 - ASPECT_RATIO_MAP: 16:9=1920x1080, 1:1=1080x1080, 9:16=1080x1920
 - Settings injected as system prompt appendix (not user message)
+- Feed shown below prompt only when no generation selected (clean home state)
+- Settings toggle always visible when not generating
+- Feed selection delegates to parent (callback pattern, not internal state)
 
 ### Pending Todos
 
@@ -76,12 +80,13 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T16:21Z
-Stopped at: Completed 13-01-PLAN.md (schema & settings foundation)
+Last session: 2026-02-01T16:27Z
+Stopped at: Completed 13-03-PLAN.md (generation feed UI) -- Phase 13 complete
 Resume file: None
 
-Next step: Execute 13-03-PLAN.md -- create page assembly (wire feed + settings into create page)
+Next step: Execute Phase 14 -- Variations (parallel generation, variation grid UI)
 
 ---
-*13-01 complete -- 2026-02-01*
-*Schema foundation: 7 optional fields, by_batchId index, listPaginated query, dimension-aware generate action*
+*13-03 complete -- 2026-02-01*
+*Generation feed UI: paginated feed with Remotion Thumbnails, settings panel toggle, settings-aware generation*
+*Phase 13 complete: schema + settings hooks + feed UI all delivered*
