@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 9 of 12 (App Shell & Clip Library) -- COMPLETE
-Plan: 3 of 3 in phase 9 (all complete)
-Status: Phase 9 complete. Ready for Phase 10.
-Last activity: 2026-02-01 -- Completed 09-03-PLAN.md (Clip Library Page)
+Phase: 10 of 12 (Movie Data & Timeline UI) -- PLANNED
+Plan: 0 of 3 in phase 10 (3 plans ready, 3 waves)
+Status: Phase 10 planned. Ready for execution.
+Last activity: 2026-02-01 -- Planned Phase 10 (3 plans, plan-checked, blockers fixed)
 
 Progress: [=============.....] 82% (25/~33 plans across all milestones)
 
@@ -77,7 +77,7 @@ Last session: 2026-02-01
 Stopped at: Completed 09-03-PLAN.md (Phase 9 complete)
 Resume file: None
 
-Next step: `/gsd:plan-phase 10` (Movie Data & Timeline UI)
+Next step: `/gsd:execute-phase 10` (Movie Data & Timeline UI)
 
 ---
-*Phase 9 complete -- 2026-02-01*
+*Phase 10 planned -- 2026-02-01*
