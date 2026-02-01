@@ -3,8 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAction, useMutation } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { UserMenu } from "@/components/auth/user-menu";
+import { api } from "../../../../convex/_generated/api";
 import { PromptInput } from "@/components/generation/prompt-input";
 import { GenerationStatus } from "@/components/generation/generation-status";
 import { ErrorDisplay } from "@/components/generation/error-display";
@@ -389,37 +388,27 @@ function CreateContent({ selectedTemplate }: CreateContentProps) {
 
 interface CreatePageClientProps {
   selectedTemplate: Template | null;
+  clipId?: string;
 }
 
 export function CreatePageClient({ selectedTemplate }: CreatePageClientProps) {
   return (
-    <main className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b">
-        <Link href="/" className="text-xl font-bold">
-          RemotionLab
-        </Link>
-        <UserMenu />
-      </header>
+    <div className="flex-1 flex flex-col">
+      <AuthLoading>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </AuthLoading>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col">
-        <AuthLoading>
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Loading...</p>
-          </div>
-        </AuthLoading>
+      <Unauthenticated>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500">Redirecting to sign in...</p>
+        </div>
+      </Unauthenticated>
 
-        <Unauthenticated>
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-500">Redirecting to sign in...</p>
-          </div>
-        </Unauthenticated>
-
-        <Authenticated>
-          <CreateContent selectedTemplate={selectedTemplate} />
-        </Authenticated>
-      </div>
-    </main>
+      <Authenticated>
+        <CreateContent selectedTemplate={selectedTemplate} />
+      </Authenticated>
+    </div>
   );
 }
