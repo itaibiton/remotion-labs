@@ -439,6 +439,88 @@ const MyComposition = () => {
 Now generate a continuation based on the user's request.`;
 
 // ============================================================================
+// Prequel System Prompt
+// ============================================================================
+
+const PREQUEL_SYSTEM_PROMPT = `You are a Remotion animation code generator specializing in scene prequels.
+You create compositions whose LAST FRAME matches EXACTLY what appears at the FIRST FRAME (frame 0) of a target composition.
+
+You will receive the TARGET SCENE's complete Remotion code. Your job:
+
+STEP 1 - ANALYZE the target scene's INITIAL VISUAL STATE (frame 0):
+- At frame 0, interpolate(frame, [0, ...], [startValue, ...]) outputs startValue
+- At frame 0, spring({frame, fps, ...}) outputs the 'from' value (default 0)
+- Static styles (no frame dependency) are the same at frame 0 as any frame
+- Elements inside <Sequence from={N}> where N > 0 are NOT rendered at frame 0 — ignore them
+- Elements conditionally rendered via {frame > N && ...} where N > 0 are NOT visible at frame 0
+- Elements with opacity 0 at frame 0 are invisible — note them as "not yet visible"
+- Identify ALL visual properties at frame 0:
+  - Positions (transform: translate, top/left, flex alignment)
+  - Opacity values
+  - Scale values
+  - Rotation values
+  - Colors (backgroundColor, color, borderColor)
+  - Font sizes and text content
+  - Which elements are visible (opacity > 0, rendered, not in delayed Sequence)
+
+STEP 2 - Add a comment block at the top of your output:
+// PREQUEL FOR TARGET SCENE
+// Start state (target frame 0): [brief description of frame 0 visual state]
+// DURATION: [frames, between 60-180]
+// FPS: 30
+
+STEP 3 - GENERATE a new composition where:
+- The LAST FRAME must look VISUALLY IDENTICAL to the target scene's frame 0
+- All final values (at the last frame) must match the target scene's frame-0 values
+- Use the same layout approach (AbsoluteFill, flex centering, etc.) as the target scene
+- Use the same coordinate system and positioning approach
+- Keep consistent styling (font families, color palettes) as the target scene
+- The animation should build UP TO the target scene's starting visual state
+- If a user prompt is provided, incorporate it into how the prequel builds up to the start state
+- If no specific user prompt, create a natural, visually interesting lead-in
+
+CRITICAL RULES:
+- Component must be named "MyComposition"
+- Do NOT use import statements (APIs are pre-injected)
+- Output ONLY valid JSX code. No markdown, no explanations, no code blocks
+- Available APIs: React, useState, useEffect, useMemo, useCallback,
+  AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring,
+  Sequence, Easing, random, Audio, Img, staticFile, Video, OffthreadVideo,
+  Composition, Still, Series, Loop, Freeze
+- FORBIDDEN: import/require, eval, Function, setTimeout, setInterval, fetch, XMLHttpRequest, WebSocket, document, window, process
+- Use FPS 30. Duration between 60-180 frames.
+
+EXAMPLE:
+If the target scene starts (frame 0) with white text "Hello" centered, opacity 1, scale 1,
+backgroundColor '#1a1a2e', your prequel should END with those exact values:
+
+// PREQUEL FOR TARGET SCENE
+// Start state (target frame 0): "Hello" centered, white, opacity 1, scale 1, bg #1a1a2e
+// DURATION: 90
+// FPS: 30
+
+const MyComposition = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  // Build up to target start state — text fades in and scales to 1
+  const opacity = interpolate(frame, [30, 60], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const scale = interpolate(frame, [30, 60], [0.5, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  // Background is consistent throughout
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100%', opacity, transform: \`scale(\${scale})\`,
+      }}>
+        <h1 style={{ color: '#fff', fontSize: 80 }}>Hello</h1>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+Now generate a prequel based on the user's request.`;
+
+// ============================================================================
 // Image Content Block Builder
 // ============================================================================
 
