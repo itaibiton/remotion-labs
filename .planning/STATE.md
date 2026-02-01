@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Release: v0.2.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.2.0 Create Page Overhaul -- Phase 14 complete, ready for Phase 15
+**Current focus:** v0.2.0 Create Page Overhaul -- Phase 15 in progress (image upload & input bar)
 
 ## Current Position
 
-Phase: 14 of 17 (Variations)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 -- Completed 14-02-PLAN.md (variation UI)
+Phase: 15 of 17 (Image Upload & Input Bar)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-01 -- Completed 15-01-PLAN.md (backend image upload pipeline)
 
-Progress: [#######             ] 38% (5/13 plans)
+Progress: [########            ] 46% (6/13 plans)
 
 ## Milestone History
 
@@ -29,8 +29,8 @@ Progress: [#######             ] 38% (5/13 plans)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 35
-- Total execution time: ~152.0 min
+- Total plans completed: 36
+- Total execution time: ~155.0 min
 
 **v0.2.0 Breakdown:**
 
@@ -42,6 +42,7 @@ Progress: [#######             ] 38% (5/13 plans)
 | 12-continuation-generation | 2/2 | 10 min | 5.0 min |
 | 13-generation-feed-settings | 3/3 | 5 min | 1.7 min |
 | 14-variations | 2/2 | 6 min | 3.0 min |
+| 15-image-upload-input-bar | 1/3 | 3 min | 3.0 min |
 
 ## Accumulated Context
 
@@ -54,7 +55,7 @@ v0.2.0 decisions:
 - Static screenshots for feed thumbnails (live Player only for selected)
 - localStorage for settings defaults, per-generation for display/rerun
 - Parallel Claude API calls with temperature 0.9 for variations
-- EXIF stripping on client before upload (piexifjs)
+- EXIF stripping on client before upload (canvas toBlob, not piexifjs -- format-agnostic)
 - Default to 1 variation (users opt into more)
 - Prequel uses same LLM code-reading approach as continuation
 - Custom useLocalStorage hook (not usehooks-ts) -- one hook not worth a dependency
@@ -72,6 +73,9 @@ v0.2.0 decisions:
 - VariationGrid uses stacked layout (metadata top, grid below) for better thumbnail space
 - groupByBatch preserves insertion order, only sorts within batches by variationIndex
 - First successful variation auto-selected for immediate preview after multi-generation
+- Canvas toBlob for EXIF stripping (format-agnostic vs piexifjs JPEG-only)
+- URL-based image source for Claude Vision (Convex storage URLs are publicly accessible)
+- buildUserContent returns plain string when no images (avoids unnecessary content array)
 
 ### Pending Todos
 
@@ -84,15 +88,16 @@ None.
 - Feed performance with 50+ generations (test early with static thumbnails)
 - Claude API cost at scale with 4 variations (implement usage tracking)
 - Prequel quality for complex animations (user preview + edit as fallback)
+- Convex storage URL accessibility from Claude API servers (may need base64 fallback)
 
 ## Session Continuity
 
-Last session: 2026-02-01T17:07Z
-Stopped at: Completed 14-02-PLAN.md (variation UI)
+Last session: 2026-02-01T21:03Z
+Stopped at: Completed 15-01-PLAN.md (backend image upload pipeline)
 Resume file: None
 
-Next step: Execute Phase 15 (next phase in roadmap)
+Next step: Execute 15-02-PLAN.md (image upload hook and UI)
 
 ---
-*14-02 complete -- 2026-02-01*
-*Variation UI: settings variationCount selector, VariationGrid with CSS grid + V1-V4 badges, feed batchId grouping, generateVariations wiring with auto-select first success*
+*15-01 complete -- 2026-02-01*
+*Backend image upload pipeline: Convex file upload mutation, canvas-based EXIF stripping, Claude Vision URL-based content blocks for reference images in generate/generateVariations*
