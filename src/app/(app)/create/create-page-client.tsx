@@ -435,6 +435,27 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   }, [removeGeneration]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleExtendNextGeneration = useCallback(async (generation: any) => {
+    if (!generation.code || !generation.rawCode) {
+      toast.error("Cannot extend: generation has no code");
+      return;
+    }
+    try {
+      const clipId = await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved as clip -- opening continuation...");
+      router.push(`/create?sourceClipId=${clipId}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to start continuation");
+    }
+  }, [saveClip, router]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRerunGeneration = useCallback(async (generation: any) => {
     const prompt = generation.prompt;
     if (!prompt) {
@@ -725,6 +746,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
             onSaveGeneration={handleSaveGeneration}
             onDeleteGeneration={handleDeleteGeneration}
             onRerunGeneration={handleRerunGeneration}
+            onExtendNextGeneration={handleExtendNextGeneration}
           />
         </div>
       )}
