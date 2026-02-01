@@ -210,9 +210,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 10-01-PLAN.md -- Convex movies backend (schema + CRUD mutations and queries)
-- [ ] 10-02-PLAN.md -- Movie list page, create dialog, and editor shell
-- [ ] 10-03-PLAN.md -- Timeline with @dnd-kit drag-to-reorder, add-scene panel, and MovieComposition
+- [x] 10-01-PLAN.md -- Convex movies backend (schema + CRUD mutations and queries)
+- [x] 10-02-PLAN.md -- Movie list page, create dialog, and editor shell
+- [x] 10-03-PLAN.md -- Timeline with @dnd-kit drag-to-reorder, add-scene panel, and MovieComposition
 
 ### Phase 11: Movie Preview, Render & Export
 **Goal**: Users can preview a full movie as one continuous video, render it to MP4, and export individual clips or the entire movie
@@ -263,7 +263,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. Editing & Iteration | v1.1 | 4/4 | Complete | 2026-01-29 |
 | 8. Export & Polish | v1.1 | 2/2 | Complete | 2026-01-29 |
 | 9. App Shell & Clip Library | v2.0 | 3/3 | Complete | 2026-02-01 |
-| 10. Movie Data & Timeline UI | v2.0 | 0/3 | Planned | - |
+| 10. Movie Data & Timeline UI | v2.0 | 3/3 | Complete | 2026-02-01 |
 | 11. Movie Preview, Render & Export | v2.0 | 0/~3 | Not started | - |
 | 12. Continuation Generation | v2.0 | 0/~2 | Not started | - |
 
@@ -272,4 +272,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped*
-*Updated: 2026-02-01 -- Phase 10 planned (3 plans in 3 waves)*
+*Updated: 2026-02-01 -- Phase 10 complete (3/3 plans, verified)*

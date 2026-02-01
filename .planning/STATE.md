@@ -86,7 +86,7 @@ Last session: 2026-02-01
 Stopped at: Completed 10-03-PLAN.md (Timeline UI) -- Phase 10 complete
 Resume file: None
 
-Next step: Phase 11 (Movie Preview & Render)
+Next step: `/gsd:plan-phase 11` (Movie Preview, Render & Export)
 
 ---
-*Updated after 10-03 execution -- 2026-02-01*
+*Phase 10 complete -- 2026-02-01*
