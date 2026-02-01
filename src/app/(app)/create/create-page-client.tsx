@@ -51,6 +51,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   const refine = useAction(api.generateAnimation.refine);
   const generateVariationsAction = useAction(api.generateAnimation.generateVariations);
   const continuationAction = useAction(api.generateAnimation.generateContinuation);
+  const removeGeneration = useMutation(api.generations.remove);
+  const saveClip = useMutation(api.clips.save);
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useGenerationSettings();
 
@@ -402,6 +404,126 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     setSavedClipId(null);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSaveGeneration = useCallback(async (generation: any) => {
+    if (!generation.code || !generation.rawCode) {
+      toast.error("Cannot save: generation has no code");
+      return;
+    }
+    try {
+      await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved to clip library!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save clip");
+    }
+  }, [saveClip]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDeleteGeneration = useCallback(async (generation: any) => {
+    try {
+      await removeGeneration({ id: generation._id as any });
+      toast.success("Generation deleted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete generation");
+    }
+  }, [removeGeneration]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleRerunGeneration = useCallback(async (generation: any) => {
+    const prompt = generation.prompt;
+    if (!prompt) {
+      toast.error("Cannot rerun: no prompt found");
+      return;
+    }
+
+    // Clear current view state to show generating UI
+    setLastGeneration(null);
+    setError(null);
+    setIsGenerating(true);
+    setIsEditing(false);
+    setEditedCode(null);
+    setSkipValidation(true);
+    validation.resetToValid();
+    setChatMessages([]);
+
+    setCurrentStep("analyzing");
+    await new Promise((r) => setTimeout(r, 500));
+    setCurrentStep("generating");
+
+    try {
+      const aspectRatio = generation.aspectRatio ?? "16:9";
+      const durationInSeconds = generation.durationInSeconds ?? 3;
+      const fps = generation.fps ?? 30;
+      const variationCount = generation.variationCount ?? 1;
+      const referenceImageIds = generation.referenceImageIds;
+
+      if (variationCount > 1) {
+        const result = await generateVariationsAction({
+          prompt,
+          variationCount,
+          aspectRatio,
+          durationInSeconds,
+          fps,
+          ...(referenceImageIds ? { referenceImageIds } : {}),
+        });
+
+        setCurrentStep("validating");
+        await new Promise((r) => setTimeout(r, 300));
+
+        const firstSuccess = result.variations[0];
+        if (firstSuccess) {
+          setLastGeneration({
+            id: firstSuccess.id,
+            rawCode: firstSuccess.rawCode,
+            code: firstSuccess.code,
+            durationInFrames: firstSuccess.durationInFrames,
+            fps: firstSuccess.fps,
+          });
+          setLastPrompt(prompt);
+          toast.success(`Rerun complete: ${result.variations.length} variation(s) generated!`);
+        } else {
+          throw new Error("All variations failed");
+        }
+      } else {
+        const result = await generate({
+          prompt,
+          aspectRatio,
+          durationInSeconds,
+          fps,
+          ...(referenceImageIds ? { referenceImageIds } : {}),
+        });
+
+        setCurrentStep("validating");
+        await new Promise((r) => setTimeout(r, 300));
+
+        if (!result?.code) throw new Error("Rerun did not return code");
+
+        setLastGeneration({
+          id: String(result.id),
+          rawCode: result.rawCode,
+          code: result.code,
+          durationInFrames: result.durationInFrames ?? 90,
+          fps: result.fps ?? 30,
+        });
+        setLastPrompt(prompt);
+        toast.success("Rerun complete!");
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Rerun failed";
+      setError({ message: msg, retryCount: 0 });
+      toast.error("Rerun failed");
+    } finally {
+      setIsGenerating(false);
+      setCurrentStep(null);
+    }
+  }, [generate, generateVariationsAction, validation]);
+
   const promptPlaceholder = sourceClipId
     ? "Describe what should happen next (or press Enter for automatic continuation)..."
     : selectedTemplate
@@ -598,7 +720,12 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       {!isGenerating && !lastGeneration && (
         <div className="w-full max-w-2xl mt-8">
           <h3 className="text-sm font-medium text-muted-foreground mb-4">Past Generations</h3>
-          <GenerationFeed onSelectGeneration={handleSelectGeneration} />
+          <GenerationFeed
+            onSelectGeneration={handleSelectGeneration}
+            onSaveGeneration={handleSaveGeneration}
+            onDeleteGeneration={handleDeleteGeneration}
+            onRerunGeneration={handleRerunGeneration}
+          />
         </div>
       )}
 
