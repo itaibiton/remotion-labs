@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 
 ## Current Position
 
-Phase: 10 of 12 (Movie Data & Timeline UI) -- PLANNED
-Plan: 0 of 3 in phase 10 (3 plans ready, 3 waves)
-Status: Phase 10 planned. Ready for execution.
-Last activity: 2026-02-01 -- Planned Phase 10 (3 plans, plan-checked, blockers fixed)
+Phase: 10 of 12 (Movie Data & Timeline UI) -- IN PROGRESS
+Plan: 1 of 3 in phase 10 (plan 01 complete, 2 remaining)
+Status: In progress. Movie data layer complete. Next: Movie list page & timeline UI.
+Last activity: 2026-02-01 -- Completed 10-01-PLAN.md (Movie Backend Data Layer)
 
-Progress: [=============.....] 82% (25/~33 plans across all milestones)
+Progress: [==============....] 85% (26/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [=============.....] 82% (25/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 25
-- Total execution time: ~116 min
+- Total plans completed: 26
+- Total execution time: ~117.5 min
 
 **v1.1 Breakdown:**
 
@@ -44,6 +44,7 @@ Progress: [=============.....] 82% (25/~33 plans across all milestones)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 09-app-shell-clip-library | 3/3 | 6 min | 2.0 min |
+| 10-movie-data-timeline-ui | 1/3 | 1.5 min | 1.5 min |
 
 ## Accumulated Context
 
@@ -59,6 +60,9 @@ Recent decisions affecting v2.0:
 - clips.get has no auth check for MVP simplicity -- loaded by ID from URL params (09-02)
 - Remotion Thumbnail renders middle frame for representative clip preview (09-03)
 - Clip loading in create page uses Convex conditional query with "skip" pattern (09-03)
+- Inline scenes array on movie document, not a join table (10-01)
+- Uniform fps enforcement at addScene time, default 30fps (10-01)
+- movies.get has no auth check, matches clips.get URL-param pattern (10-01)
 
 ### Pending Todos
 
@@ -74,10 +78,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 09-03-PLAN.md (Phase 9 complete)
+Stopped at: Completed 10-01-PLAN.md (Movie Backend Data Layer)
 Resume file: None
 
-Next step: `/gsd:execute-phase 10` (Movie Data & Timeline UI)
+Next step: Execute 10-02-PLAN.md (Movie List Page & Timeline UI)
 
 ---
-*Phase 10 planned -- 2026-02-01*
+*Updated after 10-01 execution -- 2026-02-01*
