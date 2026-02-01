@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-29)
 ## Current Position
 
 Phase: 9 of 12 (App Shell & Clip Library)
-Plan: 0 of 3 in current phase
-Status: Planned (3 plans ready to execute)
-Last activity: 2026-01-30 -- Phase 9 planned (3 plans, 3 waves)
+Plan: 1 of 3 in current phase
+Status: In progress (Plan 09-01 complete, 09-02 and 09-03 remaining)
+Last activity: 2026-02-01 -- Completed 09-01-PLAN.md (App Shell)
 
-Progress: [========..........] 73% (22/~33 plans across all milestones)
+Progress: [=========.........] 76% (23/~33 plans across all milestones)
 
 ## Milestone History
 
@@ -28,8 +28,8 @@ Progress: [========..........] 73% (22/~33 plans across all milestones)
 ## Performance Metrics
 
 **Velocity (all milestones):**
-- Total plans completed: 22
-- Total execution time: ~110 min
+- Total plans completed: 23
+- Total execution time: ~112 min
 
 **v1.1 Breakdown:**
 
@@ -39,6 +39,12 @@ Progress: [========..........] 73% (22/~33 plans across all milestones)
 | 07-editing-iteration | 4 | 14 min | 3.5 min |
 | 08-export-polish | 2 | 5 min | 2.5 min |
 
+**v2.0 Breakdown:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 09-app-shell-clip-library | 1/3 | 2 min | 2.0 min |
+
 ## Accumulated Context
 
 ### Decisions
@@ -47,6 +53,8 @@ All decisions documented in PROJECT.md Key Decisions table.
 Recent decisions affecting v2.0:
 - Serialize end-state from code (static analysis of JSX for continuation generation) -- Pending validation
 - Horizontal timeline UI (traditional video-editor-style track with duration bars) -- Pending
+- (app) route group pattern to scope shell layout to authenticated pages (09-01)
+- 5 nav items in sidebar including Movie placeholder for Phase 10 readiness (09-01)
 
 ### Pending Todos
 
@@ -61,11 +69,11 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-30
-Stopped at: Phase 9 planned, ready to execute
+Last session: 2026-02-01
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
 
-Next step: `/gsd:execute-phase 9` (App Shell & Clip Library)
+Next step: Execute 09-02-PLAN.md (Clip Library)
 
 ---
-*Phase 9 planned -- 2026-01-30*
+*Plan 09-01 complete -- 2026-02-01*
