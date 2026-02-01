@@ -10,6 +10,9 @@ import { Loader2 } from "lucide-react";
 
 interface GenerationFeedProps {
   onSelectGeneration: (generation: any) => void;
+  onSaveGeneration: (generation: any) => void;
+  onDeleteGeneration: (generation: any) => void;
+  onRerunGeneration: (generation: any) => void;
 }
 
 interface BatchGroup {
@@ -47,7 +50,12 @@ function groupByBatch(generations: any[]): BatchGroup[] {
   return groups;
 }
 
-export function GenerationFeed({ onSelectGeneration }: GenerationFeedProps) {
+export function GenerationFeed({
+  onSelectGeneration,
+  onSaveGeneration,
+  onDeleteGeneration,
+  onRerunGeneration,
+}: GenerationFeedProps) {
   const { results, status, loadMore } = usePaginatedQuery(
     api.generations.listPaginated,
     {},
@@ -103,6 +111,9 @@ export function GenerationFeed({ onSelectGeneration }: GenerationFeedProps) {
               key={gen._id}
               generation={gen}
               onSelect={onSelectGeneration}
+              onSave={onSaveGeneration}
+              onDelete={onDeleteGeneration}
+              onRerun={onRerunGeneration}
             />
           );
         }
@@ -112,6 +123,9 @@ export function GenerationFeed({ onSelectGeneration }: GenerationFeedProps) {
             key={batch.batchId!}
             variations={batch.generations}
             onSelectVariation={onSelectGeneration}
+            onSave={onSaveGeneration}
+            onDelete={onDeleteGeneration}
+            onRerun={onRerunGeneration}
           />
         );
       })}
