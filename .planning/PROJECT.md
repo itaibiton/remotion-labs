@@ -1,6 +1,6 @@
 # RemotionLab
 
-**Release: v0.2.0**
+**Release: v0.3.0**
 
 ## What This Is
 
@@ -21,10 +21,13 @@ Claude generates complete Remotion JSX code. AST validation and sandboxed execut
 ### Milestone 3: Scenes, Timeline & Movie Editor (Phases 9-12)
 Clip library with save/open/delete, movie creation with horizontal timeline and drag-to-reorder scenes, full-movie preview and MP4 rendering, single-clip and multi-composition Remotion project export, continuation generation for visually continuous scene sequences.
 
-## In Progress (v0.2.0)
-
-### Milestone 4: Create Page Overhaul (Phases 13+)
+### Milestone 4: Create Page Overhaul (Phases 13-17)
 Redesign the create page as a scrolling generation feed (Midjourney-style). Each prompt produces 1-4 variations displayed in a grid row. Generation settings panel for aspect ratio, duration, and FPS. Image/file upload for reference-based prompts. Per-creation actions: extend next (continuation), extend previous (prequel), save to library, delete, rerun. Input bar redesign with prompt textarea, upload button, and settings toggle. Create page IS the history — all past generations visible in a scrolling feed. Library remains separate for explicitly saved clips.
+
+## In Progress (v0.3.0)
+
+### Milestone 5: Movie Editor Revamp (Phases 18+)
+Transform the movie page into a professional-grade video editor. Full-screen layout with preview on top and timeline at bottom. Pro timeline interactions: trim clip start/end with drag handles, split clips at playhead (blade tool), drag-to-reorder and resize. Per-clip actions directly on timeline blocks: generate next, generate previous, re-generate, and edit. Inline editing panel with preview player and code editor side-by-side for selected clips. Everything fits in viewport with minimal scrolling.
 
 ## Requirements
 
@@ -74,19 +77,28 @@ Redesign the create page as a scrolling generation feed (Midjourney-style). Each
 - [x] UI-03: Dedicated timeline/movie page for managing scenes and previewing/rendering the full movie
 - [x] UI-04: Video preview shows a timeline bar (playhead, duration, scrub)
 
-### Planned (Milestone 4 — Create Page Overhaul)
+### Validated (Milestone 4 — Create Page Overhaul)
 
-- [ ] **FEED-01**: Create page displays all past generations as a scrolling feed (newest first), each showing prompt text and variation thumbnails
-- [ ] **FEED-02**: Each generation row shows 1-4 variation previews in a grid layout with the prompt/metadata on the side
-- [ ] **VAR-01**: User can choose number of variations (1-4) per generation; system produces that many distinct compositions from one prompt
-- [ ] **VAR-02**: User can select a specific variation to preview full-size, edit, save, or use as basis for continuation
-- [ ] **SET-01**: User can configure aspect ratio (portrait/square/landscape) from a settings panel before generating
-- [ ] **SET-02**: User can configure duration and FPS from the settings panel
-- [ ] **UPLOAD-01**: User can attach image/file to prompt as visual reference for generation
-- [ ] **ACT-01**: Each generation has extend-next action (continuation from end state) and extend-previous action (prequel leading into start state)
-- [ ] **ACT-02**: Each generation has save (to clip library), delete, and rerun actions
-- [ ] **INPUT-01**: Input bar redesigned with prompt textarea, image upload button, and settings toggle button
-- [ ] **PREQUEL-01**: System can analyze a clip's code to extract its start state and generate a prequel animation that ends at that start state
+- [x] FEED-01: Create page displays all past generations as a scrolling feed (newest first)
+- [x] FEED-02: Each generation row shows 1-4 variation previews in a grid layout
+- [x] VAR-01: User can choose number of variations (1-4) per generation
+- [x] VAR-02: User can select a specific variation to preview full-size, edit, save, or use as basis for continuation
+- [x] SET-01: User can configure aspect ratio from a settings panel before generating
+- [x] SET-02: User can configure duration and FPS from the settings panel
+- [x] UPLOAD-01: User can attach image/file to prompt as visual reference for generation
+- [x] ACT-01: Each generation has extend-next and extend-previous actions
+- [x] ACT-02: Each generation has save, delete, and rerun actions
+- [x] INPUT-01: Input bar redesigned with prompt textarea, image upload button, and settings toggle
+- [x] PREQUEL-01: System can generate a prequel animation that ends at a clip's start state
+
+### Planned (Milestone 5 — Movie Editor Revamp)
+
+- [ ] **TIMELINE-01**: User can trim clip start/end by dragging handles on timeline clip edges
+- [ ] **TIMELINE-02**: User can split a clip at the playhead position (blade tool)
+- [ ] **TIMELINE-03**: User can drag-to-resize clips on the timeline
+- [ ] **TIMELINE-04**: Per-clip action buttons on timeline: generate next, generate prev, re-generate, edit
+- [ ] **LAYOUT-01**: Movie page uses full-screen pro layout (preview top, timeline bottom, fits viewport)
+- [ ] **EDIT-01**: Inline editing panel with preview player + code editor for selected clip
 
 ### Out of Scope
 
@@ -96,7 +108,6 @@ Redesign the create page as a scrolling generation feed (Midjourney-style). Each
 - Brand kits (saved colors, fonts, logos) — future feature
 - Mobile app — web-first
 - Real-time collaboration — solo creation
-- Visual drag-and-drop timeline — horizontal timeline with reorder, not full drag-and-drop editor
 - Sharing movies — solo creation first
 
 ## Context
@@ -146,10 +157,12 @@ Redesign the create page as a scrolling generation feed (Midjourney-style). Each
 | No payments in MVP | Focus on core value, validate before monetizing | Active |
 | LLM code reading for end-state (v0.1) | Claude reads animation code to determine final visual state for continuations; static AST analysis rejected as infeasible | Validated |
 | Horizontal timeline UI (v0.1) | Traditional video-editor-style track with duration bars, not a simple list | Validated |
-| Create page as generation feed (v0.2) | Midjourney-style scrolling history of all generations, replacing single-generation view | Planned |
-| 1-4 variations per prompt (v0.2) | Multiple distinct compositions from one prompt, matching generative AI UX patterns | Planned |
-| Prequel generation (v0.2) | Generate animation that leads into a clip's start state, complementing continuation | Planned |
-| Image upload for prompt context (v0.2) | Reference images influence generation without requiring image rendering in output | Planned |
+| Create page as generation feed (v0.2) | Midjourney-style scrolling history of all generations, replacing single-generation view | Validated |
+| 1-4 variations per prompt (v0.2) | Multiple distinct compositions from one prompt, matching generative AI UX patterns | Validated |
+| Prequel generation (v0.2) | Generate animation that leads into a clip's start state, complementing continuation | Validated |
+| Image upload for prompt context (v0.2) | Reference images influence generation without requiring image rendering in output | Validated |
+| Pro timeline editor (v0.3) | Trim, split, resize, per-clip actions — transform movie page into professional editor | Planned |
+| Inline clip editing panel (v0.3) | Preview + code editor side-by-side on movie page, no navigation away | Planned |
 
 ---
-*Last updated: 2026-02-01 — v0.2.0 milestone started (Create Page Overhaul)*
+*Last updated: 2026-02-02 — v0.3.0 milestone started (Movie Editor Revamp)*
