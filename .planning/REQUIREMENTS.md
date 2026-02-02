@@ -1,6 +1,6 @@
-# Requirements: RemotionLab v0.2.0
+# Requirements: RemotionLab v0.3.0
 
-**Defined:** 2026-02-01
+**Defined:** 2026-02-02
 **Core Value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
 ## v2.0 Requirements (Complete)
@@ -40,9 +40,10 @@
 
 </details>
 
-## v0.2.0 Requirements -- Create Page Overhaul
+## v0.2.0 Requirements (Complete)
 
-Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases starting from Phase 13.
+<details>
+<summary>v0.2.0 -- Create Page Overhaul (11/11 complete)</summary>
 
 ### Generation Feed
 
@@ -76,9 +77,39 @@ Requirements for the Create Page Overhaul milestone. Each maps to roadmap phases
 
 - [x] **PREQUEL-01**: System can analyze a clip's code to extract its start state (frame 0 visual state) and generate a prequel animation that ends at that start state
 
+</details>
+
+## v0.3.0 Requirements -- Movie Editor Revamp
+
+Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases starting from Phase 18.
+
+### Timeline Interactions
+
+- [ ] **TL-01**: Timeline displays clips as proportional-width blocks (width reflects duration relative to total movie length)
+- [ ] **TL-02**: User can trim clip start/end by dragging handles on timeline clip edges (non-destructive, adjusts visible frame range)
+- [ ] **TL-03**: User can split a clip at the playhead position via blade tool (keyboard shortcut + button)
+- [ ] **TL-04**: Timeline has zoom controls (scroll wheel + buttons) to scale the time view
+- [ ] **TL-05**: Timeline shows a ruler with timecodes and a draggable playhead synced to the preview player
+- [ ] **TL-06**: Clips snap to adjacent clip edges and playhead during trim/drag operations
+
+### Per-Clip Actions
+
+- [ ] **ACT-03**: Each timeline clip has action buttons: generate next, generate previous, re-generate, and edit
+- [ ] **ACT-04**: Generate next/previous from timeline clip triggers continuation/prequel generation and adds result to movie
+
+### Layout
+
+- [ ] **LAYOUT-01**: Movie page uses a full-screen pro layout with resizable panels (preview on top, timeline at bottom)
+- [ ] **LAYOUT-02**: Panels are resizable via drag handles (user can adjust preview vs timeline proportions)
+
+### Inline Editing
+
+- [ ] **EDIT-01**: Selecting a clip opens an inline editing panel with preview player and Monaco code editor
+- [ ] **EDIT-02**: User can edit clip code in the panel and save changes back to the clip
+
 ## Future Requirements
 
-Deferred to v0.3+. Tracked but not in current roadmap.
+Deferred to v0.4+. Tracked but not in current roadmap.
 
 ### Transitions
 
@@ -89,12 +120,16 @@ Deferred to v0.3+. Tracked but not in current roadmap.
 
 - **POLISH-01**: User can duplicate a scene on the timeline
 - **POLISH-02**: Scene-aware prompt context (Claude knows about surrounding scenes when generating)
-- **POLISH-03**: Timeline playhead syncs with preview Player position during scrub
 
 ### Feed Enhancement
 
 - **FEED-03**: Feed supports infinite scroll with virtualization for 100+ generations
 - **FEED-04**: Feed has date-based navigation (jump to specific day's generations)
+
+### Timeline Advanced
+
+- **TL-07**: Undo/redo for timeline operations
+- **TL-08**: Speed/retime control for clips
 
 ## Out of Scope
 
@@ -104,13 +139,13 @@ Explicitly excluded. Documented to prevent scope creep.
 |---------|--------|
 | Audio/music tracks on timeline | Visual-only for now; audio adds multi-track complexity |
 | Multi-track timeline | Single-track scenes are sufficient; multi-track is editor scope creep |
-| Visual drag-and-drop to trim scene duration | Duration is set by code, not timeline handles |
 | Real-time collaboration | Solo creation first; Convex reactive queries enable later |
 | Sharing/publishing movies | Distribution feature, not creation; export MP4 suffices |
 | Payments/subscriptions | Focus on core value first |
-| Feed virtualization (v0.2) | Simple pagination sufficient for MVP; add when performance demands |
-| Image generation (not animation) | RemotionLab generates motion graphics code, not static images |
-| Custom aspect ratios (arbitrary) | 3 presets (16:9, 1:1, 9:16) sufficient for MVP |
+| Undo/redo (v0.3) | Adds significant state complexity; defer to v0.4 |
+| Speed/retime control (v0.3) | No native Remotion support for code compositions; needs prototyping |
+| Tool modes (Premiere-style blade/select toggle) | Contextual interactions (hover = trim) are better for content creators |
+| Filmstrip thumbnail strips on clips | Performance risk with DynamicCode rendering; defer to polish phase |
 
 ## Traceability
 
@@ -129,12 +164,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ACT-01 | Phase 16 | Complete |
 | ACT-02 | Phase 16 | Complete |
 | PREQUEL-01 | Phase 17 | Complete |
+| TL-01 | Phase — | Pending |
+| TL-02 | Phase — | Pending |
+| TL-03 | Phase — | Pending |
+| TL-04 | Phase — | Pending |
+| TL-05 | Phase — | Pending |
+| TL-06 | Phase — | Pending |
+| ACT-03 | Phase — | Pending |
+| ACT-04 | Phase — | Pending |
+| LAYOUT-01 | Phase — | Pending |
+| LAYOUT-02 | Phase — | Pending |
+| EDIT-01 | Phase — | Pending |
+| EDIT-02 | Phase — | Pending |
 
 **Coverage:**
-- v0.2.0 requirements: 11 total
-- Mapped to phases: 11/11
-- Unmapped: 0
+- v0.2.0 requirements: 11/11 complete
+- v0.3.0 requirements: 12 total
+- Mapped to phases: 0/12 (pending roadmap)
+- Unmapped: 12
 
 ---
-*Requirements defined: 2026-02-01*
-*Last updated: 2026-02-01 -- v0.2.0 traceability complete. 11/11 requirements mapped to phases 13-17.*
+*Requirements defined: 2026-02-02*
+*Last updated: 2026-02-02 -- v0.3.0 requirements defined. 12 requirements across 4 categories.*
