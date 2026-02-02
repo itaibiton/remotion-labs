@@ -12,11 +12,7 @@ import { AddScenePanel } from "./add-scene-panel";
 import { MoviePreviewPlayer } from "@/components/movie/movie-preview-player";
 import { MovieRenderButton } from "@/components/movie/movie-render-button";
 import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "@/components/ui/resizable";
+
 
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
@@ -197,34 +193,27 @@ export function MovieEditor({ movieId }: { movieId: string }) {
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0">
-          <ResizablePanelGroup orientation="vertical">
-            <ResizablePanel defaultSize={65} minSize={30}>
-              {/* Preview panel */}
-              <div className="h-full w-full flex items-center justify-center p-4 overflow-hidden bg-black/5">
-                <div style={{ aspectRatio: "1920 / 1080", maxHeight: "100%", maxWidth: "100%" }}>
-                  <MoviePreviewPlayer
-                    scenes={validScenes}
-                    fps={movie.fps}
-                    totalDurationInFrames={totalDurationInFrames}
-                    onActiveSceneChange={setActiveSceneIndex}
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={35} minSize={15}>
-              {/* Timeline panel */}
-              <div className="h-full overflow-y-auto p-4">
-                <Timeline
-                  scenes={scenesWithClips}
-                  activeSceneIndex={activeSceneIndex}
-                  onReorder={handleReorder}
-                  onRemove={handleRemoveScene}
-                />
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+        <div className="flex-1 min-h-0 flex flex-col">
+          {/* Preview — fixed proportion, vertically centered */}
+          <div className="flex-[3] min-h-0 flex items-center justify-center p-4 bg-black/5">
+            <div style={{ height: "100%", aspectRatio: "16 / 9", maxWidth: "100%" }}>
+              <MoviePreviewPlayer
+                scenes={validScenes}
+                fps={movie.fps}
+                totalDurationInFrames={totalDurationInFrames}
+                onActiveSceneChange={setActiveSceneIndex}
+              />
+            </div>
+          </div>
+          {/* Timeline — fills remaining space */}
+          <div className="flex-[2] min-h-0 overflow-y-auto p-4">
+            <Timeline
+              scenes={scenesWithClips}
+              activeSceneIndex={activeSceneIndex}
+              onReorder={handleReorder}
+              onRemove={handleRemoveScene}
+            />
+          </div>
         </div>
       )}
 
