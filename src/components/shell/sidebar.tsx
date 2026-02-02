@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Plus, Library, Film, Palette, FlaskConical, LogOut, ChevronsUpDown } from "lucide-react";
+import { Plus, Library, Film, Palette, Compass, FlaskConical, LogOut, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
 import {
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/popover";
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home },
   { href: "/create", label: "Create", icon: Plus },
+  { href: "/feed", label: "Feed", icon: Compass },
   { href: "/library", label: "Library", icon: Library },
   { href: "/movie", label: "Movie", icon: Film },
   { href: "/templates", label: "Templates", icon: Palette },

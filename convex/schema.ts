@@ -48,7 +48,8 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_created", ["userId", "createdAt"])
-    .index("by_batchId", ["batchId"]),
+    .index("by_batchId", ["batchId"])
+    .index("by_status_created", ["status", "createdAt"]),
 
   clips: defineTable({
     userId: v.string(),

@@ -35,6 +35,7 @@ interface GenerationRowProps {
   onExtendNext: (generation: GenerationRowProps["generation"]) => void;
   onExtendPrevious: (generation: GenerationRowProps["generation"]) => void;
   isDeleting?: boolean;
+  hideActions?: boolean;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -54,7 +55,7 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting }: GenerationRowProps) {
+export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions }: GenerationRowProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -72,11 +73,12 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
   return (
     <div className={`flex flex-col rounded-lg border overflow-hidden transition-colors ${isDeleting ? "animate-pulse opacity-60 pointer-events-none" : "hover:bg-muted/50"}`}>
       {/* Clickable thumbnail — fixed height, cover-clipped */}
-      <button
-        type="button"
-        className="relative w-full h-40 overflow-hidden cursor-pointer"
-        onClick={() => onSelect(generation)}
-        disabled={isDeleting || isPending}
+      <div
+        role="button"
+        tabIndex={0}
+        className={`relative w-full h-40 overflow-hidden ${isDeleting || isPending ? "pointer-events-none" : "cursor-pointer"}`}
+        onClick={() => { if (!isDeleting && !isPending) onSelect(generation); }}
+        onKeyDown={(e) => { if (e.key === "Enter" && !isDeleting && !isPending) onSelect(generation); }}
       >
         {isPending ? (
           <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
@@ -106,11 +108,20 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
         ) : (
           <div className="w-full h-full bg-muted animate-pulse" />
         )}
-      </button>
+      </div>
 
       {/* Metadata - pinned to bottom */}
       <div className="p-2.5 flex flex-col gap-1.5 mt-auto">
-        <p className="text-sm font-medium line-clamp-2">{generation.prompt}</p>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-sm font-medium truncate">{generation.prompt}</p>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p>{generation.prompt}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {isFailed && generation.errorMessage && (
           <p className="text-xs text-red-400 line-clamp-2">
@@ -146,7 +157,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
         </div>
 
         {/* Action buttons */}
-        {!isPending && (
+        {!isPending && !hideActions && (
           <TooltipProvider delayDuration={300}>
             <div className="flex items-center gap-1 pt-0.5">
               {!isFailed && (

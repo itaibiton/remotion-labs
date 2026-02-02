@@ -15,6 +15,8 @@ interface GenerationFeedProps {
   onExtendNextGeneration: (generation: any) => void;
   onExtendPreviousGeneration: (generation: any) => void;
   deletingIds?: Set<string>;
+  queryType?: "user" | "public";
+  hideActions?: boolean;
 }
 
 const itemVariants = {
@@ -31,9 +33,15 @@ export function GenerationFeed({
   onExtendNextGeneration,
   onExtendPreviousGeneration,
   deletingIds,
+  queryType = "user",
+  hideActions,
 }: GenerationFeedProps) {
+  const queryFn = queryType === "public"
+    ? api.generations.listPublicPaginated
+    : api.generations.listPaginated;
+
   const { results, status, loadMore } = usePaginatedQuery(
-    api.generations.listPaginated,
+    queryFn,
     {},
     { initialNumItems: 20 }
   );
@@ -121,6 +129,7 @@ export function GenerationFeed({
                 onExtendNext={onExtendNextGeneration}
                 onExtendPrevious={onExtendPreviousGeneration}
                 isDeleting={deletingIds?.has(gen._id) ?? false}
+                hideActions={hideActions}
               />
             </motion.div>
           ))}

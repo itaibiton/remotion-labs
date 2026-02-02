@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import Anthropic from "@anthropic-ai/sdk";
 import { internal } from "./_generated/api";
@@ -1296,5 +1296,97 @@ export const generatePrequel = action({
       });
       throw e;
     }
+  },
+});
+
+// ============================================================================
+// Showcase Seed Action (internal — called via `npx convex run`)
+// ============================================================================
+
+/**
+ * Generate animations for a batch of prompts to seed the explore feed.
+ * Processes prompts sequentially to avoid API rate limits.
+ * Each prompt creates a pending row, calls Claude, and patches to success/failed.
+ *
+ * Usage: npx convex run generateAnimation:seedShowcase '{"userId":"...", "prompts":["..."]}'
+ */
+export const seedShowcase = internalAction({
+  args: {
+    userId: v.string(),
+    prompts: v.array(v.string()),
+    aspectRatio: v.optional(v.string()),
+    durationInSeconds: v.optional(v.number()),
+    fps: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
+
+    const client = new Anthropic({ apiKey });
+
+    const aspectRatio = args.aspectRatio ?? "16:9";
+    const dimensions = ASPECT_RATIO_MAP[aspectRatio] ?? { width: 1920, height: 1080 };
+    const targetDuration = args.durationInSeconds ?? 3;
+    const targetFps = args.fps ?? 30;
+    const targetFrames = Math.round(targetDuration * targetFps);
+
+    const enhancedPrompt = SYSTEM_PROMPT +
+      `\n\nIMPORTANT COMPOSITION SETTINGS:\n` +
+      `- Dimensions: ${dimensions.width}x${dimensions.height} (${aspectRatio})\n` +
+      `- Duration: ${targetFrames} frames at ${targetFps} FPS\n` +
+      `- Use // DURATION: ${targetFrames} and // FPS: ${targetFps} in your output\n` +
+      `- Design your layout for ${aspectRatio} aspect ratio`;
+
+    const results: { prompt: string; status: string }[] = [];
+
+    for (const prompt of args.prompts) {
+      const createdAt = Date.now();
+      const generationId = await ctx.runMutation(
+        internal.generations.createPending,
+        {
+          userId: args.userId,
+          prompt,
+          createdAt,
+          aspectRatio,
+          durationInSeconds: targetDuration,
+        }
+      );
+
+      try {
+        const result = await generateSingleVariation(
+          client,
+          prompt,
+          enhancedPrompt,
+        );
+
+        await ctx.runMutation(internal.generations.complete, {
+          id: generationId,
+          status: "success" as const,
+          code: result.code,
+          rawCode: result.rawCode,
+          durationInFrames: result.durationInFrames,
+          fps: targetFps,
+        });
+
+        results.push({ prompt, status: "success" });
+        console.log(`✓ Generated: ${prompt.slice(0, 60)}...`);
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : "Generation failed";
+        await ctx.runMutation(internal.generations.complete, {
+          id: generationId,
+          status: "failed" as const,
+          errorMessage,
+        });
+        results.push({ prompt, status: `failed: ${errorMessage}` });
+        console.log(`✗ Failed: ${prompt.slice(0, 60)}... — ${errorMessage}`);
+      }
+
+      // Small delay between calls to avoid rate limiting
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+
+    const succeeded = results.filter((r) => r.status === "success").length;
+    console.log(`\nDone: ${succeeded}/${args.prompts.length} succeeded`);
+    return results;
   },
 });

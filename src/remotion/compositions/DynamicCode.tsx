@@ -17,7 +17,8 @@
  * - Execution is sandboxed via code-executor scope injection
  */
 
-import React, { useMemo } from "react";
+import React, { Component, useMemo } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import { AbsoluteFill } from "remotion";
 import { executeCode } from "@/lib/code-executor";
 
@@ -89,6 +90,32 @@ const ErrorFallback: React.FC<{ error: string }> = ({ error }) => (
 );
 
 /**
+ * Error boundary that catches render-time errors from generated code
+ * (e.g., Infinity CSS values, NaN dimensions, runtime exceptions).
+ */
+class RenderErrorBoundary extends Component<
+  { fallback: (error: string) => ReactNode; children: ReactNode },
+  { error: string | null }
+> {
+  state: { error: string | null } = { error: null };
+
+  static getDerivedStateFromError(err: Error) {
+    return { error: err.message || "Render error" };
+  }
+
+  componentDidCatch(err: Error, info: ErrorInfo) {
+    console.warn("DynamicCode render error:", err.message, info.componentStack);
+  }
+
+  render() {
+    if (this.state.error) {
+      return this.props.fallback(this.state.error);
+    }
+    return this.props.children;
+  }
+}
+
+/**
  * DynamicCode composition that renders AI-generated Remotion code.
  *
  * The composition:
@@ -124,7 +151,11 @@ export const DynamicCode: React.FC<DynamicCodeProps> = ({
   result.resetCounter();
 
   const Component = result.Component;
-  return <Component />;
+  return (
+    <RenderErrorBoundary fallback={(err) => <ErrorFallback error={err} />}>
+      <Component />
+    </RenderErrorBoundary>
+  );
 };
 
 export default DynamicCode;

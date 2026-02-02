@@ -592,7 +592,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         </div>
       )}
 
-      <div className="w-full px-6 pb-6">
+      <div className="w-full px-6 pb-6 pt-12">
         {/* Error state */}
         {error && !isGenerating && (
           <div className="w-full mb-6">

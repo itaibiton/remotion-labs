@@ -4,7 +4,7 @@ import { TemplateGallery } from "@/components/templates/template-gallery";
 export default function TemplatesPage() {
   return (
     <div className="flex-1 flex flex-col p-6">
-      <div className="max-w-6xl mx-auto w-full space-y-6">
+      <div className="w-full space-y-6">
         {/* Page header */}
         <div>
           <h1 className="text-3xl font-bold">Templates</h1>

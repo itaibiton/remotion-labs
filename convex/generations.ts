@@ -185,6 +185,23 @@ export const listPaginated = query({
 });
 
 /**
+ * Public paginated query for the explore feed.
+ * Returns all users' successful generations, newest first.
+ */
+export const listPublicPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("generations")
+      .withIndex("by_status_created", (q) => q.eq("status", "success"))
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
+/**
  * Query to get a single generation by ID
  */
 export const get = query({
