@@ -7,7 +7,7 @@ import {
   ASPECT_RATIO_PRESETS,
   type AspectRatioKey,
 } from "@/lib/aspect-ratios";
-import { AlertCircle, Loader2, Save, FastForward, Rewind, RotateCcw, Trash2 } from "lucide-react";
+import { AlertCircle, Loader2, Save, FastForward, Rewind, RotateCcw, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -36,6 +36,7 @@ interface GenerationRowProps {
   onExtendPrevious: (generation: GenerationRowProps["generation"]) => void;
   isDeleting?: boolean;
   hideActions?: boolean;
+  onUsePrompt?: (generation: GenerationRowProps["generation"]) => void;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -55,7 +56,7 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions }: GenerationRowProps) {
+export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions, onUsePrompt }: GenerationRowProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -155,6 +156,19 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
             {formatRelativeTime(generation.createdAt)}
           </span>
         </div>
+
+        {/* Use prompt button — shown on feed cards */}
+        {!isPending && !isFailed && hideActions && onUsePrompt && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full h-7 text-xs gap-1.5"
+            onClick={() => onUsePrompt(generation)}
+          >
+            <Sparkles className="h-3 w-3" />
+            Use prompt
+          </Button>
+        )}
 
         {/* Action buttons */}
         {!isPending && !hideActions && (

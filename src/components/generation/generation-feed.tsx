@@ -17,6 +17,7 @@ interface GenerationFeedProps {
   deletingIds?: Set<string>;
   queryType?: "user" | "public";
   hideActions?: boolean;
+  onUsePrompt?: (generation: any) => void;
 }
 
 const itemVariants = {
@@ -35,6 +36,7 @@ export function GenerationFeed({
   deletingIds,
   queryType = "user",
   hideActions,
+  onUsePrompt,
 }: GenerationFeedProps) {
   const queryFn = queryType === "public"
     ? api.generations.listPublicPaginated
@@ -130,6 +132,7 @@ export function GenerationFeed({
                 onExtendPrevious={onExtendPreviousGeneration}
                 isDeleting={deletingIds?.has(gen._id) ?? false}
                 hideActions={hideActions}
+                onUsePrompt={onUsePrompt}
               />
             </motion.div>
           ))}

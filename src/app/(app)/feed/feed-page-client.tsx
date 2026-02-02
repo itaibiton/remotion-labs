@@ -59,6 +59,13 @@ function FeedContent() {
     [saveClip]
   );
 
+  const handleUsePrompt = useCallback(
+    (generation: any) => {
+      router.push(`/create?prompt=${encodeURIComponent(generation.prompt)}`);
+    },
+    [router]
+  );
+
   // No-op handlers for actions hidden on public feed
   const noop = useCallback(() => {}, []);
 
@@ -91,6 +98,7 @@ function FeedContent() {
           onRerunGeneration={noop}
           onExtendNextGeneration={noop}
           onExtendPreviousGeneration={noop}
+          onUsePrompt={handleUsePrompt}
         />
       </div>
 
