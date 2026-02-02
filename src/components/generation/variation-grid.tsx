@@ -128,14 +128,21 @@ export function VariationGrid({
           const frameToDisplay = Math.floor(durationInFrames / 2);
 
           return (
-            <button
+            <div
               key={variation._id}
-              type="button"
-              className="relative rounded-md overflow-hidden bg-black hover:ring-2 hover:ring-primary/50 transition-all group/variation"
+              role="button"
+              tabIndex={0}
+              className="relative rounded-md overflow-hidden bg-black hover:ring-2 hover:ring-primary/50 transition-all group/variation cursor-pointer"
               style={{
                 aspectRatio: `${preset.width} / ${preset.height}`,
               }}
               onClick={() => onSelectVariation(variation)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectVariation(variation);
+                }
+              }}
             >
               {isFailed ? (
                 <div className="w-full h-full bg-red-950/50 flex items-center justify-center">
@@ -177,7 +184,7 @@ export function VariationGrid({
                   onExtendPrevious={onExtendPrevious}
                 />
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
