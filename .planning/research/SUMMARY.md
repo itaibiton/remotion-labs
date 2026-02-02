@@ -1,417 +1,409 @@
 # Project Research Summary
 
-**Project:** RemotionLab v2.0 — Scenes, Timeline & Movie Editor
-**Domain:** AI-powered multi-scene video/animation editor with clip library and timeline
-**Researched:** 2026-01-29
+**Project:** RemotionLab v0.3.0 — Movie Editor Revamp (Pro Timeline Editing)
+**Domain:** Professional video editing timeline features for AI-generated animation clips
+**Researched:** 2026-02-02
 **Confidence:** HIGH
 
 ## Executive Summary
 
-RemotionLab v2.0 transforms a single-clip AI animation generator into a full multi-scene movie editor. Research across comparable tools (Canva Video, CapCut, Kapwing, InVideo AI, Runway, LTX Studio) reveals a clear mental model users expect: horizontal timeline with visual scene blocks, drag-to-reorder, one-click preview of the full movie, and single-file export. The differentiator is RemotionLab's code-based approach: each "scene" is an AI-generated Remotion composition, not a video file, enabling unique capabilities like scene-to-scene code continuation and full source-code export.
+RemotionLab v0.3.0 transforms the basic horizontal timeline (fixed 160px scene blocks with drag-to-reorder) into a professional non-linear editor with trim, split, resize, zoom, inline editing, and full-screen layout. The research confirms this is architecturally feasible using the existing stack — no major framework changes needed, just two small dependencies (tinykeys for shortcuts, react-resizable-panels for layout) and careful integration between Remotion's frame-based composition model and DOM-based editing interactions.
 
-The recommended technical approach builds on the validated v1.1 architecture (Convex + Remotion Player + Lambda + Claude API) without replacing anything. New additions are: two Convex tables (`clips`, `movies`) using normalized references, a `MovieComposition` wrapper using Remotion's `<Series>` component to sequence multiple `DynamicCode` instances, a horizontal timeline UI built with @dnd-kit for reordering, and an end-state serialization system for continuation generation. The stack additions are minimal (~49KB total): @dnd-kit packages for drag-and-drop, acorn-walk + acorn-jsx-walk for AST traversal, and optionally @remotion/transitions for scene transitions.
+The core technical insight is that RemotionLab's clips are **code-based** (JSX using `useCurrentFrame()`), not video files. This fundamentally changes how trimming works: instead of skipping bytes in a media file, we shift the frame counter using Remotion's `<Sequence from={-trimStart}>` pattern. This is non-destructive — the original clip code is never modified, trim points are stored on the movie's scene descriptor. Split operations create two scene entries referencing the same clip with different trim ranges. All changes are additive to the existing v2.0 architecture (Convex scenes array, `MovieComposition` with `<Series>`, `DynamicCode` execution).
 
-The critical risk is **end-state extraction for continuation generation**. Extracting the final-frame visual state from dynamically-animated JSX code via static AST analysis is fundamentally unreliable for computed/conditional styles. The mitigation strategy is a hybrid approach: runtime evaluation at the last frame (render the composition and capture computed styles from the DOM) combined with LLM-assisted extraction (send code to Claude for semantic analysis). The data model must normalize clips (separate documents) to avoid Convex's 1 MiB document size limit. Frame math in multi-scene composition requires disciplined use of `<Series>` and `calculateMetadata()` to avoid off-by-one errors and duration mismatches.
+The critical risk is the interaction between @dnd-kit's sortable drag and the new trim handles on clip edges. The existing code spreads drag listeners on the entire clip element, which will conflict with edge-based resize interactions. The solution is well-documented: use `setActivatorNodeRef` to restrict drag activation to a dedicated handle, and use native pointer events with `stopPropagation` for trim interactions. Performance at scale (20+ clips with zoom and filmstrip thumbnails) requires virtualization and lazy loading, but the architecture handles this with standard patterns.
+
+---
 
 ## Key Findings
 
-### Recommended Stack (from STACK.md)
+### Recommended Stack
 
-The existing v1.1 stack (Next.js 16, Clerk, Convex, Remotion 4.0.410, Claude API, acorn/sucrase for code execution) remains intact. v2.0 adds minimal dependencies focused on three new capabilities: drag-and-drop timeline reordering, AST traversal for end-state extraction, and scene transitions.
+The v0.3.0 stack builds on v2.0's foundation (Next.js 16, Convex, Remotion 4.0.410, @dnd-kit, @monaco-editor/react) with **only two new dependencies**:
 
-**New dependencies for v2.0:**
-- **@dnd-kit/core + sortable + modifiers + utilities** (^6.3.1 / ^10.0.0 / ^9.0.0 / ^3.2.2) — Modular drag-and-drop with horizontal axis restriction for timeline scene reordering. Recommended over alternatives (@hello-pangea/dnd, Pragmatic DnD) for lightweight footprint (~10KB core) and first-class horizontal list support.
-- **acorn-walk + acorn-jsx-walk** (^8.3.4 / ^2.0.0) — AST traversal for extracting final-frame state from JSX code. Extends existing acorn stack (already used for validation) with visitor-based tree walking for interpolate/spring extraction.
-- **@remotion/transitions** (4.0.410, optional) — Scene-to-scene transitions (fade, slide, wipe) via TransitionSeries. Defer to later phase; basic `<Series>` (already in core) handles sequential playback without transitions.
+**New for v0.3.0:**
+- **tinykeys** (^3.0.0) — Keyboard shortcuts for blade tool, play/pause, navigation. 650B bundle, correct key event handling (vs react-hotkeys-hook which fires on both `code` and `key`). Cross-platform `$mod` modifier.
+- **react-resizable-panels** (^4.4.2) — Resizable panel layout for preview/timeline/properties split. 2.7M weekly downloads, actively maintained, shadcn/ui compatible. Needed for full-screen editor layout.
 
-**What requires NO new dependencies:**
-- Clip saving/loading (Convex schema extension)
-- Multi-scene preview (Remotion `<Series>` from core package)
-- Thumbnails (Remotion `<Thumbnail>` from @remotion/player, already installed)
-- App shell sidebar (Next.js nested layouts)
-- Movie rendering (extend existing Lambda pattern with MovieComposition)
-- Continuation generation (extend existing Claude API integration)
+**What is NOT needed:**
+- @use-gesture/react (last updated 2 years ago, overkill for single-axis trim)
+- re-resizable / react-resizable (wrong abstraction for horizontal-only timeline trim)
+- Canvas-based timeline (cannot embed Remotion `<Thumbnail>` React components, loses accessibility)
+- react-hotkeys-hook (incorrect key matching, heavier than tinykeys)
+- Remotion Timeline ($300 commercial component, designed for multi-track overlapping editors)
 
-**Stack confidence: HIGH** — All core components verified via official documentation. @dnd-kit has 5.3M weekly downloads. acorn-walk has 43M weekly downloads. Remotion `<Series>` is a documented first-class pattern for multi-scene composition.
+**Core technologies remain unchanged:**
+- Remotion 4.0.410 for composition and rendering (verified: negative `from` for trim, `<Series>` for sequence)
+- @dnd-kit/core + @dnd-kit/sortable for drag-to-reorder (verified: `setActivatorNodeRef` separates trim from reorder)
+- Convex for real-time state with reactive queries (extended schema, new mutations)
+- @remotion/player for in-browser preview (verified: `seekTo()`, `frameupdate` event for playhead sync)
 
-### Expected Features (from FEATURES.md)
+**Total new bundle: ~16KB minified** (extremely lightweight addition)
 
-Research across Canva Video, CapCut, Kapwing, and InVideo AI reveals consistent feature expectations for multi-scene video editors.
+### Expected Features
 
-**Must have (table stakes):**
-- **Clip library** with save/open/delete/rename — Every creative tool lets users save work. Grid view with thumbnails is the standard pattern.
-- **Horizontal timeline** showing scenes in sequence — THE defining UX pattern of video editors. Scenes appear as blocks proportional to duration, arranged left-to-right.
-- **Drag-to-reorder scenes** — Canva, CapCut, Kapwing all support this. Users rearrange narrative by dragging.
-- **Multi-scene preview** (play all scenes in one Player) — Users need to see the whole movie before rendering.
-- **Render full movie to one MP4** — The entire point of multi-scene editing is producing one continuous video file.
-- **App shell with persistent navigation** — With multiple pages (Create, Library, Movie, Templates), users need clear persistent navigation (sidebar is the dominant pattern).
+#### Must Have (Table Stakes)
 
-**Should have (differentiators):**
-- **"Generate next scene" continuation** — NO other tool in this space analyzes the end-state of one code composition to generate a visually continuous next scene. This is RemotionLab's biggest differentiator.
-- **Add clip to movie from Create page** — One-click workflow: generate → preview → add to movie. Tight integration between creation and composition.
-- **Scene-to-scene transitions** — Remotion's `<TransitionSeries>` provides fade/slide/wipe. Expected in polished editors.
-- **Timeline playhead synced to scene highlight** — As the movie plays, the currently-playing scene highlights in the timeline. Canva and CapCut both do this.
-- **Movie export as Remotion project** — Export all scenes as standalone .tsx files plus a Main composition. Power users can take it into their own IDE. No other tool offers this.
+From v2.0 features, adapted for pro timeline context:
 
-**Defer (v2.1+):**
-- Multi-track timeline (audio, overlays) — Out of scope; each scene is a self-contained composition
-- Audio/music tracks — Visual-only for v2.0
-- Full drag-and-drop trimming (handles, split, ripple edit) — Too complex; scenes have fixed durations
-- Real-time collaboration — Solo creation first; Convex's reactive queries support adding multiplayer later
-- Brand kits (saved colors/fonts) — Valuable but not part of core multi-scene editing loop
-- Public sharing/gallery — Distribution feature, not creation feature
+- **Variable-width clips proportional to duration** — users expect visual duration representation (Canva, CapCut pattern)
+- **Clip trimming via edge handles** — drag left/right edges to adjust in/out points (standard NLE behavior)
+- **Split/blade tool** — cut a clip at playhead position into two clips (industry standard: `B` key)
+- **Zoom and pan controls** — view full timeline or zoom to frame-level precision
+- **Playhead sync with player** — visual indicator of which clip is playing, seek on click
+- **Inline editing panel** — edit clip code + preview without leaving the movie page
 
-**Feature confidence: HIGH** — Table stakes features are consistent across Canva Video, CapCut, Kapwing, InVideo. Differentiators leverage RemotionLab's unique code-based approach.
+#### Should Have (Differentiators)
 
-### Architecture Approach (from ARCHITECTURE.md)
+- **Per-clip action buttons** — contextual actions on hover/select (edit, duplicate, delete, generate next/prev)
+- **Full-screen editor layout** — resizable panels (preview, timeline, properties) instead of scrollable page
+- **Keyboard shortcuts** — blade, play/pause, frame stepping, undo/redo
+- **Thumbnail filmstrip** — visual preview across clip width at high zoom
 
-The v2.0 architecture extends v1.1 without replacing anything. The core pattern (Convex for state, Remotion Player for preview, Lambda for rendering, Claude for generation) remains unchanged.
+#### Defer (Future)
 
-**Schema design:**
-1. **`clips` table** (normalized) — Stores code, rawCode, name, duration, fps, endState, thumbnailUrl. Clips are self-contained snapshots (code copied from generations, not referenced). Index on userId + updatedAt for library queries.
-2. **`movies` table** — Stores ordered array of `{ clipId, durationOverride? }` scene descriptors. Total duration cached/computed on mutation. fps enforced uniform across all clips. Array-of-scenes (not separate join table) appropriate for 2-20 scene scale.
-3. **`renders` table extension** — Add optional `movieId` field alongside existing `generationId` for movie renders.
+- **Multi-track timeline** — audio tracks, overlay tracks (explicitly out of scope per PROJECT.md)
+- **Audio support** — sound design deferred to separate milestone
+- **Transitions UI** — @remotion/transitions exists but UI for selecting transitions deferred
+- **Waveform visualization** — no audio tracks in v0.3.0 scope
 
-**Composition hierarchy:**
-```
-MovieComposition (inputProps: { scenes[], fps, durationInFrames })
-  └── <Series>
-        ├── <Series.Sequence durationInFrames={scene1.duration}>
-        │     └── <DynamicCode code={scene1.code} ... />
-        ├── <Series.Sequence durationInFrames={scene2.duration}>
-        │     └── <DynamicCode code={scene2.code} ... />
-        └── ...
-```
+### Architecture Approach
 
-Total duration computed via `calculateMetadata()` (sum of scene durations). Each DynamicCode instance executes its clip's code in isolation. `<Series>` automatically handles frame offsets. Same meta-composition pattern as v1.1 (code as inputProps).
+The v0.3.0 architecture is **100% additive** to v2.0. No components are removed, only extended or replaced with more capable versions.
 
-**End-state serialization** (for continuation generation):
-- **Strategy 1 (primary):** Runtime evaluation — Render composition at last frame, extract computed styles from DOM. Handles all code patterns including conditionals/loops.
-- **Strategy 2 (fallback):** Heuristic AST extraction — For simple `interpolate()` calls, extract output range endpoints. For `spring()`, assume convergence to 1.0.
-- **Strategy 3 (pragmatic):** LLM-assisted — Send raw JSX code to Claude, ask it to describe end-state. Claude reasons about code semantically better than AST traversal.
+**Data model changes:**
+- Extend `movies.scenes[]` schema to add optional `trimStart`, `trimEnd` fields (frames trimmed from each edge)
+- Add `sceneId` (UUID) for stable React keys across reorder/split operations
+- Update `computeTotalDuration` helper to account for trim when present
+- New mutations: `movies.trimScene`, `movies.splitScene`, `clips.update` (for inline editing)
 
-**App shell layout:**
-```
-app/
-  layout.tsx           # Root (unchanged)
-  page.tsx             # Landing (no sidebar)
-  (app)/               # Route group for authenticated pages
-    layout.tsx         # Sidebar + header shell
-    create/page.tsx
-    library/page.tsx
-    movie/[id]/page.tsx
-    templates/page.tsx
-```
+**Composition layer changes:**
+- Update `MovieComposition` to wrap trimmed clips in `<Sequence from={-trimStart}>` with adjusted `durationInFrames`
+- Pass `trimStart`/`trimEnd` through to Lambda render via `inputProps`
+- Effective duration = `clipDuration - trimStart - trimEnd` (computed consistently everywhere)
 
-Next.js nested layouts provide persistent sidebar without affecting URLs. Sidebar is client component with `usePathname()` for active state.
+**UI component changes:**
+- Replace `Timeline` with `ProTimeline` (proportional widths, zoom state, playhead, ruler)
+- Replace `TimelineScene` with `TimelineClip` (trim handles, variable width, action buttons)
+- Rewrite `MovieEditor` with `ResizablePanelGroup` for viewport-filling layout
+- New: `InlineEditPanel` (reuses `CodeDisplay` + `PreviewPlayer` components)
+- New: `TimelineRuler`, `TimelineToolbar`, `TimelinePlayhead`
 
-**Major components:**
-1. **MovieComposition** (`src/remotion/compositions/MovieComposition.tsx`) — Remotion composition wrapping N DynamicCode instances via `<Series>`
-2. **Timeline** (`src/components/movie/timeline.tsx`) — Horizontal track with drag-reorder, playhead sync, scene blocks
-3. **ClipLibrary** (`src/components/library/clip-library.tsx`) — Grid of saved clips with thumbnails
-4. **Sidebar** (`src/components/shell/sidebar.tsx`) — Persistent navigation
-5. **EndStateExtractor** (`src/lib/end-state-extractor.ts`) — Hybrid AST + runtime extraction for continuation
+**Major components (post-refactor):**
+1. **ProTimeline** — DndContext + zoom state + playhead sync, horizontal scroll container
+2. **TimelineClip** — Proportional-width block with trim handles, thumbnail filmstrip, action buttons
+3. **InlineEditPanel** — Side panel with Monaco editor + mini preview for selected clip
+4. **MovieComposition** — `<Series>` with per-clip `<Sequence from={-trimStart}>` for non-destructive trim rendering
 
-**Architecture confidence: HIGH** — Builds on validated v1.1 patterns. Remotion `<Series>` is official API. Convex normalized schema follows best practices. Data flow matches existing preview/render pipeline.
+### Critical Pitfalls
 
-### Critical Pitfalls (from PITFALLS.md)
+From PITFALLS.md, the top 5 architectural risks:
 
-The research identified 15 pitfalls (4 critical, 4 important, 7 moderate/minor). Top 5 critical/important risks:
+1. **useCurrentFrame offset confusion with trimmed clips** — Remotion's `<Sequence from={-trimStart}>` shifts the frame counter, which is CORRECT for DynamicCode (animation should start partway through). Pitfall is misunderstanding this and implementing a broken manual offset. **Prevention:** Use the nested-Sequence negative-from pattern exactly as documented, test with visible frame-0-to-N transitions.
 
-1. **End-state extraction from JSX is unreliable via static AST analysis alone** — Remotion animations use `interpolate()`, `spring()`, and computed styles. Final frame state depends on runtime computation. AST cannot handle conditional logic, loop-generated elements, or spring physics. **Mitigation:** Use hybrid approach with runtime evaluation (render at last frame, extract from DOM) + LLM-assisted extraction (send code to Claude for semantic analysis). Avoid pure AST-only approach.
+2. **@dnd-kit reorder drag conflicting with trim handles** — Existing code spreads `{...listeners}` on entire clip element. Trim handles on edges will trigger reorder instead of resize. **Prevention:** Use `setActivatorNodeRef` to restrict drag to a dedicated handle, use native pointer events + `stopPropagation` for trim handles, increase PointerSensor activation distance to 12-15px.
 
-2. **Remotion Sequence/Series frame math errors** — Frames are 0-indexed, `<Sequence>` components cascade when nested, `<Series.Sequence>` requires explicit durations for all but last. Off-by-one errors compound with multiple scenes. **Mitigation:** Use `<Series>` exclusively (not manual `<Sequence from={...}>`), enforce uniform fps across all clips, use `calculateMetadata()` for dynamic duration, validate with 3+ scenes early.
+3. **Split operation data model ambiguity** — Current schema has no trim fields, no stable scene IDs. Split must create two scenes referencing the same clipId with different trim ranges, NOT duplicate the clip document. **Prevention:** Extend schema to add `trimStart`/`trimEnd`/`sceneId` in the first phase, before any UI work. Never duplicate clips table entries on split.
 
-3. **Convex document size limit blocks multi-clip movies** — Movies storing clip code inline hit 1 MiB document limit. A 10-clip movie with 5-10 KB per clip approaches limit. **Mitigation:** Normalize data model (clips are separate documents, movies reference by ID). Monitor document sizes during development. Keep code out of movie document.
+4. **Undo/redo complexity with Convex** — Convex is forward-only, no built-in undo. Continuous trim handle dragging floods mutations if every pointer-move hits the database. **Prevention:** Introduce local state layer (Zustand or React context) as editing buffer, debounce persistence to Convex (500ms idle or pointer-up), implement snapshot-based undo client-side.
 
-4. **Lambda payload/timeout limits for movie rendering** — Existing render limits (20 seconds, 60-second timeout) designed for single clips. 10-clip movie = 30+ seconds of video. **Mitigation:** Create separate limits for clips vs movies (movies: 120 seconds max, 300-second timeout, max 20 clips). Use Remotion's inputProps → S3 auto-upload for large payloads. Implement per-clip rendering + concatenation fallback for very long movies.
+5. **Thumbnail performance explosion** — Variable-width clips + zoom = potential 100+ simultaneous Remotion `<Thumbnail>` components, each mounting a `DynamicCode` executor. **Prevention:** Virtualize (only render visible clips), limit filmstrip thumbnails to 3-5 per clip, cache thumbnail renders as static images, debounce zoom-level regeneration.
 
-5. **Continuation generation produces incoherent transitions** — Claude has no visual memory. End-state descriptions may be incomplete. "Continue from this state" is ambiguous without concrete examples. **Mitigation:** Provide FULL previous code to Claude (not just end-state). Create dedicated continuation system prompt with multishot examples. Lock visual parameters (background color, fonts, color palette). Validate continuity before accepting (check same backgroundColor, fonts, positions).
-
-**Additional important risks:**
-- Timeline UI performance (separate state from Player, debounce seeks, use CSS transforms for playhead)
-- Movie composition architecture (pre-execute all clips on load, use premountFor, wrap in error boundaries)
-- Clip save/load state sync (clips are immutable snapshots, save creates new document)
-- Timeline/Player desync (Player is source of truth, timeline reads via frameupdate events)
-
-**Pitfall confidence: MEDIUM-HIGH** — Critical pitfalls verified against official docs. Severity assessed based on recovery cost (end-state extraction and frame math are HIGH-cost rewrites if wrong).
+---
 
 ## Implications for Roadmap
 
-Based on dependency analysis from ARCHITECTURE.md, feature priorities from FEATURES.md, and risk mitigation from PITFALLS.md, the recommended phase structure is:
+Based on architectural dependencies and pitfall analysis, the recommended phase structure:
 
-### Phase 1: Data Foundation (Clips + App Shell)
-**Rationale:** Everything depends on clips existing and the app shell providing navigation context. This establishes the data model and UI structure for all subsequent work.
+### Phase A: Data Model & Composition Layer
+
+**Rationale:** Everything else depends on the data model supporting trim points and the composition layer rendering them correctly. This must be right from day one — schema migrations are costly.
 
 **Delivers:**
-- Convex schema additions (clips table, renders.movieId extension)
-- Clip CRUD mutations and queries (save, list, get, update, remove)
-- App shell layout with sidebar navigation (Create, Library, Templates routes)
-- Save-as-clip flow from Create page (with name input, thumbnail capture)
-- Clip library page (grid view with thumbnails, open/delete/rename)
+- Extended Convex schema with `trimStart`, `trimEnd`, `sceneId` on scenes
+- Updated `computeTotalDuration` helper
+- New mutations: `movies.trimScene`, `movies.splitScene`, `clips.update`
+- Updated `MovieComposition` using `<Sequence from={-trimStart}>`
+- Updated `startMovieRender` to pass trim data to Lambda
+- Verification: trimmed clips render correctly in Player and Lambda
 
-**Addresses features:**
-- Clip library (save/open/delete/rename) — table stakes
-- App shell with persistent navigation — table stakes
-- Quick-save from any state — differentiator
+**Addresses:**
+- Table stakes: clip trimming foundation
+- PITFALLS: #3 (split data model), #6 (duration math), #10 (index keys)
+- ARCHITECTURE: data model extension, composition rendering correctness
 
-**Avoids pitfalls:**
-- Pitfall 3 (Convex document size) — Normalized schema from start prevents data migration later
-- Pitfall 8 (Clip save/load sync) — Clips as immutable snapshots prevents shared-mutable-reference bugs
-- Pitfall 13 (Clip naming UX) — Default name from prompt prevents "Untitled (1-50)" library chaos
+**Avoids:**
+- Schema migration hell (doing this in phase 1 = backwards compatible, doing later = migrate all existing movies)
+- Frame-offset confusion (by implementing the pattern correctly from the start with tests)
 
-**Stack used:** Convex schema extensions, Next.js nested layouts, Remotion `<Thumbnail>` for clip previews (already in @remotion/player)
-
-**Research flag:** Standard patterns (Convex tables, Next.js layouts). No deeper research needed.
+**Research flag:** No additional research needed — Remotion negative-from pattern verified against official docs. Standard Convex schema extension.
 
 ---
 
-### Phase 2: Movie Data + Timeline UI
-**Rationale:** Movies depend on clips existing. The timeline is the core new UI and most complex component. Must be built and tested before adding movie preview/render complexity.
+### Phase B: Full-Screen Layout
+
+**Rationale:** The layout provides the container for all subsequent UI work. Building the timeline or editing panel first would require rework when the layout changes. This phase has no dependencies on Phase A — can be developed in parallel.
 
 **Delivers:**
-- Convex schema additions (movies table with scenes array)
-- Movie CRUD mutations and queries (create, get, list, update, remove)
-- Movie editor page (`/movie/[id]`) with horizontal timeline
-- Timeline component with scene blocks (thumbnail, duration, name)
-- Add clip to movie (from Library or Create page, with movie picker)
-- Remove scene from timeline
-- Drag-to-reorder scenes (using @dnd-kit/sortable with horizontalListSortingStrategy)
+- Install `react-resizable-panels` via `npx shadcn@latest add resizable`
+- Rewrite `MovieEditor` with vertical split (preview | timeline) using `ResizablePanelGroup`
+- Extract `MovieHeader` as compact header for viewport-filling layout
+- Remove scrollable layout, replace with viewport-filling panels
+- Ensure `MoviePreviewPlayer` works within resizable panel
 
-**Addresses features:**
-- Horizontal timeline showing scenes in sequence — table stakes
-- Drag-to-reorder scenes — table stakes
-- Add clip to movie from Create page — differentiator
+**Addresses:**
+- Table stakes: full-screen editor layout (professional video editor UX pattern)
+- STACK: react-resizable-panels integration
+- ARCHITECTURE: viewport-filling layout with resizable panels
 
-**Avoids pitfalls:**
-- Pitfall 6 (Timeline UI performance) — Separate timeline state from Player state, use CSS transforms for playhead, debounce seeks
-- Pitfall 9 (Timeline/Player desync) — Player is source of truth, timeline reads via frameupdate events
-- Pitfall 15 (App shell breaking create flow) — Test full create flow after navigation changes before adding features
+**Avoids:**
+- PITFALLS: #8 (panel resize handles conflicting with timeline) by designing proper hit area separation from the start
 
-**Stack used:** @dnd-kit packages (install during this phase), Convex mutations for scene reordering, Tailwind CSS for timeline layout
-
-**Research flag:** Timeline drag-and-drop may need iteration. @dnd-kit horizontal sortable is documented but timeline-specific patterns may require trial. Budget extra testing time.
+**Research flag:** No additional research needed — react-resizable-panels is mature (2.7M weekly downloads), shadcn/ui integration documented.
 
 ---
 
-### Phase 3: Movie Composition + Preview
-**Rationale:** Preview and render depend on MovieComposition being correct. This phase bridges clips data model to Remotion rendering. Must validate frame math and Series behavior before Lambda rendering adds complexity.
+### Phase C: Pro Timeline (Core Editing)
+
+**Rationale:** Depends on layout (Phase B container) and data model (Phase A for trim data). This is the largest and most complex phase — the heart of v0.3.0.
 
 **Delivers:**
-- MovieComposition Remotion component (`<Series>` wrapping N DynamicCode instances)
-- calculateMetadata() for dynamic movie duration
-- Movie preview player (full movie in one Remotion Player)
-- Timeline-to-player synchronization (click scene → seek to scene start frame, playhead moves during playback)
-- Movie preview controls (play/pause/scrub for full movie)
+- `TimelineRuler` with time markers based on zoom
+- `TimelineClip` with proportional width, thumbnail, label
+- `ProTimeline` with horizontal scroll, zoom state, `DndContext`
+- `TimelineToolbar` with zoom slider, fit-to-view, blade toggle
+- `TimelinePlayhead` synced with player via `useCurrentPlayerFrame`
+- Trim handles on `TimelineClip` using native pointer events
+- Wire trim handle drag to `movies.trimScene` mutation (debounced)
+- Per-clip action buttons (generate next/prev, edit, delete)
+- Verify: drag reorder coexists with trim handles, zoom works, playhead syncs
 
-**Addresses features:**
-- Multi-scene preview (play all scenes in sequence) — table stakes
-- Timeline playhead synced to scene highlight — differentiator
+**Addresses:**
+- Table stakes: variable-width clips, trim handles, zoom/pan, playhead sync
+- FEATURES: timeline as visual duration representation
+- ARCHITECTURE: ProTimeline component hierarchy
 
-**Avoids pitfalls:**
-- Pitfall 2 (Sequence/Series frame math) — Use `<Series>` exclusively, calculateMetadata() for duration, test with 3+ scenes early
-- Pitfall 7 (MovieComposition architecture) — Pre-execute all clips on load, use premountFor, wrap each DynamicCode in error boundary
-- Pitfall 11 (Code executor scaling) — Cache executed code at movie level, pre-execute on load, limit to 20 clips
+**Avoids:**
+- PITFALLS: #2 (dnd-kit conflict) via `setActivatorNodeRef` + stopPropagation
+- PITFALLS: #5 (thumbnail perf) via virtualization + 3-5 thumbnails max per clip
+- PITFALLS: #7 (optimistic divergence) via debounced persistence
+- PITFALLS: #9 (zoom jank) via CSS transforms + rAF batching
+- PITFALLS: #13 (small clips) via minimum visual width + hover-activated handles
 
-**Stack used:** Remotion `<Series>` (core), existing DynamicCode composition (reused), calculateMetadata API
-
-**Research flag:** Standard Remotion patterns. Frame math requires careful testing but well-documented. No deeper research needed.
+**Research flag:** Medium complexity — @dnd-kit + trim handle interaction needs careful implementation. Pattern is documented but requires testing across mouse/touch. Thumbnail virtualization may need iteration based on empirical performance.
 
 ---
 
-### Phase 4: Movie Rendering to Lambda
-**Rationale:** Rendering extends the existing Lambda pipeline with MovieComposition. Depends on MovieComposition being stable from Phase 3.
+### Phase D: Blade/Split Tool
+
+**Rationale:** Builds on Phase A (split mutation) and Phase C (timeline interactions, keyboard shortcuts).
 
 **Delivers:**
-- Movie render action (triggerRender.startMovieRender)
-- Extended render limits (movies: 120 seconds max, 300-second timeout, max 20 clips)
-- Lambda rendering of MovieComposition (same meta-composition pattern, code as inputProps)
-- Movie export download (presigned URL for MP4)
-- Optional: Movie export as Remotion project (zip with scene files + Main composition)
+- Blade tool toggle in `TimelineToolbar`
+- Keyboard shortcut (`B`) using tinykeys
+- Split indicator on clip hover where playhead intersects
+- Wire split action to `movies.splitScene` mutation
+- Visual feedback: clip splits into two blocks with shared thumbnail
+- Verify: split creates two scenes with same clipId, different trim ranges
 
-**Addresses features:**
-- Render full movie to one MP4 — table stakes
-- Movie export as Remotion project — differentiator
+**Addresses:**
+- Table stakes: split/blade tool (industry standard NLE feature)
+- STACK: tinykeys integration for keyboard shortcuts
+- FEATURES: blade tool as pro editor differentiator
 
-**Avoids pitfalls:**
-- Pitfall 4 (Lambda payload/timeout limits) — Separate limits for movies, use inputProps → S3 auto-upload, implement per-clip fallback if needed
-- Pitfall 12 (Losing meta-composition pattern) — One bundle, multiple compositions, MovieComposition uses inputProps like DynamicCode
+**Avoids:**
+- PITFALLS: #11 (discoverability) via visible split indicator on hover + tooltip
+- PITFALLS: #12 (keyboard conflicts) via focus-scoped shortcut handlers
 
-**Stack used:** Remotion Lambda (existing), MovieComposition (from Phase 3), Convex actions (extend existing triggerRender pattern)
-
-**Research flag:** Standard Lambda rendering patterns. May need Lambda timeout tuning based on actual movie duration testing. No deeper research needed.
+**Research flag:** Low complexity — straightforward mutation + UI. Tinykeys API verified. Main concern is UX discoverability for non-pro users (addressed via hover indicators).
 
 ---
 
-### Phase 5: Continuation Generation
-**Rationale:** Depends on clips, movies, and end-state extraction system. This is the highest-risk technical feature (Pitfall 1) and benefits from all other infrastructure being stable first.
+### Phase E: Inline Editing Panel
+
+**Rationale:** Depends on layout (Phase B horizontal panel split) and timeline (Phase C selection state). Reuses existing `CodeDisplay` and `PreviewPlayer` components with minimal modification.
 
 **Delivers:**
-- End-state extraction system (hybrid: runtime evaluation + AST heuristics + LLM-assisted)
-- Continuation system prompt design (multishot examples, parameter locking)
-- generateContinuation action (Claude API call with previous code + end-state context)
-- "Generate next scene" UI (button on Create page and timeline)
-- Auto-add continuation to movie option
+- `InlineEditPanel` component with mini preview + `CodeDisplay`
+- Wire "edit" button on `TimelineClip` to open panel
+- Add horizontal `ResizableHandle` between main area and editing panel
+- Wire save button to `clips.update` mutation
+- Add "Generate Next" and "Generate Prev" buttons (wired to existing continuation endpoint)
+- Verify: edit → save → preview cycle works, changes reflect in timeline and player
 
-**Addresses features:**
-- "Generate next scene" continuation — THE differentiator, RemotionLab's killer feature
+**Addresses:**
+- Table stakes: inline editing (edit without leaving movie page)
+- FEATURES: inline editing panel as differentiator
+- ARCHITECTURE: panel layout integration
 
-**Avoids pitfalls:**
-- Pitfall 1 (End-state extraction unreliability) — Hybrid approach with runtime evaluation primary, AST fallback, LLM-assisted semantic analysis
-- Pitfall 5 (Continuation produces incoherent transitions) — Full previous code to Claude, dedicated continuation prompt, parameter locking, continuity validation
+**Avoids:**
+- No major pitfalls — reuses proven components (`CodeDisplay`, `PreviewPlayer`)
 
-**Stack used:** acorn-walk + acorn-jsx-walk (install during this phase), existing Claude API integration (extend system prompts), Remotion rendering at last frame for state capture
-
-**Research flag:** HIGH — End-state extraction is novel and high-risk. Budget time for iteration on extraction approaches and prompt engineering. May need to pivot from AST-only to runtime evaluation based on early testing.
+**Research flag:** Low complexity — component composition, no new patterns. Monaco editor already integrated via `CodeDisplay`.
 
 ---
 
-### Phase 6: Scene Transitions (Optional/Polish)
-**Rationale:** Depends on basic `<Series>` working from Phase 3. Transitions are polish that enhance UX but not core functionality. Can be deferred to v2.1 if needed.
+### Phase F: Keyboard Shortcuts & Polish
+
+**Rationale:** Layered on after core editing (Phase C) and blade tool (Phase D). Can be developed incrementally.
 
 **Delivers:**
-- @remotion/transitions package integration
-- TransitionSeries component replacing Series in MovieComposition
-- Transition picker UI (fade, slide, wipe, none)
-- Per-transition duration settings
-- Adjusted total duration calculation (scenes minus transition overlaps)
+- Keyboard shortcut registry using tinykeys
+- Play/pause (Space), frame stepping (arrows), undo/redo (Cmd+Z/Shift+Z)
+- Focus-scoped handlers (timeline panel has `tabIndex={0}`)
+- Shortcut reference overlay (triggered by `?`)
+- Visual polish: cursor changes, trim handle hover states, smooth zoom transitions
 
-**Addresses features:**
-- Scene-to-scene transitions — differentiator, polish
+**Addresses:**
+- Should have: keyboard shortcuts (pro editor expectation)
+- STACK: tinykeys for all shortcut bindings
+- FEATURES: keyboard navigation as differentiator
 
-**Stack used:** @remotion/transitions@4.0.410 (install during this phase, deferred from earlier)
+**Avoids:**
+- PITFALLS: #12 (keyboard conflicts) via focus scoping + preventDefault only for recognized shortcuts
+- PITFALLS: #14 (preview lag) via `seekTo()` during drag, not prop updates
 
-**Research flag:** Standard Remotion patterns. TransitionSeries is well-documented. Can skip deeper research.
+**Research flag:** Low complexity — tinykeys API simple, patterns documented. Main concern is testing across browsers/OSes for modifier key consistency.
 
 ---
 
 ### Phase Ordering Rationale
 
-**Dependencies:**
-1. Clips must exist before they can be added to movies (Phase 1 before 2)
-2. Movies must exist before they can be previewed/rendered (Phase 2 before 3)
-3. MovieComposition must work before Lambda rendering (Phase 3 before 4)
-4. End-state extraction needs stable clips data model (Phase 1 before 5)
-5. Continuation generation benefits from full workflow being tested (Phase 5 near end)
+**Why this order:**
 
-**Groupings:**
-- Phase 1 (Data + Shell) establishes foundation without Remotion complexity
-- Phases 2-3 (Movies + Timeline + Preview) are the core multi-scene editing loop
-- Phase 4 (Rendering) completes the creation-to-delivery pipeline
-- Phase 5 (Continuation) layers on the unique differentiator
-- Phase 6 (Transitions) is polish that can flex based on timeline
+1. **Phase A first (data model)** — Without trim fields in the schema, nothing else can be built. Schema migrations are expensive. The `sceneId` field is needed for stable React keys (Pitfall #10) which affects all subsequent phases.
 
-**Pitfall avoidance:**
-- Data model pitfalls (3, 8) addressed in Phase 1 before complexity compounds
-- Frame math pitfall (2) addressed in Phase 3 with focused testing
-- Performance pitfalls (6, 11) addressed as timeline and preview are built (Phases 2-3)
-- Continuation pitfall (1, 5) gets dedicated phase (5) after infrastructure is solid
+2. **Phase B parallel-track (layout)** — Has zero dependency on Phase A. Can be developed by a different team member while data model work completes. Layout is the container for Phases C, E.
 
-**Parallel potential:**
-- Phase 1 (Clips/Shell) and Phase 2 (Movie data model) could overlap slightly (schema work in parallel)
-- Phase 5 (Continuation) could start AST exploration in parallel with Phase 4 (Rendering)
-- Phase 6 (Transitions) could run in parallel with earlier phases as a separate workstream
+3. **Phase C after A+B (timeline)** — Core editing interactions. Requires trim data from Phase A to render correctly. Requires layout from Phase B as container. This is the critical path and largest phase.
+
+4. **Phase D after C (blade)** — Split mutation needs the timeline interactions (selection, playhead position) from Phase C. Keyboard shortcuts infrastructure from this phase is used in Phase F.
+
+5. **Phase E after C (editing panel)** — Needs clip selection state from Phase C timeline. Horizontal panel layout from Phase B.
+
+6. **Phase F last (polish)** — Builds on shortcuts from Phase D, polish on interactions from Phase C. Can be done incrementally.
+
+**Parallel opportunities:**
+- Phase A + Phase B can be developed in parallel (no shared dependencies)
+- Phase D + Phase E can be developed in parallel after Phase C completes
+- Phase F is incremental — keyboard shortcuts can be added throughout C/D/E and consolidated in F
+
+**Critical path:** A → C → D/E → F (B is off the critical path)
+
+**How this avoids pitfalls:**
+- Pitfall #3 (data model) — addressed in Phase A before any UI
+- Pitfall #2 (dnd-kit conflict) — designed into Phase C from the start
+- Pitfall #4 (undo) — addressed in Phase A with local state layer + debouncing
+- Pitfall #5 (thumbnail perf) — mitigated in Phase C with virtualization
+- Pitfall #8 (panel conflicts) — designed into Phase B layout
 
 ### Research Flags
 
 **Phases needing deeper research during planning:**
-- **Phase 2 (Timeline UI):** Drag-and-drop with @dnd-kit for horizontal timeline is documented but timeline-specific patterns may need iteration. Plan extra testing time for reorder interaction polish.
-- **Phase 5 (Continuation Generation):** End-state extraction is HIGH-RISK novel work. AST-based extraction may prove insufficient. Budget time for runtime evaluation approach and prompt engineering iteration. Consider spike/prototype before full phase commitment.
+- None — all technical patterns verified against official docs
 
 **Phases with standard patterns (skip research-phase):**
-- **Phase 1:** Standard Convex schema patterns, Next.js layouts well-documented.
-- **Phase 3:** Remotion `<Series>` is official API with comprehensive docs and examples.
-- **Phase 4:** Extends existing Lambda pattern with no new concepts.
-- **Phase 6:** TransitionSeries is documented official API.
+- **Phase A:** Standard Convex schema extension + Remotion Sequence pattern
+- **Phase B:** shadcn/ui Resizable component (documented integration)
+- **Phase C:** @dnd-kit + DOM performance patterns (well-documented)
+- **Phase D:** Mutation + keyboard shortcut (tinykeys docs complete)
+- **Phase E:** Component composition (reuses existing components)
+- **Phase F:** Incremental polish (no new architecture)
+
+**Empirical validation needed:**
+- Phase C: Thumbnail virtualization thresholds (test with 20+ clips at various zoom levels)
+- Phase C: Trim handle + @dnd-kit coexistence (test across mouse/touch/trackpad)
+- Phase C: Zoom performance (measure reflow impact, may need CSS transform optimization)
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Core technologies verified via official docs. @dnd-kit (5.3M weekly downloads), acorn-walk (43M downloads), Remotion `<Series>` is first-class API. All versions compatible with existing stack. |
-| Features | HIGH | Table stakes features consistent across Canva Video, CapCut, Kapwing, InVideo. Differentiators leverage RemotionLab's unique code-based approach verified against competitor feature sets. |
-| Architecture | HIGH | Builds on validated v1.1 patterns. Convex normalized schema follows best practices. Remotion `<Series>` + calculateMetadata() is documented pattern. MovieComposition extends existing DynamicCode meta-composition. |
-| Pitfalls | MEDIUM-HIGH | Critical pitfalls verified against official docs. End-state extraction (Pitfall 1) has MEDIUM confidence due to novel nature — static AST analysis limitations confirmed, but runtime evaluation approach is unproven in this context. Frame math pitfall (2) mitigated by well-documented Remotion patterns. |
+| Stack | **HIGH** | All new dependencies verified (tinykeys: 51K weekly downloads, react-resizable-panels: 2.7M weekly downloads). Remotion negative-from pattern verified against official docs. No experimental or unmaintained packages. |
+| Features | **HIGH** | Table stakes features confirmed across Canva, CapCut, Kapwing research. Pro timeline editing patterns well-established (DaVinci Resolve, Final Cut Pro, Premiere). Differentiators (inline editing, continuation generation) validated as unique. |
+| Architecture | **HIGH** | All changes additive to v2.0. Remotion `<Sequence>` trim pattern confirmed in docs. @dnd-kit `setActivatorNodeRef` pattern confirmed. react-resizable-panels integration via shadcn/ui verified. No risky architectural pivots. |
+| Pitfalls | **HIGH** | Critical pitfalls (#1-5) verified against codebase + official docs. @dnd-kit conflict (#2) has documented solution. Thumbnail perf (#5) has standard mitigation (virtualization). Undo/redo (#4) follows established client-side snapshot pattern. |
 
-**Overall confidence:** HIGH
-
-The v2.0 scope builds incrementally on a solid v1.1 foundation. The stack additions are minimal and well-vetted. The architecture extends proven patterns without replacing anything. The primary uncertainty is end-state extraction for continuation generation, which has a clear hybrid mitigation strategy with fallbacks.
+**Overall confidence: HIGH**
 
 ### Gaps to Address
 
-**End-state extraction implementation:** The research identifies three strategies (runtime evaluation, AST heuristics, LLM-assisted) but hasn't validated which combination works best. **Resolution:** Implement minimal prototype during Phase 5 planning — test all three approaches with sample generated code to determine primary vs fallback strategy. Accept that v2.0 continuation may require user validation/retry cycles.
+**Minor gaps (address during implementation):**
 
-**Timeline drag-and-drop performance at scale:** @dnd-kit is proven for horizontal sortable lists but timeline-specific performance (with Player sync, large thumbnails, 15+ clips) is untested. **Resolution:** Build Phase 2 timeline with performance instrumentation from day one. Use React Profiler to measure re-renders. Implement debouncing/throttling preemptively.
+1. **Thumbnail performance threshold** — Research recommends virtualization + 3-5 thumbnails per clip, but exact threshold (how many total clips before virtualization is mandatory) needs empirical testing. **Mitigation:** Implement virtualization from the start in Phase C, measure performance with 10/20/50 clip test scenarios, adjust lazy-load threshold based on data.
 
-**Movie rendering cost/quota management:** Research doesn't quantify Lambda cost differential between clip (20 seconds) and movie (120 seconds) renders. **Resolution:** Implement separate quota tracking for movie renders in Phase 4. Monitor actual Lambda costs in production. Adjust limits based on usage patterns.
+2. **Zoom level UX tuning** — Research recommends `pixelsPerFrame` range of 0.5 to 10, but optimal default and zoom increment may need user testing. **Mitigation:** Start with 2px/frame default (matches 30fps = 60px/second, readable duration labels), add zoom presets (fit-to-view, 1:1, 4:1), tune based on dogfooding.
 
-**Continuation visual coherence validation:** No automated way to verify if a continuation is "visually coherent" vs "jarring." Relies on user acceptance. **Resolution:** Start with manual testing during Phase 5. Build retry mechanism with feedback. Consider future: side-by-side preview of last frame + first frame of continuation for visual diff.
+3. **Trim handle activation area on touch devices** — Pointer events work cross-platform, but minimum hit area for touch may be larger than mouse. **Mitigation:** Use 44x44px touch target guideline (iOS HIG), test on iPad/Android tablet early in Phase C.
+
+4. **Local state sync protocol edge cases** — Research recommends debounced Convex persistence with local editing buffer, but edge cases (user navigates away mid-edit, concurrent edit from another device) need defined behavior. **Mitigation:** Auto-save on page unload (beforeunload), show "changes not saved" warning if local state diverges from Convex for > 5 seconds, conflict resolution via "last write wins" with user notification.
+
+**No major gaps** — all core technical questions answered by research.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
+
 **Remotion Official Documentation:**
-- [Sequence component](https://www.remotion.dev/docs/sequence) — Time-shifting, cascading, premountFor
-- [Series component](https://www.remotion.dev/docs/series) — Sequential scene composition
-- [TransitionSeries](https://www.remotion.dev/docs/transitions/transitionseries) — Scene transitions
-- [Combining compositions](https://www.remotion.dev/docs/miscellaneous/snippets/combine-compositions) — Multi-scene patterns
-- [calculateMetadata()](https://www.remotion.dev/docs/calculate-metadata) — Dynamic duration/dimensions
-- [Thumbnail component](https://www.remotion.dev/docs/player/thumbnail) — Clip preview rendering
-- [Player Custom Controls](https://www.remotion.dev/docs/player/custom-controls) — frameupdate events, seekTo API
-- [Building a Timeline](https://www.remotion.dev/docs/building-a-timeline) — State management recommendations
-- [Lambda Limits](https://www.remotion.dev/docs/lambda/limits) — 1000 concurrent, 15-min timeout, storage
-- [interpolate()](https://www.remotion.dev/docs/interpolate) — Pure function, extrapolation
-- [spring()](https://www.remotion.dev/docs/spring) — Pure function, physics
-- [useCurrentFrame()](https://www.remotion.dev/docs/use-current-frame) — 0-indexed, Sequence-relative
+- [Sequence component — negative from for trimming](https://www.remotion.dev/docs/sequence)
+- [Series component — sequential playback](https://www.remotion.dev/docs/series)
+- [useCurrentFrame — frame counter behavior](https://www.remotion.dev/docs/use-current-frame)
+- [Thumbnail component — performance notes](https://www.remotion.dev/docs/player/thumbnail)
+- [Building a timeline](https://www.remotion.dev/docs/building-a-timeline)
+- [Player API — seek, frameupdate](https://www.remotion.dev/docs/player/player)
 
-**Convex Official Documentation:**
-- [Schemas](https://docs.convex.dev/database/schemas) — Table definitions, validators
-- [Relationship patterns](https://stack.convex.dev/relationship-structures-let-s-talk-about-schemas) — 1:many design
-- [Document limits](https://docs.convex.dev/production/state/limits) — 1 MiB documents, 8192 array elements
-- [File storage](https://docs.convex.dev/file-storage) — Unlimited file size, storageId refs
-- [Best practices](https://docs.convex.dev/understanding/best-practices/) — Array sizes, indexing
+**@dnd-kit Documentation:**
+- [useSortable — setActivatorNodeRef](https://docs.dndkit.com/presets/sortable/usesortable)
+- [Pointer sensor — activation constraints](https://docs.dndkit.com/api-documentation/sensors/pointer)
+- [Modifiers — horizontal axis restriction](https://docs.dndkit.com/api-documentation/modifiers)
 
-**Next.js Official Documentation:**
-- [Layouts and Pages](https://nextjs.org/docs/pages/building-your-application/routing/pages-and-layouts) — Persistent layout pattern
-- [Route Groups](https://nextjs.org/docs/app/building-your-application/routing/route-groups) — Layout scoping
+**Convex Documentation:**
+- [Optimistic Concurrency Control](https://docs.convex.dev/database/advanced/occ)
+- [Optimistic updates pattern](https://docs.convex.dev/client/react/optimistic-updates)
 
-**Claude API Documentation:**
-- [Multishot prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/multishot-prompting) — Consistency via examples
-- [Increase output consistency](https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/increase-consistency) — Structured outputs
+**react-resizable-panels:**
+- [GitHub — bvaughn/react-resizable-panels](https://github.com/bvaughn/react-resizable-panels)
+- [shadcn/ui Resizable component](https://ui.shadcn.com/docs/components/resizable)
 
-**NPM Package Verification:**
-- [@dnd-kit/core](https://www.npmjs.com/package/@dnd-kit/core) — v6.3.1, 5.3M weekly downloads
-- [@dnd-kit/sortable](https://www.npmjs.com/package/@dnd-kit/sortable) — v10.0.0
-- [acorn-walk](https://www.npmjs.com/package/acorn-walk) — v8.3.4, 43M weekly downloads
-- [acorn-jsx-walk](https://www.npmjs.com/package/acorn-jsx-walk) — v2.0.0
-- [@remotion/transitions](https://www.npmjs.com/package/@remotion/transitions) — v4.0.410
+**tinykeys:**
+- [GitHub — jamiebuilds/tinykeys](https://github.com/jamiebuilds/tinykeys)
+- [npm — tinykeys package](https://www.npmjs.com/package/tinykeys)
+
+**Existing RemotionLab Codebase:**
+- `src/components/movie/timeline.tsx` — current timeline implementation
+- `src/components/movie/timeline-scene.tsx` — @dnd-kit integration, Thumbnail rendering
+- `src/remotion/compositions/MovieComposition.tsx` — Series + DynamicCode pattern
+- `convex/schema.ts` — movies.scenes schema
+- `convex/movies.ts` — computeTotalDuration, mutations
 
 ### Secondary (MEDIUM confidence)
+
 **Video Editor UX Patterns:**
-- [Canva Video Timeline](https://www.canva.com/design-school/resources/video-timeline) — Timeline interaction patterns
-- [CapCut Timeline Guide](https://filmora.wondershare.com/advanced-video-editing/capcut-timeline.html) — Multi-track features
-- [Kapwing Timeline Tutorial](https://www.kapwing.com/help/timeline-tutorial/) — Snap mode, ripple editing
-- [InVideo Features & Pricing](https://ampifire.com/blog/invideo-ai-features-pricing-what-can-this-text-to-video-generator-do/) — AI workflow
+- Canva Video timeline interaction patterns
+- CapCut timeline guide (multi-track reference, excluded from scope)
+- Final Cut Pro browser views (thumbnail grid patterns)
+- InVideo features (script-to-video, differentiation analysis)
 
-**AI Scene Continuation:**
-- [Runway Gen-4 Character Consistency](https://venturebeat.com/ai/runways-gen-4-ai-solves-the-character-consistency-challenge-making-ai-filmmaking-actually-useful) — Reference anchoring
-- [LTX Studio Features](https://ltx.studio/blog/top-ltx-studio-features) — Multi-scene storyboard, Elements system
+**Performance & Web APIs:**
+- [Pointer Events — 12 Days of Web](https://12daysofweb.dev/2022/pointer-events)
+- [All JS Keyboard Libraries Are Broken (Jan 2025 analysis)](https://blog.duvallj.pw/posts/2025-01-10-all-javascript-keyboard-shortcut-libraries-are-broken.html) — tinykeys evaluation
 
-**Timeline & Drag-and-Drop:**
-- [Top 5 DnD Libraries for React 2026](https://puckeditor.com/blog/top-5-drag-and-drop-libraries-for-react) — @dnd-kit recommendation
-- [dnd-kit Sortable Docs](https://docs.dndkit.com/presets/sortable) — Horizontal list strategy
-- [dnd-kit Modifiers Docs](https://docs.dndkit.com/api-documentation/modifiers) — restrictToHorizontalAxis
+**Architecture Patterns:**
+- Non-destructive editing data model (NLE standard pattern)
+- Event sourcing for undo (event-sourced state pattern)
+- Timeline virtualization (IntersectionObserver + windowing)
 
-**Static Analysis:**
-- [Telerik: Static CSS-in-JS extraction](https://www.telerik.com/blogs/static-extraction-css-js-efficiency-react-apps) — Limitations research
-- [ESTree spec](https://github.com/acornjs/acorn) — AST node types
+### Tertiary (LOW confidence)
 
-### Tertiary (LOW confidence, needs validation)
-**Community patterns:**
-- [React Video Editor Timeline](https://www.reactvideoeditor.com/features/timeline) — Dedicated state stores
-- [animation-timeline-control](https://github.com/ievgennaida/animation-timeline-control) — Canvas virtualization
-- [AI Film School: Continuity Crisis](https://ai-filmschool.com/2025/06/16/the-continuity-crisis-how-marcus-saved-his-film-from-ai-chaos/) — Parameter locking for consistency (case study, not peer-reviewed)
+- Remotion community discussions on trim/sequence nesting (no single canonical source, pattern inferred from multiple examples)
+- @dnd-kit GitHub discussions on complex interactions (#809, #1313) — patterns work but less formal than official docs
 
 ---
-*Research completed: 2026-01-29*
-*Ready for roadmap: yes*
+
+*Research completed: 2026-02-02*
+*Research files: STACK.md, FEATURES.md (05-FEATURES-PRO-TIMELINE.md), ARCHITECTURE.md, PITFALLS.md*
+*Ready for roadmap: YES*

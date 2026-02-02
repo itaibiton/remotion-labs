@@ -1,1055 +1,991 @@
-# Architecture: Multi-Scene Movie Editor (v2.0)
+# Architecture: Pro Timeline Editing (v0.3 -- Milestone 5)
 
-**Domain:** AI-Powered Video Creation Platform -- Multi-Scene Movie Editor
-**Researched:** 2026-01-29
-**Confidence:** HIGH (builds on validated v1.1 patterns, Remotion APIs well-documented)
+**Domain:** AI-Powered Video Creation Platform -- Pro Timeline Editing
+**Researched:** 2026-02-02
+**Confidence:** HIGH (builds on validated v2.0 architecture, Remotion APIs verified via official docs)
 
 ## Executive Summary
 
-v2.0 extends RemotionLab from single-clip creation to a multi-scene movie editor. The existing architecture -- Convex for state, Remotion Player for preview, Lambda for rendering, Claude for code generation -- remains intact. The new features layer on top without replacing anything.
+Milestone 5 transforms the movie page from a simple scene-list editor into a professional timeline editor with trim, split, resize, inline editing, and a full-screen layout. The existing architecture -- Convex scenes array on the movie document, `MovieComposition` using `<Series>`, `DynamicCode` execution -- remains intact. All changes are additive.
 
-The core architectural additions are:
+The core challenge is that RemotionLab clips are **code-based** (JSX using `useCurrentFrame()`), not video files. Trimming a code-based clip means adjusting which frame range is visible, which changes how the code's internal frame counter maps to the composition timeline. This is architecturally different from trimming a video file (which just skips bytes). The solution uses Remotion's `<Sequence>` with negative `from` values to shift the frame counter, combined with `durationInFrames` to limit the visible range.
 
-1. **Two new Convex tables** (`clips`, `movies`) with relationship patterns connecting to existing `generations` and `renders` tables
-2. **A `MovieComposition` wrapper** that uses Remotion's `<Series>` to sequence multiple `DynamicCode` instances into one playable/renderable video
-3. **An end-state serialization system** that uses AST analysis to extract the visual state of a clip at its last frame, enabling continuation generation
-4. **An app shell layout** using Next.js nested layouts for persistent sidebar navigation
-5. **A timeline component** for visual scene management
+Five architectural changes are required:
 
-The critical design decision is **how clips relate to movies**: movies store an ordered list of clip references with per-scene duration overrides, and the `MovieComposition` calculates total duration dynamically via `calculateMetadata()`.
-
----
-
-## Current Architecture (v1.1)
-
-```
-User Prompt
-    |
-    v
-[Claude API] -- generates --> Remotion JSX Code (rawCode)
-    |
-    v
-[AST Validation] -- acorn + acorn-jsx --> Validated JSX
-    |
-    v
-[Sucrase Transform] -- JSX to JS --> Transformed code
-    |
-    v
-[Convex Storage] -- stores --> { rawCode, code, durationInFrames, fps }
-    |                             (generations table)
-    v
-[DynamicCode Composition] -- executes --> Function constructor with scope injection
-    |
-    +-- [Remotion Player] -- browser preview
-    +-- [Remotion Lambda] -- server render (code passed as inputProps)
-```
-
-**Key components in play:**
-- `convex/schema.ts`: `generations` table (userId, prompt, rawCode, code, durationInFrames, fps, status)
-- `convex/renders.ts`: `renders` table (userId, generationId, renderId, bucketName, status, progress)
-- `src/remotion/compositions/DynamicCode.tsx`: Meta-composition that accepts code as `inputProps`
-- `src/lib/code-executor.ts`: Function constructor with controlled scope injection
-- `src/lib/code-validator.ts`: AST-based security validation
-- `src/components/preview/preview-player.tsx`: Remotion Player wrapper
-- `convex/triggerRender.ts`: Lambda render trigger with progress polling
-- `convex/generateAnimation.ts`: Claude API action with validation pipeline
+1. **Data model extension** -- Add `trimStart`, `trimEnd` fields to the scene descriptor in `movies.scenes[]`
+2. **MovieComposition update** -- Wrap each `DynamicCode` in a `<Sequence from={-trimStart}>` with adjusted `durationInFrames`
+3. **Timeline component rewrite** -- Replace fixed 160px blocks with proportional-width, zoom-aware, interactive blocks with trim handles
+4. **Full-screen layout** -- Replace scrollable movie page with viewport-filling resizable panel layout
+5. **Inline editing panel** -- Side panel with Monaco editor + mini preview for the selected clip
 
 ---
 
-## v2.0 Architecture Overview
+## 1. Data Model Changes
 
-```
-                    +------------------+
-                    |   App Shell      |
-                    |  (sidebar nav)   |
-                    +--------+---------+
-                             |
-          +------------------+------------------+
-          |                  |                  |
-    /create             /library            /movie/[id]
-   (clip creation)    (saved clips)      (movie editor)
-          |                  |                  |
-          v                  v                  v
-    [Generate Clip]   [Browse Clips]    [Timeline UI]
-    [Preview Clip]    [Open/Delete]     [Reorder Scenes]
-    [Save as Clip]    [Add to Movie]    [Preview Movie]
-          |                                     |
-          v                                     v
-    +----------+                    +-------------------+
-    | clips    |  <--- refs --->    | movies            |
-    | table    |                    | table             |
-    +----------+                    +-------------------+
-         |                                |
-         v                                v
-    [DynamicCode]                  [MovieComposition]
-    (single clip)                  (Series of DynamicCode)
-         |                                |
-         +------------ Lambda -----------+
-```
-
----
-
-## 1. Convex Schema Design
-
-### New Tables
-
-#### `clips` table
-
-Clips are saved compositions. A clip is created from a generation but decoupled from it -- the clip stores its own copy of the code so that editing a clip does not alter generation history.
+### Current Schema (What We Have)
 
 ```typescript
-// convex/schema.ts -- additions
-
-clips: defineTable({
-  userId: v.string(),
-  // Reference to the generation that created this clip (nullable for future direct-create)
-  generationId: v.optional(v.id("generations")),
-  // Display name (user-editable)
-  name: v.string(),
-  // The composition code
-  code: v.string(),          // Transformed JS (for execution)
-  rawCode: v.string(),       // Original JSX (for editor display)
-  // Timing
-  durationInFrames: v.number(),
-  fps: v.number(),
-  // Optional metadata
-  thumbnailUrl: v.optional(v.string()),
-  // Serialized end-state for continuation generation (JSON string)
-  // Contains final positions, styles, text content at last frame
-  endState: v.optional(v.string()),
-  // Timestamps
-  createdAt: v.number(),
-  updatedAt: v.number(),
-})
-  .index("by_user", ["userId"])
-  .index("by_user_updated", ["userId", "updatedAt"])
-  .index("by_generation", ["generationId"]),
+// movies.scenes array element
+scenes: v.array(v.object({
+  clipId: v.id("clips"),
+  durationOverride: v.optional(v.number()),
+}))
 ```
 
-**Design rationale:**
-- `code` + `rawCode` are copied from the generation, not referenced. This allows clip editing without mutation side-effects.
-- `endState` is a JSON string containing serialized last-frame state. Stored as string (not nested object) because its schema is flexible and evolves independently.
-- `generationId` is optional to support future "create clip without AI" workflows.
-- `thumbnailUrl` is optional; can be populated later via a screenshot action.
-
-#### `movies` table
-
-Movies are ordered collections of clips. The key design decision is **how to represent scene ordering**.
-
-**Chosen approach: Array of scene descriptors on the movie document.**
-
-Rationale for array-of-IDs over separate table:
-- Movies will have 2-20 scenes (well within Convex's recommended 10-element guideline, and far below the 8192 limit).
-- Reordering requires updating a single document (the movie), not multiple scene documents.
-- Scene order is inherently tied to the movie; there is no independent scene entity.
-- Single-user editing (no collaborative conflicts).
-- Reading a movie's scenes is a single document fetch + N clip lookups, which is optimal for Convex's reactive queries.
+### Extended Schema (What We Need)
 
 ```typescript
+// movies.scenes array element -- extended for pro timeline
+scenes: v.array(v.object({
+  clipId: v.id("clips"),
+  durationOverride: v.optional(v.number()),
+  // NEW: Trim points (in frames, relative to clip's internal timeline)
+  trimStart: v.optional(v.number()),  // Frames trimmed from beginning (default: 0)
+  trimEnd: v.optional(v.number()),    // Frames trimmed from end (default: 0)
+}))
+```
+
+**Why these fields and not `inPoint`/`outPoint`:**
+
+The `trimStart`/`trimEnd` model stores how many frames are removed from each edge, not absolute positions. This is better because:
+- The **effective duration** is simple to compute: `clipDuration - trimStart - trimEnd`
+- **Resize by dragging** maps directly: dragging the left handle increases `trimStart`, dragging the right handle increases `trimEnd`
+- The existing `durationOverride` field is preserved for fps-normalization (it currently handles fps mismatch). Trim fields are separate concerns.
+- A trim of `(0, 0)` means "show the full clip" -- the default state requires no data, which is backwards-compatible.
+
+**Computed effective duration:**
+
+```typescript
+function getEffectiveDuration(
+  scene: { clipId: string; durationOverride?: number; trimStart?: number; trimEnd?: number },
+  clip: { durationInFrames: number; fps: number },
+  movieFps: number
+): number {
+  // Base duration: either fps-normalized override or clip's native duration
+  const baseDuration = scene.durationOverride ?? clip.durationInFrames;
+  // Apply trim
+  const trimStart = scene.trimStart ?? 0;
+  const trimEnd = scene.trimEnd ?? 0;
+  return Math.max(1, baseDuration - trimStart - trimEnd);
+}
+```
+
+### Split Operation: Data Model Impact
+
+Splitting a clip at the playhead creates **two new scene entries** from one. The original clip document is unchanged (non-destructive editing). Split is purely a scenes-array operation:
+
+```typescript
+// Before split: scenes = [..., { clipId: "abc", trimStart: 0, trimEnd: 0 }, ...]
+// User splits at frame 45 (relative to clip start) within a 90-frame clip
+
+// After split: scenes = [
+//   ...,
+//   { clipId: "abc", trimStart: 0, trimEnd: 45 },   // First half: frames 0-44
+//   { clipId: "abc", trimStart: 45, trimEnd: 0 },    // Second half: frames 45-89
+//   ...
+// ]
+```
+
+Key insight: **both halves reference the same clipId**. The clip document is not duplicated. Only the trim points differ. This is the standard NLE (non-linear editing) pattern of non-destructive editing.
+
+**Why not create a new clip document for each half:**
+- The clip's code is immutable reference material. Trimming is a movie-level concern, not a clip-level concern.
+- Multiple movies can reference the same clip with different trim points.
+- Avoids database bloat from duplicated code strings.
+- The `DynamicCode` component already receives frame information via Remotion context, so the trim is handled at the composition layer.
+
+### Convex Mutation Changes
+
+The existing `computeTotalDuration` helper and mutations need updates:
+
+```typescript
+// Updated computeTotalDuration
+async function computeTotalDuration(
+  ctx: { db: { get: (id: any) => Promise<any> } },
+  scenes: Array<{ clipId: any; durationOverride?: number; trimStart?: number; trimEnd?: number }>
+): Promise<number> {
+  let total = 0;
+  for (const scene of scenes) {
+    const clip = await ctx.db.get(scene.clipId);
+    const baseDuration = scene.durationOverride ?? clip?.durationInFrames ?? 0;
+    const trimStart = scene.trimStart ?? 0;
+    const trimEnd = scene.trimEnd ?? 0;
+    total += Math.max(1, baseDuration - trimStart - trimEnd);
+  }
+  return total;
+}
+```
+
+**New mutations needed:**
+
+| Mutation | Purpose |
+|----------|---------|
+| `movies.trimScene` | Update `trimStart` and/or `trimEnd` for a scene at index |
+| `movies.splitScene` | Split a scene at a given frame into two scenes |
+| `movies.updateScene` | Generic scene field update (used by resize, trim) |
+
+**Updated mutations:**
+
+| Mutation | Change |
+|----------|--------|
+| `movies.reorderScenes` | Must pass through `trimStart`/`trimEnd` in `sceneOrder` |
+| `movies.addScene` | No change (new scenes have default trim of 0) |
+| `movies.removeScene` | No change |
+
+### Schema Validator Update
+
+```typescript
+// Updated scene validator in schema.ts
+const sceneValidator = v.object({
+  clipId: v.id("clips"),
+  durationOverride: v.optional(v.number()),
+  trimStart: v.optional(v.number()),
+  trimEnd: v.optional(v.number()),
+});
+
 movies: defineTable({
   userId: v.string(),
   name: v.string(),
-  // Ordered array of scene descriptors
-  scenes: v.array(v.object({
-    clipId: v.id("clips"),
-    // Per-scene overrides (optional)
-    durationOverride: v.optional(v.number()),  // Override clip's default duration
-  })),
-  // Computed/cached totals
+  scenes: v.array(sceneValidator),
   totalDurationInFrames: v.number(),
-  fps: v.number(),  // All clips must share fps (enforced at add-time)
-  // Timestamps
+  fps: v.number(),
   createdAt: v.number(),
   updatedAt: v.number(),
 })
-  .index("by_user", ["userId"])
-  .index("by_user_updated", ["userId", "updatedAt"]),
 ```
 
-**Design rationale:**
-- `scenes` is an array of objects (not just IDs) to allow per-scene metadata like `durationOverride`.
-- `totalDurationInFrames` is cached/computed on every mutation that modifies `scenes`. This avoids recomputing on every read.
-- `fps` is enforced to be uniform across all clips in a movie. Mixed fps would require frame-rate conversion, which is out of scope.
-- No separate `movieScenes` join table -- the array approach is simpler and appropriate for the expected scale (2-20 scenes).
-
-### Relationship Diagram
-
-```
-users (existing)
-  |
-  +-- 1:many --> generations (existing)
-  |                |
-  |                +-- 1:1 (optional) --> clips (NEW)
-  |                |
-  |                +-- 1:many --> renders (existing)
-  |
-  +-- 1:many --> clips (NEW)
-  |                |
-  |                +-- referenced by --> movies.scenes[].clipId
-  |
-  +-- 1:many --> movies (NEW)
-                   |
-                   +-- scenes[] contains clipId refs --> clips
-                   |
-                   +-- 1:many --> renders (existing, extended)
-```
-
-### `renders` table extension
-
-The existing `renders` table references `generationId`. For movie renders, we need to also support `movieId`:
-
-```typescript
-// Extend existing renders table
-renders: defineTable({
-  userId: v.string(),
-  // One of these will be set (not both)
-  generationId: v.optional(v.id("generations")),  // Changed from required to optional
-  movieId: v.optional(v.id("movies")),             // NEW
-  renderId: v.string(),
-  bucketName: v.string(),
-  status: v.union(
-    v.literal("pending"),
-    v.literal("rendering"),
-    v.literal("complete"),
-    v.literal("failed")
-  ),
-  progress: v.number(),
-  outputUrl: v.optional(v.string()),
-  outputSize: v.optional(v.number()),
-  error: v.optional(v.string()),
-  createdAt: v.number(),
-  completedAt: v.optional(v.number()),
-})
-  .index("by_user", ["userId"])
-  .index("by_generation", ["generationId"])
-  .index("by_movie", ["movieId"])           // NEW
-  .index("by_status", ["status"]),
-```
-
-**Migration note:** Making `generationId` optional is a schema change. Existing render documents all have `generationId` set. The change is backwards-compatible (existing code still works) but requires a Convex schema push.
+This is a backwards-compatible change. Existing scenes without `trimStart`/`trimEnd` default to `undefined`, which the code treats as `0`.
 
 ---
 
-## 2. Remotion Composition Hierarchy for Movies
+## 2. MovieComposition: Handling Trimmed Clips
 
-### Architecture: `MovieComposition` wrapping N `DynamicCode` instances
+### The Frame-Offset Problem
 
-The existing `DynamicCode` composition executes a single clip's code. For movies, we need a new `MovieComposition` that sequences multiple clips using Remotion's `<Series>` component.
+When a clip uses `useCurrentFrame()` internally, it expects frame 0 to be the clip's beginning. A clip with `trimStart: 30` should see frame 30 as its starting frame, not frame 0. But `<Series.Sequence>` resets the frame counter to 0 for its children.
+
+### Solution: Nested `<Sequence>` with Negative `from`
+
+Remotion's `<Sequence>` with a negative `from` value shifts the internal timeline backwards. Combined with `durationInFrames`, this creates the exact behavior needed for trimming:
 
 ```
-MovieComposition (receives scenes array as inputProps)
-  |
-  +-- <Series>
-        |
-        +-- <Series.Sequence durationInFrames={scene1.duration}>
-        |     +-- <DynamicCode code={scene1.code} ... />
-        |
-        +-- <Series.Sequence durationInFrames={scene2.duration}>
-        |     +-- <DynamicCode code={scene2.code} ... />
-        |
-        +-- <Series.Sequence durationInFrames={scene3.duration}>
-              +-- <DynamicCode code={scene3.code} ... />
+<Series.Sequence durationInFrames={effectiveDuration}>
+  <Sequence from={-trimStart} layout="none">
+    <DynamicCode ... />
+  </Sequence>
+</Series.Sequence>
 ```
 
-### MovieComposition Implementation
+When `trimStart = 30`:
+- The inner `<Sequence from={-30}>` shifts the timeline back by 30 frames
+- When the outer `<Series.Sequence>` is at frame 0, the inner component sees frame 30
+- When the outer is at frame 1, inner sees frame 31
+- The outer `durationInFrames` limits how long the clip plays (effectiveDuration)
+- The clip never sees frames 0-29 (trimmed from start) or frames beyond `clipDuration - trimEnd` (trimmed from end)
+
+This is the pattern documented at [remotion.dev/docs/sequence](https://www.remotion.dev/docs/sequence) for trimming content:
+
+> "By shifting the time backwards, the animation has already progressed by N frames when the content appears."
+
+### Updated MovieComposition
 
 ```typescript
-// src/remotion/compositions/MovieComposition.tsx
-"use client";
+// src/remotion/compositions/MovieComposition.tsx -- updated
 
 import React from "react";
-import { Series } from "remotion";
+import { Series, Sequence } from "remotion";
 import { DynamicCode } from "./DynamicCode";
 
 export interface MovieScene {
-  code: string;           // Transformed JS code
-  durationInFrames: number;
+  code: string;
+  durationInFrames: number;  // Clip's full duration
   fps: number;
+  trimStart?: number;        // NEW: frames trimmed from start
+  trimEnd?: number;          // NEW: frames trimmed from end
 }
 
 export interface MovieCompositionProps {
   scenes: MovieScene[];
-  // Total duration is computed externally via calculateMetadata
-  durationInFrames: number;
-  fps: number;
 }
 
-export const MovieComposition: React.FC<MovieCompositionProps> = ({
-  scenes,
-}) => {
+export const MovieComposition: React.FC<MovieCompositionProps> = ({ scenes }) => {
   return (
     <Series>
-      {scenes.map((scene, index) => (
-        <Series.Sequence
-          key={index}
-          durationInFrames={scene.durationInFrames}
-        >
-          <DynamicCode
-            code={scene.code}
-            durationInFrames={scene.durationInFrames}
-            fps={scene.fps}
-          />
-        </Series.Sequence>
-      ))}
+      {scenes.map((scene, index) => {
+        const trimStart = scene.trimStart ?? 0;
+        const trimEnd = scene.trimEnd ?? 0;
+        const effectiveDuration = Math.max(1, scene.durationInFrames - trimStart - trimEnd);
+
+        return (
+          <Series.Sequence key={index} durationInFrames={effectiveDuration}>
+            {trimStart > 0 ? (
+              <Sequence from={-trimStart} layout="none">
+                <DynamicCode
+                  code={scene.code}
+                  durationInFrames={scene.durationInFrames}
+                  fps={scene.fps}
+                />
+              </Sequence>
+            ) : (
+              <DynamicCode
+                code={scene.code}
+                durationInFrames={scene.durationInFrames}
+                fps={scene.fps}
+              />
+            )}
+          </Series.Sequence>
+        );
+      })}
     </Series>
   );
 };
 ```
 
-### calculateMetadata for Dynamic Duration
+Note: We pass the clip's **full** `durationInFrames` to `DynamicCode` (not the effective duration). The clip code may use `useVideoConfig().durationInFrames` internally for its animation calculations. The trim is handled entirely by the `<Sequence>` and `<Series.Sequence>` wrapper -- the clip code is unaware it's being trimmed. This is the correct non-destructive editing behavior.
 
-The `<Composition>` registration uses `calculateMetadata` to compute total duration from the scenes array:
+### Lambda Render: Updated inputProps
+
+The `startMovieRender` action must pass `trimStart`/`trimEnd` through to the composition:
 
 ```typescript
-// In Root.tsx or wherever compositions are registered
-import { Composition, CalculateMetadataFunction } from "remotion";
-import { MovieComposition, MovieCompositionProps } from "./MovieComposition";
+// In triggerRender.ts -- startMovieRender
+const scenes = movie.sceneClips
+  .filter((clip: any) => clip !== null)
+  .map((clip: any, i: number) => ({
+    code: clip.code as string,
+    durationInFrames: clip.durationInFrames as number,
+    fps: clip.fps as number,
+    trimStart: movie.scenes[i].trimStart ?? 0,      // NEW
+    trimEnd: movie.scenes[i].trimEnd ?? 0,           // NEW
+  }));
 
-const calculateMovieMetadata: CalculateMetadataFunction<
-  MovieCompositionProps
-> = ({ props }) => {
-  const totalDuration = props.scenes.reduce(
-    (sum, scene) => sum + scene.durationInFrames,
-    0
-  );
-  return {
-    durationInFrames: totalDuration,
-    fps: props.fps,
-    width: 1920,
-    height: 1080,
-  };
-};
-
-// Registration:
-<Composition
-  id="MovieComposition"
-  component={MovieComposition}
-  durationInFrames={1}  // Overridden by calculateMetadata
-  fps={30}
-  width={1920}
-  height={1080}
-  defaultProps={{
-    scenes: [],
-    durationInFrames: 1,
-    fps: 30,
-  }}
-  calculateMetadata={calculateMovieMetadata}
-/>
+// Total frames must reflect effective durations
+const totalFrames = scenes.reduce((sum, s) => {
+  return sum + Math.max(1, s.durationInFrames - (s.trimStart ?? 0) - (s.trimEnd ?? 0));
+}, 0);
 ```
-
-### Why `<Series>` and Not Nested `<Sequence>`
-
-- `<Series>` automatically calculates `from` offsets for each child, eliminating manual frame math.
-- `<Series.Sequence>` supports `durationInFrames` per child, which maps directly to our scene model.
-- `<Series>` is the idiomatic Remotion pattern for "scenes playing one after another."
-- Future upgrade path: `<TransitionSeries>` can replace `<Series>` to add fade/wipe transitions between scenes.
-
-### DynamicCode Reuse
-
-The existing `DynamicCode` composition is reused without modification. Each `<Series.Sequence>` wraps a `DynamicCode` instance. Inside each `DynamicCode`, `useCurrentFrame()` returns frame-relative-to-sequence (not global frame), which is exactly what the generated code expects. This is a Remotion built-in behavior -- `<Sequence>` (and `<Series.Sequence>` which wraps it) automatically adjusts the frame counter for children.
 
 ---
 
-## 3. Lambda Rendering for Movies
+## 3. Timeline Architecture: From Simple to Pro
 
-### Approach: Same meta-composition pattern, extended to movies
+### Current Timeline (What We Replace)
 
-The existing Lambda rendering pattern passes `code` as `inputProps` to the `DynamicCode` composition. For movies, we pass the entire `scenes` array as `inputProps` to `MovieComposition`.
+The current timeline is a horizontal flex container with fixed 160px scene blocks. Each block is an `@dnd-kit` sortable with a `Thumbnail` preview. There is no zoom, no playhead, no trim handles, no proportional sizing.
 
-```typescript
-// convex/triggerRender.ts -- movie render extension
+### Pro Timeline: Component Hierarchy
 
-// For single clip renders (existing):
-const { renderId, bucketName } = await renderMediaOnLambda({
-  composition: "DynamicCode",
-  inputProps: {
-    code: clip.code,
-    durationInFrames: clip.durationInFrames,
-    fps: clip.fps,
-  },
-  // ... other config
-});
-
-// For movie renders (NEW):
-const { renderId, bucketName } = await renderMediaOnLambda({
-  composition: "MovieComposition",
-  inputProps: {
-    scenes: movieScenes.map(scene => ({
-      code: scene.code,
-      durationInFrames: scene.durationInFrames,
-      fps: scene.fps,
-    })),
-    durationInFrames: totalDuration,  // Sum of all scene durations
-    fps: 30,
-  },
-  // ... other config
-});
+```
+ProTimeline (top-level container)
+  |
+  +-- TimelineToolbar
+  |     +-- ZoomSlider (controls pixelsPerFrame)
+  |     +-- BladeToolToggle (activates split mode)
+  |     +-- FitToViewButton
+  |
+  +-- TimelineRuler
+  |     +-- Frame/time markers (tick marks at intervals based on zoom)
+  |     +-- Playhead indicator (synced with player)
+  |
+  +-- TimelineTrack (DndContext + SortableContext)
+  |     |
+  |     +-- TimelineClip (one per scene) -- sortable, resizable
+  |     |     +-- ClipThumbnail (Remotion <Thumbnail>)
+  |     |     +-- ClipLabel (name + effective duration)
+  |     |     +-- TrimHandleLeft (drag to adjust trimStart)
+  |     |     +-- TrimHandleRight (drag to adjust trimEnd)
+  |     |     +-- ClipActionButtons (generate next/prev, edit, delete)
+  |     |     +-- DragHandle (for @dnd-kit sortable)
+  |     |
+  |     +-- Playhead line (vertical line at current frame, positioned absolutely)
+  |
+  +-- TimelineScrollContainer (horizontal scroll wrapper)
 ```
 
-### Lambda Bundle Deployment
+### Critical Design Decision: @dnd-kit + Trim Handle Coexistence
 
-The Lambda bundle (deployed via `deploySite()`) must include both compositions:
-- `DynamicCode` (existing, for single clip renders)
-- `MovieComposition` (new, for movie renders)
+The existing `@dnd-kit` setup uses `useSortable` which attaches listeners to the entire element. Trim handle dragging must NOT trigger a reorder drag. The solution uses three complementary techniques:
 
-This requires a one-time redeploy of the Lambda site bundle after adding `MovieComposition`. Both compositions share the same `code-executor.ts` and scope injection infrastructure.
-
-### inputProps Size Considerations
-
-Lambda passes `inputProps` as JSON. For a movie with 10 scenes, each scene contains:
-- `code`: ~2-5 KB of transformed JavaScript
-- `durationInFrames`: number
-- `fps`: number
-
-Total inputProps for 10 scenes: ~20-50 KB. This is well within Remotion Lambda's limits (inputProps are serialized to the render request, which has a practical limit of several MB).
-
-### Duration Limits for Movies
-
-The existing `RENDER_LIMITS.MAX_DURATION_FRAMES` (currently 900 frames / 30 seconds) needs adjustment for movies. Recommended approach:
+**1. Separate drag handles from trim handles using `setActivatorNodeRef`:**
 
 ```typescript
-// convex/lib/renderLimits.ts -- extend
-export const RENDER_LIMITS = {
-  // Single clip limits (existing)
-  MAX_CLIP_DURATION_FRAMES: 600,    // 20 seconds per clip
-  MAX_CLIP_DURATION_SECONDS: 20,
+const {
+  attributes,
+  listeners,
+  setNodeRef,
+  setActivatorNodeRef,  // KEY: restricts drag activation to specific element
+  transform,
+  transition,
+} = useSortable({ id });
 
-  // Movie limits (new)
-  MAX_MOVIE_SCENES: 20,
-  MAX_MOVIE_DURATION_FRAMES: 5400,  // 3 minutes total
-  MAX_MOVIE_DURATION_SECONDS: 180,
+// Only the drag handle triggers reorder:
+<div ref={setNodeRef}>
+  <div ref={setActivatorNodeRef} {...listeners} {...attributes}>
+    {/* Drag handle icon */}
+  </div>
+  <div className="trim-handle-left" onPointerDown={handleTrimLeft}>
+    {/* Left trim handle -- does NOT trigger dnd-kit */}
+  </div>
+  <div className="trim-handle-right" onPointerDown={handleTrimRight}>
+    {/* Right trim handle -- does NOT trigger dnd-kit */}
+  </div>
+</div>
+```
 
-  // Shared
-  LAMBDA_TIMEOUT_MS: 240_000,       // 4 minutes (increased from default)
-  POLL_INTERVAL_MS: 3000,
+**2. `onPointerDown` stopPropagation on trim handles:**
+
+```typescript
+const handleTrimLeft = (e: React.PointerEvent) => {
+  e.stopPropagation();  // Prevent bubbling to dnd-kit listeners
+  // Start trim-left drag interaction
 };
 ```
 
----
+**3. Increased activation distance on the PointerSensor:**
 
-## 4. End-State Serialization for Continuation Generation
+The existing sensor already has `activationConstraint: { distance: 8 }`, which means a small drag on a trim handle (which only moves horizontally within the block) is less likely to trigger a reorder. Combined with the activator ref approach, this provides robust separation.
 
-### The Problem
+### Proportional Clip Widths + Zoom
 
-When a user clicks "Generate next scene," Claude needs to know what the current scene looks like at its last frame so the next scene starts from that visual state. The challenge: the current scene is dynamic JSX code executed at runtime. We need to extract the visual end-state from the code statically.
-
-### Approach: Hybrid AST Analysis + Runtime Snapshot
-
-There are two complementary strategies. The recommended approach is **runtime evaluation at the last frame** because it handles all code patterns (including computed styles), with AST analysis as a fallback/supplement.
-
-#### Strategy A: Runtime Evaluation at Last Frame (Primary)
-
-Execute the clip's code at its last frame and extract the rendered element tree.
+The current fixed 160px blocks are replaced with width proportional to effective duration:
 
 ```typescript
-// src/lib/end-state-extractor.ts
+// Width of a clip block in pixels
+const clipWidth = effectiveDurationInFrames * pixelsPerFrame;
 
-import { executeCode } from "./code-executor";
-import React from "react";
-import ReactDOMServer from "react-dom/server";
+// Zoom state
+const [pixelsPerFrame, setPixelsPerFrame] = useState(2); // 2px per frame default
+// At 30fps: 1 second = 60px at default zoom
+// Zoom range: 0.5 (zoomed out) to 10 (zoomed in)
+```
 
-interface EndState {
-  elements: EndStateElement[];
-  backgroundColor?: string;
+### Zoom Controls
+
+```typescript
+interface TimelineZoomState {
+  pixelsPerFrame: number;       // Core zoom metric
+  minPixelsPerFrame: number;    // 0.5 (shows ~66 seconds in 1000px)
+  maxPixelsPerFrame: number;    // 10 (shows ~3.3 seconds in 1000px)
 }
 
-interface EndStateElement {
-  type: string;           // "div", "h1", "span", "svg", etc.
-  text?: string;          // Text content
-  style: Record<string, string | number>;  // Computed inline styles
-  children?: EndStateElement[];
-}
-
-/**
- * Extract the visual state of a clip at its last frame.
- *
- * Approach: Execute the code with frame = durationInFrames - 1,
- * render to a static React element tree, and extract styles/text.
- */
-export function extractEndState(
-  code: string,
-  durationInFrames: number,
-  fps: number
-): EndState | null {
-  // Execute the code to get the component
-  const result = executeCode(code);
-  if (!result.success) return null;
-
-  const Component = result.Component;
-
-  // Create a mock Remotion context where frame = last frame
-  // This requires wrapping the component in a mock provider
-  // that makes useCurrentFrame() return durationInFrames - 1
-  // and useVideoConfig() return the correct config.
-
-  // Render to static markup and parse the element tree
-  // (Implementation details below)
-
-  return parseRenderedTree(Component, durationInFrames, fps);
+// "Fit to view" calculates pixelsPerFrame to show all clips:
+function fitToView(totalFrames: number, viewportWidth: number): number {
+  return Math.max(0.5, Math.min(10, viewportWidth / totalFrames));
 }
 ```
 
-**How to mock Remotion hooks for last-frame evaluation:**
+### Playhead Positioning
 
-The `useCurrentFrame()` and `useVideoConfig()` hooks read from React context provided by `<Composition>` or `<Player>`. For extraction purposes, we can:
-
-1. **Use Remotion's `<Freeze>` component** at the last frame: Wrap the component in `<Freeze frame={durationInFrames - 1}>` inside a Remotion context, which locks the frame counter.
-2. **Render with a minimal Player context** that provides the last frame value.
-3. **Alternatively, render in a headless Remotion environment** using `renderMedia()` locally for a single frame (heavyweight but accurate).
-
-The simplest approach for v2.0: render the component at the last frame using a test/headless Remotion context and extract the resulting React element tree.
-
-#### Strategy B: AST-Based Style Extraction (Supplementary)
-
-Parse the JSX code and extract interpolate/spring call patterns to compute final values.
+The playhead is a vertical line absolutely positioned within the timeline track:
 
 ```typescript
-// src/lib/end-state-ast.ts
+// Playhead position in pixels
+const playheadX = currentFrame * pixelsPerFrame;
 
-/**
- * Analyze JSX code to extract the visual state at the last frame.
- *
- * Pattern recognition:
- * 1. Find all interpolate() calls:
- *    interpolate(frame, [0, 30], [0, 1]) -> final value = 1
- *    interpolate(frame, [0, 60], [100, 500]) -> final value = 500
- *
- * 2. Find all spring() calls:
- *    spring({ frame, fps }) -> final value = 1 (spring always settles at 1)
- *    spring value used in interpolate: interpolate(springVal, [0, 1], [0, 200]) -> 200
- *
- * 3. Extract literal style values:
- *    style={{ fontSize: 64, color: "#FFFFFF" }} -> fontSize: 64, color: "#FFFFFF"
- *
- * 4. Extract text content:
- *    <h1>Hello World</h1> -> text: "Hello World"
- */
+// On click in the ruler/track area: seek the player
+const handleTimelineClick = (e: React.MouseEvent) => {
+  const rect = trackRef.current?.getBoundingClientRect();
+  if (!rect) return;
+  const x = e.clientX - rect.left + scrollLeft;
+  const frame = Math.round(x / pixelsPerFrame);
+  playerRef.current?.seekTo(frame);
+};
 ```
 
-**Key insight about Remotion animations:**
-- `spring()` always settles at `1` (with default config). The final interpolated value is therefore the last element of the output range.
-- `interpolate(frame, [inputStart, inputEnd], [outputStart, outputEnd], { extrapolateRight: 'clamp' })` clamps at `outputEnd`.
-- Without clamp, the value extrapolates linearly, but at `durationInFrames - 1` the value equals approximately `outputEnd` if `inputEnd` matches duration.
+### Timeline State Management
 
-**AST analysis limitations:**
-- Cannot handle computed styles (e.g., `const size = width * 0.5; style={{ fontSize: size }}`)
-- Cannot handle conditional rendering (`if (frame > 30) return <X />;`)
-- Cannot handle array.map() generated elements
-- Cannot handle state-dependent rendering
-
-**Recommendation:** Use AST analysis as a supplement to enhance the end-state description sent to Claude, but rely on runtime evaluation as the primary extraction method.
-
-#### Strategy C: Claude-Based End-State Description (Pragmatic Alternative)
-
-Instead of extracting end-state programmatically, **send the source code to Claude and ask it to describe the final frame**:
-
-```
-System: Analyze this Remotion JSX code. Describe what the visual output looks like
-at the very last frame (frame {durationInFrames - 1}). Include:
-- All visible elements and their positions
-- Colors, fonts, sizes
-- Final transform values (opacity, scale, rotation, translation)
-- Background color
-- Text content
-
-Then generate a new Remotion composition that starts from this exact visual state
-and transitions to: {user's next scene prompt}
-```
-
-**Pros:**
-- Zero infrastructure needed
-- Handles all code patterns (Claude understands the code semantically)
-- Can be implemented in a single Claude API call
-
-**Cons:**
-- Adds latency (extra Claude call or larger prompt)
-- Claude may hallucinate or misinterpret complex animations
-- Not verifiable programmatically
-
-**Recommendation for v2.0:** Start with Strategy C (send code to Claude for analysis) because it requires no new infrastructure. Supplement with Strategy B (AST analysis for interpolate/spring final values) to provide Claude with computed hints. Defer Strategy A (runtime extraction) to v2.1 if Claude-based analysis proves insufficient.
-
-### End-State Storage and Usage
-
-Regardless of extraction method, the end-state is stored on the clip:
+Timeline interactions require local state that syncs with Convex. The pattern: optimistic local state for responsiveness, Convex mutations for persistence.
 
 ```typescript
-// After extraction, store on the clip
-await ctx.db.patch(clipId, {
-  endState: JSON.stringify({
-    description: "White background with centered large blue text 'Hello World' at full opacity, scale 1.2",
-    elements: [
-      { type: "text", content: "Hello World", style: { fontSize: 80, color: "#3B82F6", opacity: 1, scale: 1.2 } }
-    ],
-    backgroundColor: "#FFFFFF"
-  }),
-});
+interface TimelineState {
+  // Zoom/scroll (local only, no persistence needed)
+  pixelsPerFrame: number;
+  scrollLeft: number;
 
-// When generating continuation:
-const continuationPrompt = `
-Previous scene ends with this state:
-${clip.endState}
+  // Selection (local only)
+  selectedSceneIndex: number | null;
 
-Generate a Remotion composition that starts from exactly this visual state
-and transitions to: ${userPrompt}
-`;
+  // Interaction mode (local only)
+  activeTool: 'select' | 'blade';
+  isDraggingTrim: false | 'left' | 'right';
+  trimDragStartFrame: number | null;
+
+  // Optimistic scenes (mirrors Convex, updated optimistically during interactions)
+  localScenes: Scene[];
+}
+```
+
+**Trim interaction flow:**
+
+```
+User mousedown on left trim handle
+  |
+  v
+Set isDraggingTrim = 'left', capture initial trimStart
+  |
+  v
+User mousemove (document-level listener)
+  |
+  v
+Calculate deltaFrames = (deltaX / pixelsPerFrame)
+Update localScenes[i].trimStart optimistically (clamped to valid range)
+Visual feedback updates immediately (clip block width changes, thumbnail shifts)
+  |
+  v
+User mouseup
+  |
+  v
+Call movies.trimScene mutation with final trimStart value
+Reset isDraggingTrim = false
+```
+
+**Split interaction flow:**
+
+```
+User clicks 'blade' tool toggle
+  |
+  v
+Set activeTool = 'blade', cursor changes to crosshair
+  |
+  v
+User clicks on a timeline clip
+  |
+  v
+Calculate split frame: (clickX - clipStartX) / pixelsPerFrame + scene.trimStart
+  |
+  v
+Call movies.splitScene mutation:
+  - Original scene: trimEnd = clipDuration - splitFrame
+  - New scene: trimStart = splitFrame
+  Both reference the same clipId
+  |
+  v
+Reset activeTool = 'select'
 ```
 
 ---
 
-## 5. App Shell Layout
+## 4. Full-Screen Layout Architecture
 
-### Pattern: Next.js Nested Layouts with Persistent Sidebar
-
-The current app has no persistent shell -- each page (`/`, `/create`, `/templates`) has its own full-page layout. v2.0 introduces a sidebar navigation that persists across pages.
-
-### Layout Architecture
+### Current Layout (What We Replace)
 
 ```
-app/
-  layout.tsx                    # Root layout (unchanged -- Providers, Toaster)
-  page.tsx                      # Landing page (no sidebar, marketing)
-  (app)/                        # Route group for authenticated pages
-    layout.tsx                  # App shell layout (sidebar + content area)
-    create/
-      page.tsx                  # Clip creation page
-    library/
-      page.tsx                  # Saved clips library
-    movie/
-      [id]/
-        page.tsx                # Movie editor with timeline
-    templates/
-      page.tsx                  # Template gallery (moved from top-level)
+[Header: movie name + buttons]           <-- fixed
+[Preview Player]                          <-- in scrollable content
+[Timeline: fixed 160px blocks]            <-- in scrollable content
 ```
 
-**Why route groups:** The `(app)` route group allows the app shell layout to wrap all authenticated pages without affecting URLs. The landing page (`/`) stays outside the shell. Pages are accessed at `/create`, `/library`, `/movie/[id]`, `/templates`.
+The current layout scrolls vertically. The preview player and timeline are stacked and can scroll out of view.
 
-### App Shell Layout Component
+### Pro Layout: Viewport-Filling Resizable Panels
+
+```
++--------------------------------------------------+
+| Header: movie name, render/export buttons         |
++--------------------------------------------------+
+|                                                    |
+|          Preview Player (resizable)                |
+|                                                    |
++==================================================+  <-- ResizableHandle (horizontal)
+| Toolbar: zoom, blade, fit-to-view                  |
++----------------------------------------------------+
+|                                                    |
+|       Timeline Track (horizontal scroll)           |
+|       [clip1][clip2][clip3][clip4]                  |
+|       ^ playhead                                   |
+|                                                    |
++--------------------------------------------------+
+```
+
+When a clip is selected for editing, a side panel opens:
+
+```
++--------------------------------------------------+
+| Header: movie name, render/export buttons         |
++--------------------------------------------------+
+|                        ||                          |
+|   Preview Player       ||   Editing Panel          |
+|   (resized smaller)    ||   +-- Mini Preview       |
+|                        ||   +-- Monaco Editor      |
+|                        ||   +-- Action Buttons     |
++========================||==========================+
+| Toolbar                ||                          |
++------------------------||                          |
+|                        ||   (panel continues       |
+|   Timeline Track       ||    vertically)           |
+|                        ||                          |
++--------------------------------------------------+
+```
+
+### Implementation: react-resizable-panels via shadcn/ui
+
+The project already uses shadcn/ui components. The `ResizablePanelGroup` / `ResizablePanel` / `ResizableHandle` components wrap `react-resizable-panels` with Tailwind styling.
+
+**Recommended new dependency:** `react-resizable-panels` (2.7M weekly downloads, shadcn/ui native support).
+
+```
+npx shadcn@latest add resizable
+```
+
+This installs the `react-resizable-panels` package and creates `src/components/ui/resizable.tsx`.
+
+### Layout Component Structure
 
 ```typescript
-// app/(app)/layout.tsx
-import { Sidebar } from "@/components/shell/sidebar";
-import { AppHeader } from "@/components/shell/app-header";
+// src/components/movie/movie-editor.tsx -- rewritten
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
+
+export function MovieEditor({ movieId }: { movieId: string }) {
+  const [selectedSceneIndex, setSelectedSceneIndex] = useState<number | null>(null);
+
   return (
-    <div className="h-screen flex flex-col">
-      {/* Top header bar */}
-      <AppHeader />
+    <div className="h-full flex flex-col">
+      {/* Fixed header */}
+      <MovieHeader movie={movie} />
 
-      {/* Main content area with sidebar */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar navigation */}
-        <Sidebar />
+      {/* Main content: resizable panels */}
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
+        {/* Left side: preview + timeline */}
+        <ResizablePanel defaultSize={selectedSceneIndex !== null ? 65 : 100}>
+          <ResizablePanelGroup direction="vertical">
+            {/* Preview player */}
+            <ResizablePanel defaultSize={60} minSize={30}>
+              <MoviePreviewPlayer ... />
+            </ResizablePanel>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+            <ResizableHandle withHandle />
+
+            {/* Timeline */}
+            <ResizablePanel defaultSize={40} minSize={20}>
+              <ProTimeline ... />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </ResizablePanel>
+
+        {/* Right side: editing panel (conditionally shown) */}
+        {selectedSceneIndex !== null && (
+          <>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+              <InlineEditPanel
+                clip={selectedClip}
+                onClose={() => setSelectedSceneIndex(null)}
+              />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
+    </div>
+  );
+}
+```
+
+**Why nested `ResizablePanelGroup`:**
+
+The outer group handles horizontal split (main area | editing panel). The inner group handles vertical split (preview | timeline). This allows:
+- User can resize preview vs timeline independently
+- User can resize editing panel width independently
+- When editing panel closes, preview + timeline fill the full width
+- Layout persists via `autoSaveId` on `ResizablePanelGroup` (uses localStorage)
+
+### Layout Persistence
+
+```typescript
+<ResizablePanelGroup
+  direction="horizontal"
+  autoSaveId="movie-editor-horizontal"  // Remembers panel sizes
+>
+```
+
+---
+
+## 5. Inline Editing Panel
+
+### What It Contains
+
+The inline editing panel shows when a user double-clicks or clicks "edit" on a timeline clip. It provides:
+
+1. **Mini preview player** -- Single-clip preview (the selected clip only, respecting trim)
+2. **Monaco editor** -- The clip's `rawCode` with the existing `CodeDisplay` component
+3. **Clip info** -- Name, duration, trim range
+4. **Action buttons** -- Save changes, generate next, generate prev, re-generate, close
+
+### Connection to Existing Components
+
+The existing `CodeDisplay` component (at `src/components/code-editor/code-display.tsx`) already handles:
+- Monaco editor with read-only/edit toggle
+- Validation error markers
+- Reset to original code
+- Copy to clipboard
+
+The existing `PreviewPlayer` component handles single-clip preview. Both can be reused directly within the editing panel.
+
+### Editing Panel Architecture
+
+```typescript
+// src/components/movie/inline-edit-panel.tsx
+
+interface InlineEditPanelProps {
+  clip: Clip;
+  scene: { trimStart?: number; trimEnd?: number };
+  movieId: string;
+  sceneIndex: number;
+  onClose: () => void;
+}
+
+export function InlineEditPanel({ clip, scene, movieId, sceneIndex, onClose }: InlineEditPanelProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCode, setEditedCode] = useState<string | null>(null);
+
+  const editorCode = editedCode ?? clip.rawCode;
+  const validation = useDebouncedValidation(editorCode, 500, !isEditing);
+  const previewCode = validation.transformedCode ?? clip.code;
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Panel header */}
+      <div className="px-4 py-3 border-b flex items-center justify-between">
+        <h3 className="font-medium truncate">{clip.name}</h3>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Mini preview -- shows the clip with its trim applied */}
+      <div className="p-4 border-b">
+        <PreviewPlayer
+          code={previewCode}
+          durationInFrames={clip.durationInFrames}
+          fps={clip.fps}
+        />
+      </div>
+
+      {/* Code editor -- reuse existing CodeDisplay */}
+      <div className="flex-1 min-h-0">
+        <CodeDisplay
+          code={editorCode}
+          originalCode={clip.rawCode}
+          isEditing={isEditing}
+          onEditToggle={() => setIsEditing(!isEditing)}
+          onChange={setEditedCode}
+          errors={validation.errors}
+          isValid={validation.isValid}
+        />
+      </div>
+
+      {/* Action buttons */}
+      <div className="p-4 border-t flex gap-2">
+        <Button size="sm" disabled={!isEditing || !validation.isValid} onClick={handleSave}>
+          Save Changes
+        </Button>
+        <Button size="sm" variant="outline" onClick={handleGenerateNext}>
+          Generate Next
+        </Button>
       </div>
     </div>
   );
 }
 ```
 
-### Sidebar Component
+### Saving Edited Code
+
+When the user edits a clip's code within the editing panel, saving should:
+
+1. Update the `clips` document with new `code` and `rawCode`
+2. The Convex reactive query automatically propagates the change to the timeline and preview player
+3. No need to update the `movies.scenes[]` array (it only stores `clipId` and trim metadata)
+
+**Important consideration:** If the same clip is used in multiple movies (or multiple scenes within the same movie), editing the clip affects ALL usages. This is by design -- clips are shared references. If the user wants independent edits per scene, they should first duplicate the clip (a future "Duplicate Clip" action).
+
+New mutation needed:
 
 ```typescript
-// src/components/shell/sidebar.tsx
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Plus, Library, Film, Palette } from "lucide-react";
-
-const navItems = [
-  { href: "/create", label: "Create", icon: Plus },
-  { href: "/library", label: "Library", icon: Library },
-  { href: "/templates", label: "Templates", icon: Palette },
-  // Movie links are contextual (shown when user has movies)
-];
-
-export function Sidebar() {
-  const pathname = usePathname();
-
-  return (
-    <aside className="w-60 border-r bg-muted/30 flex flex-col">
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={/* active state based on pathname */}
-          >
-            <item.icon className="h-4 w-4 mr-3" />
-            {item.label}
-          </Link>
-        ))}
-
-        {/* Movie list section */}
-        <div className="pt-4 mt-4 border-t">
-          <h3 className="text-xs font-medium text-muted-foreground mb-2 px-3">
-            Movies
-          </h3>
-          {/* Render list of user's movies */}
-        </div>
-      </nav>
-    </aside>
-  );
-}
-```
-
-### Existing Page Migration
-
-The current `/create` page has its own header with `<Link>` to home and `<UserMenu>`. Under the app shell:
-- `<UserMenu>` moves to `<AppHeader>` (shared across all pages)
-- Per-page headers are removed (the shell provides navigation)
-- The `/create` page content becomes the page body within the shell
-
----
-
-## 6. Timeline Component Architecture
-
-### Component Hierarchy
-
-```
-MovieEditorPage
-  |
-  +-- MovieHeader (movie name, settings)
-  |
-  +-- MoviePreviewPlayer (full movie preview using MovieComposition)
-  |
-  +-- Timeline
-  |     |
-  |     +-- TimelineTrack (horizontal scrollable container)
-  |     |     |
-  |     |     +-- TimelineScene (one per scene)
-  |     |     |     +-- SceneThumbnail
-  |     |     |     +-- SceneDuration label
-  |     |     |     +-- SceneActions (remove, edit, duplicate)
-  |     |     |
-  |     |     +-- AddSceneButton (at end of track)
-  |     |
-  |     +-- TimelinePlayhead (current position indicator)
-  |     +-- TimelineRuler (time markers)
-  |
-  +-- MovieActions (render, export, generate next scene)
-```
-
-### Timeline Data Flow
-
-```
-[Convex: movie.scenes[]]
-    |
-    v (reactive query)
-[Timeline Component]
-    |
-    +-- Drag to reorder --> mutation: updateSceneOrder(movieId, newScenes[])
-    +-- Click remove --> mutation: removeScene(movieId, sceneIndex)
-    +-- Click add --> navigate to /create with ?addToMovie=movieId
-    +-- Click scene --> highlight scene in preview player (seek to scene start frame)
-```
-
-### Timeline-to-Player Synchronization
-
-When a user clicks a scene in the timeline, the preview player seeks to the first frame of that scene:
-
-```typescript
-function getSceneStartFrame(scenes: MovieScene[], sceneIndex: number): number {
-  return scenes
-    .slice(0, sceneIndex)
-    .reduce((sum, scene) => sum + scene.durationInFrames, 0);
-}
+// convex/clips.ts -- new mutation
+export const update = mutation({
+  args: {
+    id: v.id("clips"),
+    code: v.optional(v.string()),
+    rawCode: v.optional(v.string()),
+    name: v.optional(v.string()),
+    durationInFrames: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Auth check, ownership check
+    // Patch the clip document
+    // If durationInFrames changed, all movies referencing this clip
+    // may need totalDurationInFrames recalculated -- but this is
+    // handled by the reactive query re-evaluation, not eagerly.
+  },
+});
 ```
 
 ---
 
-## 7. Component Boundaries and New Files
+## 6. Player-Timeline Synchronization
+
+### Current State
+
+The existing `useCurrentPlayerFrame` hook efficiently tracks the frame via `useSyncExternalStore` + the player's `frameupdate` event. The `MoviePreviewPlayer` computes `sceneTimings` (cumulative offsets) and determines `activeSceneIndex`.
+
+### Enhanced Synchronization for Pro Timeline
+
+The pro timeline needs bidirectional sync:
+- **Player -> Timeline:** Playhead position updates as the player plays
+- **Timeline -> Player:** Clicking in the timeline seeks the player
+
+```typescript
+// Shared state between MoviePreviewPlayer and ProTimeline
+interface TimelineSync {
+  currentFrame: number;                   // From player
+  totalDurationInFrames: number;          // Computed from scenes
+  sceneTimings: Array<{                   // Cumulative frame offsets
+    startFrame: number;
+    endFrame: number;
+    effectiveDuration: number;
+  }>;
+  seekTo: (frame: number) => void;        // Seek the player
+  activeSceneIndex: number;               // Which scene is playing
+}
+```
+
+This state is lifted to `MovieEditor` and passed down to both `MoviePreviewPlayer` and `ProTimeline`:
+
+```typescript
+// In MovieEditor
+const playerRef = useRef<PlayerRef>(null);
+const currentFrame = useCurrentPlayerFrame(playerRef);
+
+const sceneTimings = useMemo(() => {
+  let offset = 0;
+  return validScenes.map((scene) => {
+    const effectiveDuration = getEffectiveDuration(scene, ...);
+    const startFrame = offset;
+    const endFrame = offset + effectiveDuration;
+    offset = endFrame;
+    return { startFrame, endFrame, effectiveDuration };
+  });
+}, [validScenes]);
+
+const seekTo = useCallback((frame: number) => {
+  playerRef.current?.seekTo(frame);
+}, []);
+```
+
+### Per-Clip Thumbnail in Timeline
+
+The `Thumbnail` component from `@remotion/player` renders a specific frame of a composition. For trimmed clips, the thumbnail should show a frame within the trimmed range:
+
+```typescript
+// Thumbnail frame for a trimmed clip
+const thumbnailFrame = (scene.trimStart ?? 0) + Math.floor(effectiveDuration / 2);
+```
+
+---
+
+## 7. Integration Points with Existing Components
+
+### Components Modified (Not Replaced)
+
+| Component | File | Modification |
+|-----------|------|-------------|
+| `MovieComposition` | `src/remotion/compositions/MovieComposition.tsx` | Add `<Sequence from={-trimStart}>` wrapper for trimmed clips |
+| `MoviePreviewPlayer` | `src/components/movie/movie-preview-player.tsx` | Accept `ref` forwarding, expose `seekTo`, pass trimmed scenes |
+| `MovieEditor` | `src/components/movie/movie-editor.tsx` | Complete rewrite: resizable panels, pro timeline, inline editing |
+| `computeTotalDuration` | `convex/movies.ts` | Account for `trimStart`/`trimEnd` in duration calculation |
+| `reorderScenes` | `convex/movies.ts` | Pass through trim fields in `sceneOrder` validator |
+| `startMovieRender` | `convex/triggerRender.ts` | Pass `trimStart`/`trimEnd` in scenes inputProps |
+| Schema | `convex/schema.ts` | Add optional `trimStart`/`trimEnd` to scene object validator |
+
+### Components Replaced
+
+| Old Component | New Component | Reason |
+|---------------|---------------|--------|
+| `Timeline` | `ProTimeline` | Proportional widths, zoom, playhead, trim handles |
+| `TimelineScene` | `TimelineClip` | Resizable, trim handles, action buttons, proportional width |
 
 ### New Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `MovieComposition` | `src/remotion/compositions/MovieComposition.tsx` | Remotion composition wrapping N clips via `<Series>` |
-| `Sidebar` | `src/components/shell/sidebar.tsx` | Persistent navigation sidebar |
-| `AppHeader` | `src/components/shell/app-header.tsx` | Persistent top header with user menu |
-| `AppLayout` | `app/(app)/layout.tsx` | Next.js layout providing the app shell |
-| `ClipCard` | `src/components/library/clip-card.tsx` | Clip display card for library grid |
-| `ClipLibrary` | `src/components/library/clip-library.tsx` | Grid of saved clips |
-| `Timeline` | `src/components/movie/timeline.tsx` | Horizontal timeline component |
-| `TimelineScene` | `src/components/movie/timeline-scene.tsx` | Individual scene block in timeline |
-| `MoviePreviewPlayer` | `src/components/movie/movie-preview-player.tsx` | Preview player for full movie |
-| `MovieActions` | `src/components/movie/movie-actions.tsx` | Render/export/continue controls for movie |
-| `EndStateExtractor` | `src/lib/end-state-extractor.ts` | Extracts last-frame state from clip code |
+| Component | File | Purpose |
+|-----------|------|---------|
+| `ProTimeline` | `src/components/movie/pro-timeline.tsx` | Full pro timeline with zoom, playhead, interactions |
+| `TimelineClip` | `src/components/movie/timeline-clip.tsx` | Interactive clip block with trim handles |
+| `TimelineRuler` | `src/components/movie/timeline-ruler.tsx` | Time/frame markers above timeline |
+| `TimelineToolbar` | `src/components/movie/timeline-toolbar.tsx` | Zoom, blade tool, fit-to-view controls |
+| `TimelinePlayhead` | `src/components/movie/timeline-playhead.tsx` | Vertical playhead line |
+| `InlineEditPanel` | `src/components/movie/inline-edit-panel.tsx` | Side panel for clip editing |
+| `MovieHeader` | `src/components/movie/movie-header.tsx` | Compact header for pro layout |
+| `resizable.tsx` | `src/components/ui/resizable.tsx` | shadcn/ui resizable component (from `npx shadcn add`) |
 
 ### New Convex Functions
 
 | Function | Type | Purpose |
 |----------|------|---------|
-| `clips.save` | mutation | Save a generation as a clip |
-| `clips.list` | query | List user's clips |
-| `clips.get` | query | Get single clip |
-| `clips.update` | mutation | Update clip name/code |
-| `clips.remove` | mutation | Delete a clip |
-| `movies.create` | mutation | Create new movie |
-| `movies.get` | query | Get movie with scene data |
-| `movies.list` | query | List user's movies |
-| `movies.addScene` | mutation | Append clip as scene |
-| `movies.removeScene` | mutation | Remove scene by index |
-| `movies.reorderScenes` | mutation | Replace scenes array with new order |
-| `movies.update` | mutation | Update movie name/settings |
-| `movies.remove` | mutation | Delete a movie |
-| `triggerRender.startMovieRender` | action | Trigger Lambda render for movie |
-| `generateAnimation.generateContinuation` | action | Generate next scene from end-state |
+| `movies.trimScene` | mutation | Update trim points for a scene |
+| `movies.splitScene` | mutation | Split a scene into two at a given frame |
+| `clips.update` | mutation | Update clip code/name after inline editing |
 
-### Modified Existing Components
+### New Dependencies
 
-| Component | Change |
-|-----------|--------|
-| `convex/schema.ts` | Add `clips` and `movies` tables, make `renders.generationId` optional |
-| `convex/triggerRender.ts` | Add `startMovieRender` action alongside existing `startRender` |
-| `app/layout.tsx` | Unchanged (root layout stays minimal) |
-| `app/(app)/layout.tsx` | New file providing app shell |
-| `src/components/preview/preview-player.tsx` | May need minor updates for movie mode |
-| `app/create/create-page-client.tsx` | Add "Save as Clip" and "Add to Movie" buttons |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `react-resizable-panels` | ^2.x | Resizable panel layout (via shadcn/ui `resizable` component) |
+
+No other new dependencies needed. The existing `@dnd-kit`, `@monaco-editor/react`, and `@remotion/player` packages handle all other functionality.
 
 ---
 
-## 8. Data Flow for Key Operations
+## 8. Suggested Build Order
 
-### Save Clip Flow
+Based on dependency analysis, the recommended phase ordering for Milestone 5:
 
-```
-User clicks "Save as Clip"
-  |
-  v
-Client calls clips.save mutation with:
-  - code, rawCode from current generation/editor state
-  - durationInFrames, fps
-  - name (user-provided or auto-generated)
-  - generationId (optional reference to source generation)
-  |
-  v
-Convex creates clip document
-  |
-  v
-(Optional) Extract end-state if code is stable
-  |
-  v
-UI shows "Saved!" toast, clip appears in library
-```
+### Phase A: Data Model + Composition Layer
 
-### Add Clip to Movie Flow
+**Why first:** Everything else depends on the data model supporting trim points and the composition layer rendering them correctly.
 
-```
-User clicks "Add to Movie" (from library or create page)
-  |
-  v
-If no movie exists:
-  - Show "Create Movie" dialog (name)
-  - Client calls movies.create mutation
-  |
-  v
-Client calls movies.addScene mutation with:
-  - movieId
-  - clipId
-  |
-  v
-Mutation appends { clipId } to movie.scenes[]
-Mutation recalculates totalDurationInFrames
-  |
-  v
-Reactive query updates timeline UI
-```
+1. Add `trimStart`/`trimEnd` to schema validator (backwards-compatible)
+2. Update `computeTotalDuration` to account for trim
+3. Add `movies.trimScene` mutation
+4. Add `movies.splitScene` mutation
+5. Update `MovieComposition` to use `<Sequence from={-trimStart}>`
+6. Update `startMovieRender` to pass trim data
+7. Update `reorderScenes` validator to include trim fields
+8. Verify: trimmed clips render correctly in Player and Lambda
 
-### Movie Preview Flow
+**Risk:** LOW -- Remotion's `<Sequence from={negative}>` behavior is well-documented and verified.
 
-```
-MovieEditorPage loads with movieId from URL params
-  |
-  v
-Reactive query: movies.get(movieId) returns movie document
-  |
-  v
-For each scene in movie.scenes:
-  - Reactive query: clips.get(scene.clipId) returns clip data
-  |
-  v
-Build MovieCompositionProps:
-  scenes = clips.map(clip => ({
-    code: clip.code,
-    durationInFrames: scene.durationOverride ?? clip.durationInFrames,
-    fps: clip.fps,
-  }))
-  |
-  v
-Render <Player component={MovieComposition} inputProps={props} ... />
-  |
-  v
-calculateMetadata computes total duration dynamically
-Player renders all scenes in sequence via <Series>
-```
+### Phase B: Full-Screen Layout
 
-### Movie Render Flow
+**Why second:** The layout provides the container for all subsequent UI work. Building the timeline or editing panel first would require rework when the layout changes.
 
-```
-User clicks "Render Movie"
-  |
-  v
-Client calls triggerRender.startMovieRender action with:
-  - movieId
-  |
-  v
-Action fetches movie + all clip codes
-Action validates: total duration within limits, all clips valid
-Action calls renderMediaOnLambda with:
-  - composition: "MovieComposition"
-  - inputProps: { scenes: [...], durationInFrames: total, fps: 30 }
-  |
-  v
-Lambda renders MovieComposition
-  - <Series> sequences all clips
-  - Each DynamicCode executes its clip's code
-  |
-  v
-Progress polling (same pattern as existing renders)
-  |
-  v
-Complete: presigned URL for download
-```
+1. Install `react-resizable-panels` via `npx shadcn@latest add resizable`
+2. Rewrite `MovieEditor` with `ResizablePanelGroup` (vertical split: preview | timeline)
+3. Extract `MovieHeader` as compact header component
+4. Remove scrollable layout, replace with viewport-filling panels
+5. Ensure `MoviePreviewPlayer` works within the resizable panel
+6. Verify: movie page fills viewport, panels resize correctly
 
-### Generate Continuation Flow
+**Risk:** LOW -- react-resizable-panels is mature (2.7M weekly downloads), shadcn/ui integration is documented.
 
-```
-User clicks "Generate Next Scene" on a clip
-  |
-  v
-Client sends to generateAnimation.generateContinuation:
-  - clipId (source clip)
-  - prompt (what should happen next)
-  |
-  v
-Action fetches clip's rawCode and endState
-If no endState: extract it (Strategy C: send rawCode to Claude for analysis)
-  |
-  v
-Claude API call with continuation system prompt:
-  "Previous scene code: {rawCode}
-   Previous scene end state: {endState}
-   Generate a new scene that starts from this visual state and transitions to: {prompt}"
-  |
-  v
-Standard validation pipeline (AST validation, sucrase transform)
-  |
-  v
-Return new code as a generation result
-Client can preview, then save as clip and add to movie
-```
+### Phase C: Pro Timeline
+
+**Why third:** Depends on the layout container (Phase B) and data model (Phase A). This is the largest and most complex phase.
+
+1. Build `TimelineRuler` with time markers based on zoom level
+2. Build `TimelineClip` with proportional width, thumbnail, label
+3. Build `ProTimeline` with horizontal scroll, `DndContext` + `SortableContext`
+4. Add zoom state and `TimelineToolbar` with zoom slider
+5. Add `TimelinePlayhead` synced with player
+6. Add trim handles to `TimelineClip` with pointer event handling
+7. Wire trim handle drag to `movies.trimScene` mutation
+8. Add blade tool with `movies.splitScene` mutation
+9. Add per-clip action buttons (generate next, edit, delete)
+10. Verify: drag reorder coexists with trim handles, zoom works, playhead syncs
+
+**Risk:** MEDIUM -- The trim handle + dnd-kit coexistence is the trickiest integration point. Using `setActivatorNodeRef` and `stopPropagation` should work, but may need iteration.
+
+### Phase D: Inline Editing Panel
+
+**Why last:** Depends on the layout (horizontal panel split from Phase B), selection from timeline (Phase C), and existing editor components.
+
+1. Build `InlineEditPanel` component with mini preview + `CodeDisplay`
+2. Wire "edit" button on `TimelineClip` to open the panel
+3. Add horizontal `ResizableHandle` between main area and editing panel
+4. Wire save button to `clips.update` mutation
+5. Add "Generate Next" and "Generate Prev" buttons in panel
+6. Verify: edit, save, preview cycle works; changes reflect in timeline and player
+
+**Risk:** LOW -- Reuses existing `CodeDisplay` and `PreviewPlayer` components with minimal modification.
 
 ---
 
-## 9. Suggested Build Order
+## 9. Anti-Patterns to Avoid
 
-Based on dependency analysis, the recommended phase structure is:
+### 1. Storing trim state in the clip document instead of the scene
 
-### Phase 1: Data Foundation (Clips + App Shell)
-**Why first:** Everything else depends on clips existing and the app shell providing navigation context.
+**Wrong:** Add `trimStart`/`trimEnd` to the `clips` table.
+**Why bad:** The same clip can appear in multiple movies (or multiple times in one movie) with different trim points. Trim is a movie-scene concern, not a clip property.
+**Right:** Store trim data on `movies.scenes[]` (the scene descriptor).
 
-Build order:
-1. Convex schema additions (clips table, renders extension)
-2. Clip CRUD mutations and queries
-3. App shell layout (sidebar + header)
-4. Save-as-clip flow from create page
-5. Clip library page
+### 2. Creating new clip documents on split
 
-### Phase 2: Movie Data + Timeline
-**Why second:** Movies depend on clips existing. Timeline is the core new UI.
+**Wrong:** When splitting, duplicate the clip document into two new clips.
+**Why bad:** Doubles the stored code, breaks the link to the original clip. If the clip is updated, the split copies are stale.
+**Right:** Both halves of a split reference the same `clipId` with different trim points. The clip document is unchanged.
 
-Build order:
-1. Convex schema additions (movies table)
-2. Movie CRUD mutations and queries
-3. MovieComposition Remotion component
-4. Movie editor page with timeline
-5. Add/remove/reorder scenes
+### 3. Modifying the clip's code to implement trim
 
-### Phase 3: Movie Preview + Render
-**Why third:** Preview and render depend on MovieComposition and movie data being stable.
+**Wrong:** Generate a new version of the code that only renders frames `trimStart` to `clipDuration - trimEnd`.
+**Why bad:** Destroys the original code. Makes trim non-undoable. Requires AI re-generation for every trim adjustment.
+**Right:** Use Remotion's `<Sequence from={-trimStart}>` to shift the frame counter at the composition level. The clip code is untouched.
 
-Build order:
-1. Movie preview player (full movie in one Player)
-2. Timeline-to-player synchronization
-3. Movie Lambda render action
-4. Movie export (zip containing all clip files)
+### 4. Using canvas-based timeline instead of DOM
 
-### Phase 4: Continuation Generation
-**Why last:** Depends on clips, movies, and the end-state extraction system.
+**Wrong:** Build the timeline as a `<canvas>` element for "performance."
+**Why bad:** Loses React component model, accessibility, and Remotion `<Thumbnail>` integration. Canvas would require reimplementing text rendering, thumbnails, drag-and-drop.
+**Right:** Use DOM elements with proportional widths. Even at 100+ clips (unlikely), DOM performance is adequate with virtualization. Remotion's `<Thumbnail>` component renders a composition to a small preview, which requires a DOM mount point.
 
-Build order:
-1. End-state extraction (start with Claude-based analysis)
-2. Continuation system prompt design
-3. "Generate next scene" action
-4. Create page integration (continuation mode)
-5. Auto-add continuation to movie
+### 5. Trying to make trim handles work without separated drag listeners
+
+**Wrong:** Keep the current `useSortable` setup where the entire element is the drag target, then try to detect trim handles via pointer position.
+**Why bad:** Fragile coordinate math, breaks when zoom changes, doesn't account for touch events properly.
+**Right:** Use `setActivatorNodeRef` on a dedicated drag handle element. Trim handles are separate pointer event targets that `stopPropagation` to avoid triggering dnd-kit.
+
+### 6. Building zoom before proportional widths
+
+**Wrong:** Add zoom to the fixed-160px timeline blocks.
+**Why bad:** Zoom on fixed-width blocks just adds whitespace. The fundamental issue is that blocks must be proportional to duration before zoom has meaning.
+**Right:** First make clip widths proportional to effective duration (`width = effectiveDuration * pixelsPerFrame`), then zoom changes `pixelsPerFrame`.
 
 ---
 
-## 10. Anti-Patterns to Avoid
+## 10. Scalability Considerations
 
-### 1. Storing code by reference instead of by value
-**Wrong:** Clip stores `generationId` and reads code from generations table at render time.
-**Why bad:** If the generation is deleted or modified, the clip breaks.
-**Right:** Clip copies `code` and `rawCode` at save time. The clip is self-contained.
+| Concern | At 5 scenes | At 20 scenes | At 50+ scenes |
+|---------|-------------|--------------|---------------|
+| Timeline rendering | No issues | No issues | Consider virtualization (only render visible clips) |
+| Thumbnail loading | Immediate | May show loading placeholders | Lazy-load thumbnails outside viewport |
+| Convex reactive queries | Single document read | Single document + 20 clip reads | May benefit from batched clip fetch |
+| Layout | Fits in viewport | Horizontal scroll needed | Must have zoom-to-fit |
+| inputProps size for Lambda | ~5KB | ~50KB | ~125KB (still within limits) |
 
-### 2. Mixed fps across movie scenes
-**Wrong:** Allow scenes with different fps values (e.g., 30fps and 60fps clips in one movie).
-**Why bad:** Remotion compositions have a single fps value. Mixed fps would require frame-rate conversion.
-**Right:** Enforce uniform fps (30) across all clips. Reject clips with non-matching fps when adding to a movie. (All clips are currently generated at 30fps anyway.)
-
-### 3. Separate table for scene ordering
-**Wrong:** Create a `movieScenes` join table with `movieId`, `clipId`, `order` fields.
-**Why bad:** Overkill for 2-20 scenes. Every reorder requires updating multiple documents. Single-user editing means no concurrent write conflicts to worry about.
-**Right:** Store `scenes` array directly on movie document. Reorder by replacing the array atomically.
-
-### 4. Runtime bundle() for movies
-**Wrong:** Try to bundle all clip code into a single composition at render time.
-**Why bad:** Remotion explicitly says bundle() cannot be called in serverless. This was researched and rejected in v1.1.
-**Right:** Use the meta-composition pattern. MovieComposition is pre-bundled. Individual clip code is passed as inputProps and executed at runtime via Function constructor.
-
-### 5. Complex end-state extraction before proving value
-**Wrong:** Build a full AST-based end-state extraction system with runtime rendering before validating that continuation generation works at all.
-**Why bad:** Large infrastructure investment for uncertain value. Claude may handle continuation just fine with source code alone.
-**Right:** Start with Strategy C (send code to Claude for end-state analysis). Only build AST-based extraction if Claude-based analysis proves insufficient.
+The expected usage pattern is 5-20 scenes per movie. The architecture handles this comfortably without optimization. At 50+ scenes, virtualization and lazy loading would be needed, but this is out of scope for v0.3.
 
 ---
 
 ## Sources
 
 ### Remotion (HIGH confidence -- official documentation)
-- [Sequence component](https://www.remotion.dev/docs/sequence) -- Time-shifting and layering
-- [Series component](https://www.remotion.dev/docs/series) -- Sequential scene stitching
-- [TransitionSeries](https://www.remotion.dev/docs/transitions/transitionseries) -- Transitions between scenes
-- [Combining compositions](https://www.remotion.dev/docs/miscellaneous/snippets/combine-compositions) -- Master composition pattern
-- [calculateMetadata()](https://www.remotion.dev/docs/calculate-metadata) -- Dynamic duration from props
-- [interpolate()](https://www.remotion.dev/docs/interpolate) -- Animation interpolation and clamping
-- [Parameterized rendering](https://www.remotion.dev/docs/parameterized-rendering) -- inputProps pattern
-- [renderMediaOnLambda()](https://www.remotion.dev/docs/lambda/rendermediaonlambda) -- Lambda render API
-- [Lambda FAQ](https://www.remotion.dev/docs/lambda/faq) -- One function serves multiple compositions
 
-### Convex (HIGH confidence -- official documentation)
-- [Schemas](https://docs.convex.dev/database/schemas) -- Table definitions and validators
-- [Relationship patterns](https://stack.convex.dev/relationship-structures-let-s-talk-about-schemas) -- 1:many, many:many design
-- [Relational data](https://www.convex.dev/can-do/relational-data) -- Document ID references
-- [Best practices](https://docs.convex.dev/understanding/best-practices/) -- Array size limits, indexing
-- [Sorting](https://www.convex.dev/can-do/sorting) -- Index-based ordering
+- [Sequence component: negative `from` for trimming](https://www.remotion.dev/docs/sequence) -- Verified: negative `from` shifts frame counter backwards, enabling trim behavior
+- [Series component: sequential playback](https://www.remotion.dev/docs/series) -- Verified: `durationInFrames` on `Series.Sequence` controls visible range
+- [Freeze component](https://www.remotion.dev/docs/freeze) -- Verified: freezes children at specific frame
+- [Player API: seek(), seeked event, frameupdate](https://www.remotion.dev/docs/player/player) -- Verified: `seek()` method for programmatic frame control
+- [Custom controls: SeekBar, inFrame/outFrame](https://www.remotion.dev/docs/player/custom-controls) -- Verified: custom seek bar supports frame range
+- [Building a timeline-based video editor](https://www.remotion.dev/docs/building-a-timeline) -- Verified: Remotion recommends passing tracks as inputProps, building custom timeline UI
 
-### Next.js (HIGH confidence -- official documentation)
-- [Layouts and Pages](https://nextjs.org/docs/pages/building-your-application/routing/pages-and-layouts) -- Persistent layout pattern
-- [Route Groups](https://nextjs.org/docs/app/building-your-application/routing/route-groups) -- Layout scoping without URL impact
+### react-resizable-panels (HIGH confidence -- official repo + shadcn/ui)
 
-### Ordering Patterns (MEDIUM confidence -- community resources)
-- [Fractional Indexing](https://www.steveruiz.me/posts/reordering-fractional-indices) -- Advanced reordering pattern (not needed for v2.0 scale)
-- [fractional-indexing npm](https://www.npmjs.com/package/fractional-indexing) -- Rocicorp implementation
+- [GitHub: bvaughn/react-resizable-panels](https://github.com/bvaughn/react-resizable-panels) -- 2.7M weekly downloads, mature API
+- [shadcn/ui Resizable component](https://ui.shadcn.com/docs/components/resizable) -- Wraps react-resizable-panels with Tailwind styling
+- Layout persistence via `autoSaveId` prop confirmed in documentation
+
+### @dnd-kit (HIGH confidence -- official documentation)
+
+- [useSortable: setActivatorNodeRef](https://docs.dndkit.com/presets/sortable/usesortable) -- Verified: restricts drag activation to specific element
+- [Pointer sensor: activationConstraint](https://docs.dndkit.com/api-documentation/sensors/pointer) -- Verified: `distance` constraint prevents accidental drag on trim handles
+
+### Video Editing Architecture (MEDIUM confidence -- industry patterns)
+
+- Non-destructive editing model: clips store references with in/out points, original media unchanged
+- Split operation creates two references to the same source with different trim points
+- Standard NLE data model: source media + timeline references with trim metadata
 
 ---
-*Architecture research for: RemotionLab v2.0 -- Multi-Scene Movie Editor*
-*Researched: 2026-01-29*
-*Previous version: 2026-01-28 (v1.1 architecture)*
+*Architecture research for: RemotionLab v0.3 -- Pro Timeline Editing (Milestone 5)*
+*Researched: 2026-02-02*
+*Previous version: 2026-01-29 (v2.0 architecture)*

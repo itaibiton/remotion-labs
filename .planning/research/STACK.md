@@ -1,7 +1,7 @@
 # Stack Research: AI-Powered Video Creation Platform
 
 **Domain:** AI-powered animated video creation ("Midjourney for animations")
-**Researched:** 2026-01-27 (v1.0), 2026-01-28 (v1.1 additions), 2026-01-29 (v2.0 additions)
+**Researched:** 2026-01-27 (v1.0), 2026-01-28 (v1.1 additions), 2026-01-29 (v2.0 additions), 2026-02-02 (v3.0 Pro Timeline additions)
 **Confidence:** HIGH (core stack verified via official docs)
 
 ---
@@ -18,6 +18,553 @@ This stack builds a web application where users create animated videos through t
 - **Remotion Lambda** for serverless video rendering at scale
 
 The stack prioritizes developer velocity, real-time updates, and seamless integration between components.
+
+---
+
+## v3.0 Stack Additions: Pro Timeline Editing
+
+**Added:** 2026-02-02
+**Focus:** Clip trimming, blade/split tool, drag-to-resize, per-clip actions, full-screen editor layout, inline editing panel
+
+### Overview of What Is Needed
+
+v3.0 evolves the basic horizontal timeline (fixed 160px scene blocks with drag-to-reorder) into a professional non-linear editing (NLE) timeline. The key technical challenges are:
+
+1. **Timeline rendering** -- Variable-width clips proportional to duration, zoom/pan controls
+2. **Clip trimming** -- Drag handles on left/right edges to adjust in/out points
+3. **Blade/split tool** -- Cut a clip at the playhead position, creating two clips
+4. **Drag-to-resize** -- Resize clip duration by dragging edges (same as trimming, from UI perspective)
+5. **Per-clip action buttons** -- Contextual actions on hover/select (edit, duplicate, delete, split)
+6. **Full-screen pro editor layout** -- Resizable panels: preview + timeline + properties
+7. **Inline editing panel** -- Code editor + preview side-by-side within the editor
+8. **Keyboard shortcuts** -- B for blade, Space for play/pause, arrow keys for frame stepping, etc.
+
+### What Is Already Sufficient (No New Dependencies)
+
+Several v3.0 features require no new libraries -- just new patterns using existing stack:
+
+| Feature | Existing Stack | Pattern |
+|---------|---------------|---------|
+| Variable-width clips | Tailwind CSS | `style={{ width: clip.durationInFrames * pixelsPerFrame }}` |
+| Playhead sync | `@remotion/player` PlayerRef | `frameupdate` event + `seekTo()` (already using `useCurrentPlayerFrame` hook) |
+| Clip splitting (data) | Convex mutations | New mutation that creates two scene entries from one |
+| Per-clip actions | Tailwind + lucide-react | Hover overlay with action buttons (pattern exists in timeline-scene.tsx) |
+| Frame stepping | `@remotion/player` PlayerRef | `seekTo(currentFrame + 1)` / `seekTo(currentFrame - 1)` |
+| Play/pause | `@remotion/player` PlayerRef | `toggle()` method |
+| Clip trimming (data model) | Convex schema | Extend scene object with `trimStart` / `trimEnd` fields |
+| Thumbnail filmstrip | `@remotion/player` `<Thumbnail>` | Render multiple `<Thumbnail>` instances at different `frameToDisplay` values |
+
+---
+
+### New Dependencies for v3.0
+
+#### 1. Keyboard Shortcuts: `tinykeys`
+
+**Recommendation: `tinykeys` ^3.0.0**
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `tinykeys` | ^3.0.0 | Keyboard shortcut bindings for blade tool, playback, navigation |
+
+**Why tinykeys over alternatives:**
+
+| Library | Verdict | Reason |
+|---------|---------|--------|
+| **tinykeys** | RECOMMENDED | ~650B bundle, correct key event handling (defaults to `key`, opt-in `code`), sequence support, `$mod` cross-platform modifier. Praised in Jan 2025 analysis as "our first good one." |
+| react-hotkeys-hook v5.2.1 | Rejected | 1.6M weekly downloads but uses both `code` and `key` simultaneously, causing shortcuts to trigger more often than expected. Heavier bundle. |
+| hotkeys-js | Rejected | Uses deprecated `keyCode` property. Framework-agnostic but worse key detection. |
+| Native `addEventListener` | Rejected | No modifier key abstraction, no sequence support, no cleanup pattern, must handle focus scoping manually. |
+
+**Integration pattern with React:**
+
+```tsx
+import { tinykeys } from "tinykeys";
+
+function useTimelineShortcuts(callbacks: {
+  blade: () => void;
+  delete: () => void;
+  playPause: () => void;
+  stepForward: () => void;
+  stepBackward: () => void;
+  undo: () => void;
+  redo: () => void;
+}) {
+  useEffect(() => {
+    const unsubscribe = tinykeys(window, {
+      "b": callbacks.blade,
+      "Delete": callbacks.delete,
+      "Backspace": callbacks.delete,
+      " ": (e) => { e.preventDefault(); callbacks.playPause(); },
+      "ArrowRight": callbacks.stepForward,
+      "ArrowLeft": callbacks.stepBackward,
+      "$mod+z": callbacks.undo,
+      "$mod+Shift+z": callbacks.redo,
+    });
+    return unsubscribe;
+  }, [callbacks]);
+}
+```
+
+**Important: Focus scoping.** Tinykeys binds to a target element (default: `window`). When Monaco editor is focused, keyboard shortcuts must NOT fire (user is typing code). Solution: bind tinykeys to the timeline panel container element, not `window`. Or conditionally check `document.activeElement` in each handler.
+
+**Confidence:** HIGH -- tinykeys 3.0.0 is stable, last commit 3 months ago, 51K weekly downloads, correct keyboard event handling verified by independent analysis.
+
+**Source:** [tinykeys npm](https://www.npmjs.com/package/tinykeys), [tinykeys GitHub](https://github.com/jamiebuilds/tinykeys), [All JS Keyboard Libraries Are Broken (analysis)](https://blog.duvallj.pw/posts/2025-01-10-all-javascript-keyboard-shortcut-libraries-are-broken.html)
+
+---
+
+#### 2. Resizable Panel Layout: `react-resizable-panels`
+
+**Recommendation: `react-resizable-panels` ^4.4.2**
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `react-resizable-panels` | ^4.4.2 | Split-pane layout for preview / timeline / properties panels |
+
+**Why this library:**
+
+The pro editor layout requires a 3-panel resizable layout:
+- **Left/Center:** Preview player (Remotion Player)
+- **Right:** Properties / code editor panel (Monaco)
+- **Bottom:** Timeline strip
+
+This is a Group + Panel + PanelResizeHandle pattern -- exactly what react-resizable-panels provides.
+
+| Library | Verdict | Reason |
+|---------|---------|--------|
+| **react-resizable-panels** | RECOMMENDED | 2.7M weekly downloads, actively maintained (v4.4.2 released days ago), keyboard accessible, supports pixel/percentage sizing, layout persistence, collapsible panels. By Brian Vaughn (React core team alumnus). Used by shadcn/ui's Resizable component. |
+| re-resizable | Rejected | Designed for individual resizable boxes (8-direction resize), not split-pane layouts. Wrong abstraction. |
+| Custom CSS resize | Rejected | Pointer capture math, accessibility, and persistence are solved problems -- no value in reimplementing. |
+| react-resplit | Rejected | Lower adoption (npm), less feature-complete. |
+| CSS `resize` property | Rejected | No keyboard support, no collapse behavior, no min/max constraints, poor UX. |
+
+**Integration with shadcn/ui:** The project uses shadcn/ui. Shadcn provides a `Resizable` component built on react-resizable-panels. We can add it via `npx shadcn@latest add resizable` to get pre-styled wrappers, OR use the library directly for more control.
+
+**Known issue (Jan 2026):** A TypeScript error with `PanelGroup` has been reported with react-resizable-panels v4.4.2 + React 19.2.3 + Next.js 16.1.4 (our exact stack). The workaround is direct imports: `import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels"` rather than namespace imports.
+
+**Editor layout pattern:**
+
+```tsx
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
+
+function ProEditor() {
+  return (
+    <PanelGroup direction="vertical" className="h-screen">
+      {/* Top: Preview + Properties */}
+      <Panel defaultSize={65} minSize={30}>
+        <PanelGroup direction="horizontal">
+          <Panel defaultSize={60} minSize={30}>
+            <PreviewPlayer />
+          </Panel>
+          <PanelResizeHandle className="w-1.5 bg-border" />
+          <Panel defaultSize={40} minSize={20} collapsible>
+            <PropertiesPanel />
+          </Panel>
+        </PanelGroup>
+      </Panel>
+
+      <PanelResizeHandle className="h-1.5 bg-border" />
+
+      {/* Bottom: Timeline */}
+      <Panel defaultSize={35} minSize={15}>
+        <ProTimeline />
+      </Panel>
+    </PanelGroup>
+  );
+}
+```
+
+**Confidence:** HIGH -- 2.7M weekly downloads, v4 actively maintained, the exact use case it was designed for. TypeScript issue has known workaround.
+
+**Source:** [react-resizable-panels npm](https://www.npmjs.com/package/react-resizable-panels), [react-resizable-panels GitHub](https://github.com/bvaughn/react-resizable-panels), [react-resizable-panels docs](https://react-resizable-panels.vercel.app/)
+
+---
+
+#### 3. Clip Trimming & Resize: Custom Pointer Events (NO Library)
+
+**Recommendation: Build custom trim handles using the Pointer Events API. Do NOT add a resize library.**
+
+**Why NOT use a library:**
+
+| Library | Verdict | Reason |
+|---------|---------|--------|
+| re-resizable | Rejected | Designed for 2D box resizing (8 handles). Timeline trim is strictly horizontal, single-axis. The library's abstraction (width/height resize with aspect ratio) is wrong for frame-based trimming. |
+| react-resizable | Rejected | Same mismatch -- designed for grid/box resizing, not timeline clip trimming. |
+| @dnd-kit (for resize) | Rejected | dnd-kit has no built-in resize concept. Hacking it via useDraggable on edge handles is possible but fights the library's drag-and-drop abstraction. Would conflict with the existing sortable reorder behavior on the same elements. |
+| @use-gesture/react | Considered but rejected | 10.3.1, last published 2 years ago. Overkill for single-axis drag -- adds gesture recognition we do not need (pinch, rotate). The Pointer Events API is sufficient. |
+
+**Why custom is correct:**
+
+Timeline clip trimming is fundamentally simple pointer math:
+
+1. User presses on a left/right edge handle
+2. `pointerdown` -> capture pointer -> track delta
+3. `pointermove` -> compute new trimStart/trimEnd from delta (clamped to valid range)
+4. `pointerup` -> release capture -> persist to Convex
+
+The Pointer Events API provides `setPointerCapture()` which eliminates the need to bind to `document` for reliable drag tracking. This is ~50 lines of code, not a library-sized problem.
+
+**Implementation pattern:**
+
+```tsx
+function TrimHandle({ side, onTrim }: { side: "left" | "right"; onTrim: (deltaFrames: number) => void }) {
+  const startXRef = useRef(0);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation(); // Prevent dnd-kit drag activation
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    startXRef.current = e.clientX;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!(e.target as HTMLElement).hasPointerCapture(e.pointerId)) return;
+    const deltaPixels = e.clientX - startXRef.current;
+    const deltaFrames = Math.round(deltaPixels / pixelsPerFrame);
+    onTrim(deltaFrames); // Optimistic local update
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    // Persist final trim values to Convex
+  };
+
+  return (
+    <div
+      className={`absolute top-0 bottom-0 w-2 cursor-ew-resize z-10 hover:bg-primary/50
+        ${side === "left" ? "left-0" : "right-0"}`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    />
+  );
+}
+```
+
+**Critical interaction: Trim handles vs dnd-kit sortable.** The same clip element has both:
+- Sortable drag (move whole clip) -- handled by `@dnd-kit/sortable` via `listeners` on the clip body
+- Trim handles (resize from edges) -- handled by custom Pointer Events on edge elements
+
+Preventing conflict:
+1. Trim handles call `e.stopPropagation()` on `pointerdown` to prevent dnd-kit's PointerSensor from activating
+2. dnd-kit's `activationConstraint: { distance: 8 }` (already configured) ensures accidental edge clicks don't trigger drag
+3. Use `setActivatorNodeRef` from `useSortable` to restrict drag initiation to a central grip handle, NOT the entire clip
+
+**Confidence:** HIGH -- Pointer Events API is a web standard, `setPointerCapture` is supported in all modern browsers. The pattern is well-documented. No library dependency risk.
+
+**Source:** [Pointer Events - 12 Days of Web](https://12daysofweb.dev/2022/pointer-events), [MDN Pointer Events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events)
+
+---
+
+#### 4. Timeline Zoom/Pan: Custom Implementation (NO Library)
+
+**Recommendation: Build zoom/pan using native wheel events and CSS transforms. Do NOT add @use-gesture/react.**
+
+**Why NOT @use-gesture/react:**
+- Last published 2 years ago (v10.3.1), maintenance concerns
+- Adds gesture recognition (pinch, rotate) we do not need
+- Timeline zoom is simply: Ctrl+Wheel -> change `pixelsPerFrame` state, then adjust `scrollLeft` to keep the cursor position stable
+
+**Implementation approach:**
+
+```tsx
+// Timeline zoom state
+const [pixelsPerFrame, setPixelsPerFrame] = useState(2); // 2px per frame default
+const MIN_PX_PER_FRAME = 0.5; // Full zoom out
+const MAX_PX_PER_FRAME = 10;  // Full zoom in
+
+// Wheel handler on timeline container
+const handleWheel = (e: React.WheelEvent) => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    setPixelsPerFrame(prev =>
+      Math.min(MAX_PX_PER_FRAME, Math.max(MIN_PX_PER_FRAME, prev * zoomFactor))
+    );
+  }
+  // Without modifier key: normal horizontal scroll
+};
+```
+
+**Important browser quirk:** `e.preventDefault()` in a wheel handler requires `{ passive: false }` on the event listener. React's synthetic `onWheel` is passive by default in some browsers. Use a `useEffect` with `addEventListener("wheel", handler, { passive: false })` instead of the React `onWheel` prop.
+
+**Pan:** Horizontal scroll is native via `overflow-x: auto` on the timeline container. No library needed.
+
+**Confidence:** HIGH -- Standard DOM wheel event handling. The zoom math (multiply pixelsPerFrame by a factor) is straightforward.
+
+---
+
+### Remotion APIs for Pro Timeline Features
+
+These existing Remotion capabilities are central to the timeline but require NO new packages:
+
+#### Trimming: `<Sequence>` with Negative `from`
+
+Remotion's `<Sequence>` supports trimming via its `from` and `durationInFrames` props:
+
+- **Trim start:** `<Sequence from={-trimStart}>` -- Negative `from` skips the first N frames of the child content. The child's `useCurrentFrame()` starts at `trimStart`, not 0.
+- **Trim end:** `<Sequence durationInFrames={trimmedDuration}>` -- Limits how many frames of the child are shown.
+- **Combined:** A clip with `trimStart: 15` and `trimEnd: 30` (out of original 120 frames) renders frames 15-89 of the original content.
+
+**Data model extension for trimming:**
+
+```typescript
+// convex/schema.ts -- extend the scene object in movies table
+scenes: v.array(v.object({
+  clipId: v.id("clips"),
+  durationOverride: v.optional(v.number()),
+  trimStart: v.optional(v.number()),  // NEW: frames to skip from beginning (default 0)
+  trimEnd: v.optional(v.number()),    // NEW: frames to skip from end (default 0)
+})),
+```
+
+**Effective duration calculation:**
+```typescript
+function getEffectiveDuration(scene: Scene, clip: Clip): number {
+  const baseDuration = scene.durationOverride ?? clip.durationInFrames;
+  const trimStart = scene.trimStart ?? 0;
+  const trimEnd = scene.trimEnd ?? 0;
+  return baseDuration - trimStart - trimEnd;
+}
+```
+
+**MovieComposition update for trimmed scenes:**
+
+```tsx
+<Series>
+  {scenes.map((scene, i) => {
+    const effectiveDuration = getEffectiveDuration(scene, clips[i]);
+    const trimStart = scene.trimStart ?? 0;
+    return (
+      <Series.Sequence key={i} durationInFrames={effectiveDuration}>
+        <Sequence from={-trimStart} durationInFrames={effectiveDuration}>
+          <DynamicCode
+            code={clips[i].code}
+            durationInFrames={clips[i].durationInFrames}
+            fps={clips[i].fps}
+          />
+        </Sequence>
+      </Series.Sequence>
+    );
+  })}
+</Series>
+```
+
+**Confidence:** HIGH -- Remotion docs explicitly document negative `from` for trimming. The `<Sequence>` nesting pattern (outer for positioning, inner for trimming) is the recommended approach.
+
+**Source:** [Remotion Sequence](https://www.remotion.dev/docs/sequence), [Remotion Series](https://www.remotion.dev/docs/series)
+
+#### Blade/Split Tool: Data Operation on Convex
+
+The blade tool is purely a data operation -- no new Remotion API needed:
+
+1. User positions playhead at frame N within a scene
+2. User presses B (blade tool shortcut)
+3. Convex mutation: Replace scene entry at index with two entries:
+   - Scene A: same clipId, `trimEnd` increased to cut at frame N
+   - Scene B: same clipId, `trimStart` set to frame N
+4. Both scene entries reference the SAME clip (non-destructive editing)
+5. Timeline re-renders with two clips where there was one
+
+**Non-destructive editing is critical.** The original clip's code is never modified. Trim points are stored on the scene (movie join record), not the clip. The same clip can appear in multiple movies with different trims.
+
+**Confidence:** HIGH -- This is a pure data model operation. Remotion's Sequence + Series handles the rendering.
+
+#### Thumbnail Filmstrip: Multiple `<Thumbnail>` Instances
+
+For a filmstrip preview on each timeline clip (showing a strip of frames across the clip width):
+
+```tsx
+function ClipFilmstrip({ clip, width, pixelsPerFrame }: Props) {
+  const thumbnailWidth = 48; // px per thumbnail
+  const count = Math.max(1, Math.floor(width / thumbnailWidth));
+  const frameStep = clip.durationInFrames / count;
+
+  return (
+    <div className="flex h-full overflow-hidden">
+      {Array.from({ length: count }, (_, i) => (
+        <Thumbnail
+          key={i}
+          component={DynamicCode}
+          inputProps={{ code: clip.code, durationInFrames: clip.durationInFrames, fps: clip.fps }}
+          compositionWidth={1920}
+          compositionHeight={1080}
+          frameToDisplay={Math.floor(i * frameStep)}
+          durationInFrames={clip.durationInFrames}
+          fps={clip.fps}
+          style={{ width: thumbnailWidth, height: "100%", flexShrink: 0 }}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+**Performance concern:** Each `<Thumbnail>` mounts a Remotion composition and renders one frame. For a timeline with 10 clips, each showing 5 thumbnails = 50 simultaneous Remotion compositions. This may be heavy.
+
+**Mitigation strategies (prioritized):**
+1. **Lazy rendering:** Only render thumbnails for clips visible in the viewport (IntersectionObserver)
+2. **Reduce density:** Show 2-3 thumbnails per clip, not filling the entire width
+3. **Placeholder on zoom:** While zooming, show solid color placeholders, render thumbnails on zoom stop (debounce)
+4. **Memoization:** Wrap `<Thumbnail>` in `React.memo` to prevent re-renders when only zoom level changes (key by clipId + frameToDisplay)
+
+**Confidence:** MEDIUM -- `<Thumbnail>` works for this purpose, but performance at scale (many clips, many thumbnails) needs empirical testing. May need to fall back to canvas-rendered thumbnails or cached stills.
+
+**Source:** [Remotion Thumbnail docs](https://www.remotion.dev/docs/player/thumbnail)
+
+---
+
+### Timeline Rendering Approach: CSS/HTML (NOT Canvas, NOT SVG)
+
+**Recommendation: Build the timeline using CSS/HTML divs with Tailwind. Do NOT use Canvas or SVG.**
+
+**Why CSS/HTML over Canvas:**
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **CSS/HTML (RECOMMENDED)** | Native DOM events (click, hover, pointer), accessibility (ARIA, keyboard nav), easy Tailwind styling, existing Remotion `<Thumbnail>` renders as DOM elements | May struggle with 500+ elements (irrelevant for our scale of 5-50 clips) |
+| Canvas | Best for 100+ tracks with thousands of keyframes, pixel-level control, smooth 60fps zoom | No native DOM events (must implement hit-testing), cannot embed React components (`<Thumbnail>`), no accessibility, harder to style |
+| SVG | Vector scaling, DOM events | DOM overhead at scale, harder to embed React components |
+
+**CSS/HTML is the right choice because:**
+
+1. **Scale:** Our timeline has 1-50 clips on a single track. CSS handles this trivially.
+2. **Remotion `<Thumbnail>` integration:** Thumbnails are React components. Canvas cannot render React components without an offscreen DOM -> canvas pipeline (massive complexity).
+3. **@dnd-kit integration:** dnd-kit operates on DOM elements. Canvas would require a completely different drag approach.
+4. **Accessibility:** Screen readers, keyboard navigation, and focus management work out of the box with DOM elements.
+5. **Development speed:** Tailwind CSS + React components is the fastest path to a polished UI.
+
+**When Canvas would be correct (NOT our case):**
+- Multi-track timelines with 100+ tracks (DAW-style)
+- Thousands of keyframes with continuous animation
+- Custom waveform rendering
+- Frame-precise scrubbing at 60fps with hundreds of visible elements
+
+**Confidence:** HIGH -- CSS/HTML is the correct choice for a single-track timeline with under 50 clips and embedded React components.
+
+---
+
+### dnd-kit Modifications for Pro Timeline
+
+The existing `@dnd-kit/sortable` setup needs modifications (NOT new packages) to support the pro timeline:
+
+**Current state:** Entire clip element is draggable (`listeners` spread on the outer div).
+
+**Required changes:**
+
+1. **Separate drag handle from clip body:** Use `setActivatorNodeRef` from `useSortable` to restrict drag initiation to a dedicated grip handle area (center of clip), preventing conflict with trim handles on edges.
+
+```tsx
+const { setNodeRef, setActivatorNodeRef, listeners, attributes, transform, transition } = useSortable({ id });
+
+return (
+  <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}>
+    {/* Left trim handle -- NOT a drag trigger */}
+    <TrimHandle side="left" onTrim={handleTrimStart} />
+
+    {/* Drag handle -- center grip area */}
+    <div
+      ref={setActivatorNodeRef}
+      {...listeners}
+      {...attributes}
+      className="flex-1 cursor-grab active:cursor-grabbing"
+    >
+      <ClipFilmstrip clip={clip} />
+    </div>
+
+    {/* Right trim handle -- NOT a drag trigger */}
+    <TrimHandle side="right" onTrim={handleTrimEnd} />
+  </div>
+);
+```
+
+2. **Variable-width clips:** Current clips are fixed at `w-[160px]`. Pro timeline uses `style={{ width: effectiveDuration * pixelsPerFrame }}` for proportional sizing. dnd-kit handles variable-width sortable items without configuration changes.
+
+3. **Snap-to-frame on drag end:** After reorder, clips snap to integer frame positions (no sub-frame gaps). This is handled in the state update, not the dnd-kit config.
+
+**Confidence:** HIGH -- `setActivatorNodeRef` is a documented API in `@dnd-kit/sortable`. Variable-width sortable items are a supported use case.
+
+**Source:** [dnd-kit useSortable docs](https://docs.dndkit.com/presets/sortable/usesortable), [dnd-kit Draggable handle pattern](https://docs.dndkit.com/api-documentation/draggable/usedraggable)
+
+---
+
+### Full v3.0 Dependency Summary
+
+```bash
+# New dependencies for v3.0 Pro Timeline
+npm install tinykeys@^3.0.0
+npm install react-resizable-panels@^4.4.2
+```
+
+| Package | Size (approx) | Purpose | When to Add |
+|---------|--------------|---------|-------------|
+| `tinykeys` | ~650B min | Keyboard shortcuts (blade, play/pause, nav) | Phase: Keyboard shortcuts |
+| `react-resizable-panels` | ~15KB min | Resizable editor layout (preview/timeline/properties) | Phase: Pro editor layout |
+
+**Total new bundle: ~16KB minified** (extremely lightweight)
+
+---
+
+### What Is NOT Needed for v3.0
+
+| Technology | Why Not | Use Instead |
+|------------|---------|-------------|
+| **@use-gesture/react** | Last updated 2 years ago. Overkill for single-axis trim/zoom. Adds pinch/rotate recognition we do not need. | Native Pointer Events API for trim, native wheel events for zoom |
+| **re-resizable** | Designed for 2D box resizing (8 handles). Timeline trim is strictly horizontal, single-axis. Wrong abstraction. | Custom trim handles with Pointer Events |
+| **react-resizable** | Same mismatch as re-resizable. Designed for grid/box resizing. | Custom trim handles with Pointer Events |
+| **Canvas-based timeline** | Cannot embed Remotion `<Thumbnail>` React components. No DOM events. No accessibility. Overkill for 1-50 clips. | CSS/HTML divs with Tailwind |
+| **SVG timeline** | DOM overhead without benefit. Cannot easily embed React components. | CSS/HTML divs with Tailwind |
+| **react-hotkeys-hook** | Uses both `code` and `key` simultaneously, causing shortcuts to fire more than expected. Heavier than tinykeys. | tinykeys (correct key handling, ~650B) |
+| **hotkeys-js** | Uses deprecated `keyCode` property for key detection. | tinykeys |
+| **Remotion Timeline ($300)** | Designed for multi-track editors with overlapping clips. Our use case is a single-track sequential timeline. | Custom timeline with Tailwind + dnd-kit |
+| **@twick/video-editor** | Full SDK with its own rendering pipeline, incompatible with our DynamicCode/Remotion pattern. | Custom implementation |
+| **Wavesurfer.js / waveform libraries** | No audio track support in current scope. AI-generated clips are visual-only. | Defer to future audio milestone |
+| **Undo/redo library (immer-undo, etc.)** | Convex is the source of truth. Undo should be implemented as Convex mutations (store action history), not client-side state snapshots. | Convex-backed undo stack (custom) |
+| **react-virtuoso for timeline** | Timeline has 1-50 clips in view. Virtualization adds complexity without benefit at this scale. | Simple overflow-x-auto scroll |
+
+---
+
+### Convex Schema Extensions for Trimming
+
+The scene object in the movies table needs two new optional fields:
+
+```typescript
+// convex/schema.ts -- extend the scene object
+scenes: v.array(v.object({
+  clipId: v.id("clips"),
+  durationOverride: v.optional(v.number()),
+  trimStart: v.optional(v.number()),  // NEW: frames to skip from clip start
+  trimEnd: v.optional(v.number()),    // NEW: frames to skip from clip end
+})),
+```
+
+**Constraints:**
+- `trimStart >= 0`
+- `trimEnd >= 0`
+- `trimStart + trimEnd < effectiveDuration` (cannot trim more than the clip length)
+- Effective duration = `(durationOverride ?? clip.durationInFrames) - trimStart - trimEnd`
+- Must be > 0 (at least 1 frame visible)
+
+**New mutations needed:**
+- `updateSceneTrim({ movieId, sceneIndex, trimStart?, trimEnd? })` -- Set trim points
+- `splitScene({ movieId, sceneIndex, splitAtFrame })` -- Create two scenes from one
+
+**Confidence:** HIGH -- Optional fields are backward-compatible. Existing scenes without trimStart/trimEnd behave identically (default to 0).
+
+---
+
+### v3.0 Confidence Assessment
+
+| Component | Confidence | Reason |
+|-----------|------------|--------|
+| tinykeys for shortcuts | HIGH | 650B, correct key handling, stable v3.0, simple API |
+| react-resizable-panels for layout | HIGH | 2.7M weekly downloads, actively maintained, shadcn/ui compatible |
+| Custom trim handles (Pointer Events) | HIGH | Web standard API, ~50 lines of code, well-documented pattern |
+| Custom zoom/pan (wheel events) | HIGH | Standard DOM events, simple math |
+| CSS/HTML timeline rendering | HIGH | Correct choice for 1-50 clips with embedded React components |
+| Remotion Sequence trimming | HIGH | Officially documented negative `from` pattern for trimming |
+| dnd-kit drag handle separation | HIGH | `setActivatorNodeRef` is a documented API |
+| Thumbnail filmstrip performance | MEDIUM | Works in principle, but 50+ simultaneous Thumbnails may need optimization |
+| Blade tool (data operation) | HIGH | Pure Convex mutation, no new APIs needed |
 
 ---
 
@@ -695,7 +1242,7 @@ npm install acorn acorn-jsx ast-guard sucrase
 | acorn-walk | ^8.3.4 | AST traversal | Official acorn walker, 43M weekly downloads. Needed for end-state extraction. | HIGH |
 | acorn-jsx-walk | ^2.0.0 | JSX visitor support | Extends acorn-walk for JSX node types. Small but purpose-built. | MEDIUM |
 
-### Timeline UI Stack (v2.0, new)
+### Timeline UI Stack (v2.0, existing)
 
 | Technology | Version | Purpose | Why Recommended | Confidence |
 |------------|---------|---------|-----------------|------------|
@@ -703,6 +1250,13 @@ npm install acorn acorn-jsx ast-guard sucrase
 | @dnd-kit/sortable | ^10.0.0 | Sortable list preset | useSortable, arrayMove, horizontalListSortingStrategy. | HIGH |
 | @dnd-kit/modifiers | ^9.0.0 | Movement restriction | restrictToHorizontalAxis for timeline. | HIGH |
 | @dnd-kit/utilities | ^3.2.2 | CSS transform helpers | Clean CSS.Transform.toString() for drag overlay. | HIGH |
+
+### Pro Timeline Stack (v3.0, new)
+
+| Technology | Version | Purpose | Why Recommended | Confidence |
+|------------|---------|---------|-----------------|------------|
+| tinykeys | ^3.0.0 | Keyboard shortcuts | ~650B, correct key handling, cross-platform `$mod`. | HIGH |
+| react-resizable-panels | ^4.4.2 | Resizable editor layout | 2.7M weekly downloads, keyboard accessible, collapsible panels. | HIGH |
 
 ### UI Framework
 
@@ -718,6 +1272,7 @@ npm install acorn acorn-jsx ast-guard sucrase
 | zod | 4.x | Schema validation | Validate user prompts, API responses, Remotion props. 14x faster parsing in v4. | HIGH |
 | lucide-react | ^0.563.0 | Icons | Sidebar navigation icons, timeline controls. Already installed. | HIGH |
 | sonner | ^2.0.7 | Toast notifications | User feedback for save/delete/render actions. Already installed. | HIGH |
+| framer-motion | ^12.29.3 | UI animations | Already installed. Use for smooth panel transitions, not timeline rendering. | HIGH |
 
 ---
 
@@ -729,13 +1284,17 @@ npm install @clerk/nextjs convex remotion @remotion/player @remotion/cli @remoti
 npm install @anthropic-ai/sdk
 npm install acorn acorn-jsx sucrase
 npm install @monaco-editor/react
+npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/modifiers @dnd-kit/utilities
 
 # v2.0 additions
-npm install @dnd-kit/core@^6.3.1 @dnd-kit/sortable@^10.0.0 @dnd-kit/modifiers@^9.0.0 @dnd-kit/utilities@^3.2.2
 npm install acorn-walk@^8.3.4 acorn-jsx-walk@^2.0.0
 
 # v2.0 optional (add when transition UI is built)
 npm install @remotion/transitions@4.0.410
+
+# v3.0 additions (Pro Timeline)
+npm install tinykeys@^3.0.0
+npm install react-resizable-panels@^4.4.2
 ```
 
 ---
@@ -758,6 +1317,10 @@ npm install @remotion/transitions@4.0.410
 | Code Validation | acorn + custom validators | ast-guard | If ast-guard doesn't meet specific requirements |
 | JSX Transform | sucrase | @babel/standalone | If you need Babel plugins (decorators, etc.) |
 | Code Sandbox | Function constructor | E2B, Vercel Sandbox | If code truly needs full isolation (filesystem, network) |
+| Keyboard Shortcuts | tinykeys | react-hotkeys-hook | If you want React hook API at the cost of incorrect key matching |
+| Panel Layout | react-resizable-panels | Custom CSS resize | If you do not need collapsible panels or keyboard accessibility |
+| Clip Trimming | Custom Pointer Events | re-resizable, @use-gesture | If you need 2D resize or multi-gesture recognition |
+| Timeline Zoom | Native wheel events | @use-gesture/react | If you need pinch-to-zoom gesture support on touch devices |
 
 ---
 
@@ -775,6 +1338,10 @@ npm install @remotion/transitions@4.0.410
 | @xzdarcy/react-timeline-editor | Unmaintained (3 years old), tiny ecosystem | Custom timeline |
 | react-beautiful-dnd | Deprecated, no React 18/19 support | @dnd-kit |
 | Zustand / Jotai for persisted state | Convex already provides reactive state. Adding a separate store creates sync issues. | Convex useQuery + React useState for local UI state |
+| @use-gesture/react | Last updated 2 years ago, overkill for timeline interactions | Native Pointer Events + wheel events |
+| re-resizable / react-resizable | Wrong abstraction for timeline clip trimming (2D box vs 1D trim) | Custom trim handles with Pointer Events |
+| react-hotkeys-hook | Incorrect key matching (fires on both code and key) | tinykeys |
+| Canvas-based timeline | Cannot embed React components, no DOM events, overkill for <50 clips | CSS/HTML divs with Tailwind |
 
 ---
 
@@ -788,6 +1355,8 @@ npm install @remotion/transitions@4.0.410
 | convex | Next.js 15+, React 19 | ConvexProviderWithClerk tested |
 | @dnd-kit/core@6.3.1 | React 18, React 19 | Hooks-based, no version conflict |
 | @dnd-kit/sortable@10.0.0 | @dnd-kit/core@6.x | Peer dependency |
+| tinykeys@3.0.0 | Any (vanilla JS) | No React dependency, use in useEffect |
+| react-resizable-panels@4.4.2 | React 19, Next.js 16 | Known TS import workaround needed |
 | zod@4.x | TypeScript 5.5+ | Strict mode required |
 | Tailwind CSS 4.x | shadcn/ui latest | Use tw-animate-css |
 | acorn@8.x | ES2023+ | Stable |
@@ -808,11 +1377,13 @@ npm install @remotion/transitions@4.0.410
 - [Remotion Combining Compositions](https://www.remotion.dev/docs/miscellaneous/snippets/combine-compositions)
 - [Remotion Player Custom Controls](https://www.remotion.dev/docs/player/custom-controls)
 - [Remotion Building a Timeline](https://www.remotion.dev/docs/building-a-timeline)
-- [Remotion renderStill](https://www.remotion.dev/docs/renderer/render-still)
-- [Remotion @remotion/transitions](https://www.remotion.dev/docs/transitions/)
+- [Remotion Player API](https://www.remotion.dev/docs/player/player)
 - [dnd-kit Sortable Docs](https://docs.dndkit.com/presets/sortable)
+- [dnd-kit useSortable](https://docs.dndkit.com/presets/sortable/usesortable)
 - [dnd-kit Modifiers Docs](https://docs.dndkit.com/api-documentation/modifiers)
 - [Convex File Storage](https://docs.convex.dev/file-storage)
+- [tinykeys GitHub](https://github.com/jamiebuilds/tinykeys)
+- [react-resizable-panels GitHub](https://github.com/bvaughn/react-resizable-panels)
 
 ### NPM Package Verification (HIGH confidence)
 - [@dnd-kit/core npm](https://www.npmjs.com/package/@dnd-kit/core) - v6.3.1, 5.3M weekly downloads
@@ -820,18 +1391,16 @@ npm install @remotion/transitions@4.0.410
 - [@remotion/transitions npm](https://www.npmjs.com/package/@remotion/transitions) - v4.0.403+
 - [acorn-walk npm](https://www.npmjs.com/package/acorn-walk) - v8.3.4, 43M weekly downloads
 - [acorn-jsx-walk npm](https://www.npmjs.com/package/acorn-jsx-walk) - v2.0.0
+- [tinykeys npm](https://www.npmjs.com/package/tinykeys) - v3.0.0, 51K weekly downloads
+- [react-resizable-panels npm](https://www.npmjs.com/package/react-resizable-panels) - v4.4.2, 2.7M weekly downloads
+- [@use-gesture/react npm](https://www.npmjs.com/package/@use-gesture/react) - v10.3.1, last published 2 years ago (rejected)
+- [re-resizable npm](https://www.npmjs.com/package/re-resizable) - v6.11.2 (rejected)
+- [react-hotkeys-hook npm](https://www.npmjs.com/package/react-hotkeys-hook) - v5.2.1, 1.6M weekly downloads (rejected)
 
-### Library Comparisons (MEDIUM confidence)
-- [Top 5 DnD Libraries for React 2026](https://puckeditor.com/blog/top-5-drag-and-drop-libraries-for-react)
+### Analysis & Comparisons (MEDIUM confidence)
+- [All JS Keyboard Libraries Are Broken (Jan 2025)](https://blog.duvallj.pw/posts/2025-01-10-all-javascript-keyboard-shortcut-libraries-are-broken.html)
+- [Pointer Events - 12 Days of Web](https://12daysofweb.dev/2022/pointer-events)
 - [dnd-kit GitHub](https://github.com/clauderic/dnd-kit)
-- [@hello-pangea/dnd GitHub](https://github.com/hello-pangea/dnd)
-- [react-timeline-editor GitHub](https://github.com/xzdarcy/react-timeline-editor)
-
-### Community Patterns (MEDIUM confidence)
-- [Remotion Timeline Pro Store](https://www.remotion.pro/store/timeline) - $300 paid component
-- [React Video Editor](https://www.reactvideoeditor.com/features/timeline)
-- [estree-walker GitHub](https://github.com/Rich-Harris/estree-walker)
-- [acorn-jsx-walk GitHub](https://github.com/sderosiaux/acorn-jsx-walk)
 
 ---
 
@@ -839,4 +1408,5 @@ npm install @remotion/transitions@4.0.410
 *Original research: 2026-01-27*
 *v1.1 additions: 2026-01-28 (Code execution stack)*
 *v2.0 additions: 2026-01-29 (Multi-scene movie editor stack)*
+*v3.0 additions: 2026-02-02 (Pro timeline editing stack)*
 *Overall confidence: HIGH (core components verified via official documentation)*
