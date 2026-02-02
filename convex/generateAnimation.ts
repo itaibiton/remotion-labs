@@ -715,6 +715,20 @@ export const generate = action({
     const targetFps = args.fps ?? 30;
     const targetFrames = Math.round(targetDuration * targetFps);
 
+    // 1. Insert pending row — appears instantly in feed via Convex reactivity
+    const createdAt = Date.now();
+    const generationId = await ctx.runMutation(
+      internal.generations.createPending,
+      {
+        userId: identity.tokenIdentifier,
+        prompt: args.prompt,
+        createdAt,
+        aspectRatio,
+        durationInSeconds: targetDuration,
+        referenceImageIds: args.referenceImageIds,
+      }
+    );
+
     // Inject settings into system prompt
     const enhancedPrompt = SYSTEM_PROMPT +
       `\n\nIMPORTANT COMPOSITION SETTINGS:\n` +
@@ -726,41 +740,43 @@ export const generate = action({
     // Build user content (includes reference images if provided)
     const userContent = await buildUserContent(ctx, args.prompt, args.referenceImageIds);
 
-    // Call the shared helper (no temperature override → uses Claude default)
-    const result = await generateSingleVariation(
-      client,
-      userContent,
-      enhancedPrompt,
-    );
+    try {
+      // 2. Call Claude API
+      const result = await generateSingleVariation(
+        client,
+        userContent,
+        enhancedPrompt,
+      );
 
-    // Use the caller's target FPS (overrides whatever Claude put in comments)
-    const fps = targetFps;
+      const fps = targetFps;
 
-    // Store the successful generation with settings metadata
-    const generationId: Id<"generations"> = await ctx.runMutation(
-      internal.generations.store,
-      {
-        userId: identity.tokenIdentifier,
-        prompt: args.prompt,
+      // 3. Patch pending → success
+      await ctx.runMutation(internal.generations.complete, {
+        id: generationId,
+        status: "success" as const,
         code: result.code,
         rawCode: result.rawCode,
         durationInFrames: result.durationInFrames,
         fps,
-        status: "success" as const,
-        createdAt: Date.now(),
-        aspectRatio,
-        durationInSeconds: targetDuration,
-        referenceImageIds: args.referenceImageIds,
-      }
-    );
+      });
 
-    return {
-      id: generationId,
-      rawCode: result.rawCode,
-      code: result.code,
-      durationInFrames: result.durationInFrames,
-      fps,
-    };
+      return {
+        id: generationId,
+        rawCode: result.rawCode,
+        code: result.code,
+        durationInFrames: result.durationInFrames,
+        fps,
+      };
+    } catch (e) {
+      // 4. Patch pending → failed
+      const errorMessage = e instanceof Error ? e.message : "Generation failed";
+      await ctx.runMutation(internal.generations.complete, {
+        id: generationId,
+        status: "failed" as const,
+        errorMessage,
+      });
+      throw e;
+    }
   },
 });
 
@@ -840,59 +856,58 @@ export const generateVariations = action({
     // Capture consistent timestamp before starting parallel calls
     const createdAt = Date.now();
 
+    // 1. Create N pending records upfront — all appear instantly in feed
+    const pendingIds = await Promise.all(
+      Array.from({ length: args.variationCount }, (_, index) =>
+        ctx.runMutation(internal.generations.createPending, {
+          userId: identity.tokenIdentifier,
+          prompt: args.prompt,
+          createdAt,
+          batchId,
+          variationIndex: index,
+          variationCount: args.variationCount,
+          aspectRatio,
+          durationInSeconds: targetDuration,
+          referenceImageIds: args.referenceImageIds,
+        })
+      )
+    );
+
     // Build user content (includes reference images if provided)
     const userContent = await buildUserContent(ctx, args.prompt, args.referenceImageIds);
 
-    // Create variation promises with per-promise error handling
-    const variationPromises = Array.from(
-      { length: args.variationCount },
-      (_, index) =>
-        generateSingleVariation(client, userContent, enhancedPrompt, temperature)
-          .then(async (result) => {
-            // Store successful variation
-            const id = await ctx.runMutation(internal.generations.store, {
-              userId: identity.tokenIdentifier,
-              prompt: args.prompt,
-              code: result.code,
-              rawCode: result.rawCode,
-              durationInFrames: result.durationInFrames,
-              fps: targetFps,
-              status: "success" as const,
-              createdAt,
-              batchId,
-              variationIndex: index,
-              variationCount: args.variationCount,
-              aspectRatio,
-              durationInSeconds: targetDuration,
-              referenceImageIds: args.referenceImageIds,
-            });
-            return {
-              id: String(id),
-              rawCode: result.rawCode,
-              code: result.code,
-              durationInFrames: result.durationInFrames,
-              fps: targetFps,
-              variationIndex: index,
-            };
-          })
-          .catch(async (error) => {
-            // Store failed variation so user sees partial results
-            await ctx.runMutation(internal.generations.store, {
-              userId: identity.tokenIdentifier,
-              prompt: args.prompt,
-              status: "failed" as const,
-              errorMessage:
-                error instanceof Error ? error.message : "Generation failed",
-              createdAt,
-              batchId,
-              variationIndex: index,
-              variationCount: args.variationCount,
-              aspectRatio,
-              referenceImageIds: args.referenceImageIds,
-              durationInSeconds: targetDuration,
-            });
-            return null;
-          })
+    // 2. Launch N parallel Claude calls, each independently completing its pending record
+    const variationPromises = pendingIds.map((pendingId, index) =>
+      generateSingleVariation(client, userContent, enhancedPrompt, temperature)
+        .then(async (result) => {
+          // Patch pending → success
+          await ctx.runMutation(internal.generations.complete, {
+            id: pendingId,
+            status: "success" as const,
+            code: result.code,
+            rawCode: result.rawCode,
+            durationInFrames: result.durationInFrames,
+            fps: targetFps,
+          });
+          return {
+            id: String(pendingId),
+            rawCode: result.rawCode,
+            code: result.code,
+            durationInFrames: result.durationInFrames,
+            fps: targetFps,
+            variationIndex: index,
+          };
+        })
+        .catch(async (error) => {
+          // Patch pending → failed
+          await ctx.runMutation(internal.generations.complete, {
+            id: pendingId,
+            status: "failed" as const,
+            errorMessage:
+              error instanceof Error ? error.message : "Generation failed",
+          });
+          return null;
+        })
     );
 
     const results = await Promise.all(variationPromises);
@@ -1187,82 +1202,99 @@ export const generatePrequel = action({
 
     const client = new Anthropic({ apiKey });
 
-    // Build user message with target code + prequel request
-    const userContent = args.prompt
-      ? `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a prequel that leads into this scene: ${args.prompt}`
-      : `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a natural, visually interesting prequel that leads into this scene.`;
-
-    // Call Claude API with prequel system prompt
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 4096,
-      system: PREQUEL_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userContent }],
-    });
-
-    // Extract text content from response
-    const textContent = response.content.find((block) => block.type === "text");
-    if (!textContent || textContent.type !== "text") {
-      throw new Error(
-        "Failed to generate prequel: No text response from AI. Please try again."
-      );
-    }
-
-    // Clean code -- strip markdown code blocks if present
-    let rawCode = textContent.text.trim();
-    if (rawCode.startsWith("```")) {
-      rawCode = rawCode
-        .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
-        .replace(/\n?```\s*$/, "")
-        .trim();
-    }
-
-    // Extract metadata from comments
-    const durationMatch = rawCode.match(/\/\/\s*DURATION:\s*(\d+)/);
-    const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
-
-    // Clamp values for safety
-    const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
-    const fps = 30; // Always 30 fps for consistency
-
-    // Validate the prequel code
-    const validation = validateRemotionCode(rawCode);
-    if (!validation.valid) {
-      throw new Error(
-        `Prequel code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
-      );
-    }
-
-    // Transform JSX to JavaScript
-    const transformed = transformJSX(rawCode);
-    if (!transformed.success || !transformed.code) {
-      throw new Error(transformed.error || "Code transformation failed");
-    }
-
-    // Persist to generations table (same pattern as generate action)
-    const generationId: Id<"generations"> = await ctx.runMutation(
-      internal.generations.store,
+    // 1. Insert pending row — appears instantly in feed
+    const createdAt = Date.now();
+    const generationId = await ctx.runMutation(
+      internal.generations.createPending,
       {
         userId: identity.tokenIdentifier,
         prompt: args.prompt ?? "Prequel leading into target scene",
-        code: transformed.code,
-        rawCode,
-        durationInFrames,
-        fps,
-        status: "success" as const,
-        createdAt: Date.now(),
+        createdAt,
         aspectRatio: args.aspectRatio,
         durationInSeconds: args.durationInSeconds,
         continuationType: "prequel",
       }
     );
 
-    return {
-      id: generationId,
-      rawCode,
-      code: transformed.code,
-      durationInFrames,
-      fps,
-    };
+    try {
+      // Build user message with target code + prequel request
+      const userContent = args.prompt
+        ? `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a prequel that leads into this scene: ${args.prompt}`
+        : `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a natural, visually interesting prequel that leads into this scene.`;
+
+      // Call Claude API with prequel system prompt
+      const response = await client.messages.create({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 4096,
+        system: PREQUEL_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userContent }],
+      });
+
+      // Extract text content from response
+      const textContent = response.content.find((block) => block.type === "text");
+      if (!textContent || textContent.type !== "text") {
+        throw new Error(
+          "Failed to generate prequel: No text response from AI. Please try again."
+        );
+      }
+
+      // Clean code -- strip markdown code blocks if present
+      let rawCode = textContent.text.trim();
+      if (rawCode.startsWith("```")) {
+        rawCode = rawCode
+          .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
+          .replace(/\n?```\s*$/, "")
+          .trim();
+      }
+
+      // Extract metadata from comments
+      const durationMatch = rawCode.match(/\/\/\s*DURATION:\s*(\d+)/);
+      const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
+
+      // Clamp values for safety
+      const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
+      const fps = 30; // Always 30 fps for consistency
+
+      // Validate the prequel code
+      const validation = validateRemotionCode(rawCode);
+      if (!validation.valid) {
+        throw new Error(
+          `Prequel code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
+        );
+      }
+
+      // Transform JSX to JavaScript
+      const transformed = transformJSX(rawCode);
+      if (!transformed.success || !transformed.code) {
+        throw new Error(transformed.error || "Code transformation failed");
+      }
+
+      // 2. Patch pending → success
+      await ctx.runMutation(internal.generations.complete, {
+        id: generationId,
+        status: "success" as const,
+        code: transformed.code,
+        rawCode,
+        durationInFrames,
+        fps,
+      });
+
+      return {
+        id: generationId,
+        rawCode,
+        code: transformed.code,
+        durationInFrames,
+        fps,
+      };
+    } catch (e) {
+      // 3. Patch pending → failed
+      const errorMessage = e instanceof Error ? e.message : "Prequel generation failed";
+      await ctx.runMutation(internal.generations.complete, {
+        id: generationId,
+        status: "failed" as const,
+        errorMessage,
+      });
+      throw e;
+    }
   },
 });

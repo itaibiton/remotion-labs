@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Plus, Library, Film, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/auth/user-menu";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -17,8 +18,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 border-r bg-muted/30 flex flex-col p-4">
-      <nav className="flex flex-col gap-1">
+    <aside className="w-56 bg-muted/30 flex flex-col p-4">
+      <nav className="flex flex-col gap-1 flex-1">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -42,6 +43,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="pt-4">
+        <UserMenu />
+      </div>
     </aside>
   );
 }

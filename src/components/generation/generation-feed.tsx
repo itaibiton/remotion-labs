@@ -1,13 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { GenerationRow } from "./generation-row";
-import { VariationGrid } from "./variation-grid";
-import { PendingGenerationSkeleton } from "./pending-generation-skeleton";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface GenerationFeedProps {
   onSelectGeneration: (generation: any) => void;
@@ -16,49 +14,14 @@ interface GenerationFeedProps {
   onRerunGeneration: (generation: any) => void;
   onExtendNextGeneration: (generation: any) => void;
   onExtendPreviousGeneration: (generation: any) => void;
-  pendingGenerations?: Array<{
-    id: string;
-    prompt: string;
-    type: "prequel" | "generation";
-    aspectRatio?: string;
-    count?: number;
-  }>;
+  deletingIds?: Set<string>;
 }
 
-interface BatchGroup {
-  batchId: string | null;
-  generations: any[];
-}
-
-function groupByBatch(generations: any[]): BatchGroup[] {
-  const groups: BatchGroup[] = [];
-  const batchMap = new Map<string, any[]>();
-
-  for (const gen of generations) {
-    if (gen.batchId && gen.variationCount && gen.variationCount > 1) {
-      const existing = batchMap.get(gen.batchId);
-      if (existing) {
-        existing.push(gen);
-      } else {
-        const group: any[] = [gen];
-        batchMap.set(gen.batchId, group);
-        groups.push({ batchId: gen.batchId, generations: group });
-      }
-    } else {
-      // Single generation or no batch: standalone row
-      groups.push({ batchId: null, generations: [gen] });
-    }
-  }
-
-  // Sort variations within each batch by variationIndex
-  for (const group of groups) {
-    group.generations.sort(
-      (a: any, b: any) => (a.variationIndex ?? 0) - (b.variationIndex ?? 0)
-    );
-  }
-
-  return groups;
-}
+const itemVariants = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.9 },
+};
 
 export function GenerationFeed({
   onSelectGeneration,
@@ -67,30 +30,51 @@ export function GenerationFeed({
   onRerunGeneration,
   onExtendNextGeneration,
   onExtendPreviousGeneration,
-  pendingGenerations,
+  deletingIds,
 }: GenerationFeedProps) {
   const { results, status, loadMore } = usePaginatedQuery(
     api.generations.listPaginated,
     {},
-    { initialNumItems: 10 }
+    { initialNumItems: 20 }
   );
 
-  const batches = useMemo(() => groupByBatch(results), [results]);
+  // Infinite scroll: observe a sentinel element at the bottom
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef(loadMore);
+  loadMoreRef.current = loadMore;
+
+  const handleIntersect = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0]?.isIntersecting) {
+        loadMoreRef.current(20);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (status !== "CanLoadMore") return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(handleIntersect, {
+      rootMargin: "400px",
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [status, handleIntersect]);
 
   // Loading first page
   if (status === "LoadingFirstPage") {
     return (
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex flex-row gap-4 p-3 rounded-lg border"
-          >
-            <div className="flex-shrink-0 w-[200px] aspect-video bg-muted animate-pulse rounded-md" />
-            <div className="flex-1 flex flex-col justify-center gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex flex-col rounded-lg border overflow-hidden">
+            <div className="w-full aspect-video bg-muted animate-pulse" />
+            <div className="p-2.5 flex flex-col gap-2">
               <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
               <div className="h-3 w-1/2 bg-muted animate-pulse rounded" />
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <div className="h-5 w-10 bg-muted animate-pulse rounded" />
                 <div className="h-5 w-10 bg-muted animate-pulse rounded" />
               </div>
@@ -101,10 +85,8 @@ export function GenerationFeed({
     );
   }
 
-  const hasPending = pendingGenerations && pendingGenerations.length > 0;
-
-  // Empty state (only show when no pending generations either)
-  if (results.length === 0 && status === "Exhausted" && !hasPending) {
+  // Empty state
+  if (results.length === 0 && status === "Exhausted") {
     return (
       <div className="text-center py-12">
         <p className="text-sm text-muted-foreground">
@@ -115,76 +97,48 @@ export function GenerationFeed({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Pending generation skeletons */}
-      {pendingGenerations?.map((pending) => (
-        <PendingGenerationSkeleton
-          key={pending.id}
-          prompt={pending.prompt}
-          type={pending.type}
-          aspectRatio={pending.aspectRatio}
-          count={pending.count}
-        />
-      ))}
-
-      {/* Generation rows / variation grids */}
-      {batches.map((batch) => {
-        if (batch.generations.length === 1) {
-          // Single generation: render as existing GenerationRow
-          const gen = batch.generations[0];
-          return (
-            <GenerationRow
+    <div className="flex flex-col gap-3">
+      {/* Bento grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <AnimatePresence mode="popLayout">
+          {/* Generation cards — each rendered individually */}
+          {results.map((gen: any) => (
+            <motion.div
               key={gen._id}
-              generation={gen}
-              onSelect={onSelectGeneration}
-              onSave={onSaveGeneration}
-              onDelete={onDeleteGeneration}
-              onRerun={onRerunGeneration}
-              onExtendNext={onExtendNextGeneration}
-              onExtendPrevious={onExtendPreviousGeneration}
-            />
-          );
-        }
-        // Multi-variation batch: render variation grid
-        return (
-          <VariationGrid
-            key={batch.batchId!}
-            variations={batch.generations}
-            onSelectVariation={onSelectGeneration}
-            onSave={onSaveGeneration}
-            onDelete={onDeleteGeneration}
-            onRerun={onRerunGeneration}
-            onExtendNext={onExtendNextGeneration}
-            onExtendPrevious={onExtendPreviousGeneration}
-          />
-        );
-      })}
+              layout
+              variants={itemVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <GenerationRow
+                generation={gen}
+                onSelect={onSelectGeneration}
+                onSave={onSaveGeneration}
+                onDelete={onDeleteGeneration}
+                onRerun={onRerunGeneration}
+                onExtendNext={onExtendNextGeneration}
+                onExtendPrevious={onExtendPreviousGeneration}
+                isDeleting={deletingIds?.has(gen._id) ?? false}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
-      {/* Load More */}
+      {/* Infinite scroll sentinel */}
       {status === "CanLoadMore" && (
-        <div className="flex justify-center pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => loadMore(10)}
-          >
-            Load More
-          </Button>
+        <div ref={sentinelRef} className="flex justify-center py-4">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       )}
 
       {/* Loading More */}
       {status === "LoadingMore" && (
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center py-4">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
-      )}
-
-      {/* All loaded */}
-      {status === "Exhausted" && results.length > 0 && (
-        <p className="text-center text-xs text-muted-foreground pt-4">
-          All generations loaded
-        </p>
       )}
     </div>
   );

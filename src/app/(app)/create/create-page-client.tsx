@@ -75,10 +75,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
   const [showAddToMovieDialog, setShowAddToMovieDialog] = useState(false);
   const [savedClipId, setSavedClipId] = useState<string | null>(null);
 
-  // In-feed pending generation state (skeleton cards while generating)
-  const [pendingFeedGenerations, setPendingFeedGenerations] = useState<
-    Array<{ id: string; prompt: string; type: "prequel" | "generation"; sourceGenerationId?: string; aspectRatio?: string; count?: number }>
-  >([]);
+  // IDs of generations currently being deleted
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -159,25 +157,13 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     async (prompt: string, referenceImageIds?: string[]) => {
       setLastPrompt(prompt);
 
-      // Add skeleton to feed — page stays fully interactive
-      const skeletonId = `pending-gen-${Date.now()}`;
-      setPendingFeedGenerations((prev) => [
-        ...prev,
-        {
-          id: skeletonId,
-          prompt,
-          type: "generation" as const,
-          aspectRatio: settings.aspectRatio,
-          count: settings.variationCount,
-        },
-      ]);
+      const count = settings.variationCount;
 
       try {
-        if (settings.variationCount > 1) {
-          // Multi-variation: use generateVariations action
+        if (count > 1) {
           await generateVariationsAction({
             prompt,
-            variationCount: settings.variationCount,
+            variationCount: count,
             aspectRatio: settings.aspectRatio,
             durationInSeconds: settings.durationInSeconds,
             fps: settings.fps,
@@ -186,10 +172,9 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
           });
 
           toast.success(
-            `Generated ${settings.variationCount} variation${settings.variationCount > 1 ? "s" : ""}!`
+            `Generated ${count} variation${count > 1 ? "s" : ""}!`
           );
         } else {
-          // Single generation
           await generate({
             prompt,
             aspectRatio: settings.aspectRatio,
@@ -205,11 +190,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
         const errorMessage =
           e instanceof Error ? e.message : "Generation failed";
         toast.error(errorMessage);
-      } finally {
-        // Remove skeleton — real card appears via Convex reactivity
-        setPendingFeedGenerations((prev) =>
-          prev.filter((p) => p.id !== skeletonId)
-        );
       }
     },
     [generate, generateVariationsAction, settings.aspectRatio, settings.durationInSeconds, settings.fps, settings.variationCount]
@@ -389,11 +369,19 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDeleteGeneration = useCallback(async (generation: any) => {
+    const id = String(generation._id);
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await removeGeneration({ id: generation._id as any });
       toast.success("Generation deleted");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to delete generation");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }, [removeGeneration]);
 
@@ -425,27 +413,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       return;
     }
 
-    const generationId = String(generation._id);
-
-    // Guard: prevent duplicate prequel for same generation
-    if (pendingFeedGenerations.some((p) => p.sourceGenerationId === generationId)) {
-      toast("Already generating a prequel for this generation");
-      return;
-    }
-
-    // Add skeleton entry to feed
-    const skeletonId = `pending-prequel-${generationId}`;
-    setPendingFeedGenerations((prev) => [
-      ...prev,
-      {
-        id: skeletonId,
-        prompt: generation.prompt || "Prequel",
-        sourceGenerationId: generationId,
-        type: "prequel" as const,
-        aspectRatio: generation.aspectRatio ?? settings.aspectRatio,
-      },
-    ]);
-
     try {
       // Save generation as clip (prequelAction requires a sourceClipId)
       const clipId = await saveClip({
@@ -469,13 +436,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "Prequel generation failed";
       toast.error(errorMessage);
-    } finally {
-      // Remove skeleton — real card appears via Convex reactivity
-      setPendingFeedGenerations((prev) =>
-        prev.filter((p) => p.id !== skeletonId)
-      );
     }
-  }, [saveClip, prequelAction, pendingFeedGenerations, settings.aspectRatio, settings.durationInSeconds]);
+  }, [saveClip, prequelAction, settings.aspectRatio, settings.durationInSeconds]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRerunGeneration = useCallback(async (generation: any) => {
@@ -574,206 +536,213 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
       : undefined; // Let InputBar choose based on hasExistingCode
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6">
-      {/* Continuation context banner */}
-      {sourceClipId && sourceClipData && !isGenerating && !lastGeneration && (
-        <div className="w-full max-w-2xl mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-          <p className="text-sm font-medium">
-            Generating continuation from: {sourceClipData.name}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            The next scene will start where this clip&apos;s animation ends.
-          </p>
-        </div>
-      )}
+    <div className="flex flex-col items-center">
+      {/* Sticky input bar with gradient fade */}
+      {!isGenerating && (
+        <div className="sticky top-0 z-10 w-full">
+          <div className="bg-background px-6 pt-6 pb-2">
+            {/* Continuation context banner */}
+            {sourceClipId && sourceClipData && !lastGeneration && (
+              <div className="w-full mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-sm font-medium">
+                  Generating continuation from: {sourceClipData.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  The next scene will start where this clip&apos;s animation ends.
+                </p>
+              </div>
+            )}
 
-      {/* Template context banner */}
-      {selectedTemplate && !sourceClipId && !isGenerating && !lastGeneration && (
-        <div className="w-full max-w-2xl mb-6 p-4 bg-muted/50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">
-                Using template: {selectedTemplate.name}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {selectedTemplate.description}
-              </p>
-            </div>
-            <Link
-              href="/templates"
-              className="text-xs text-muted-foreground hover:text-foreground underline"
-            >
-              Change template
-            </Link>
+            {/* Template context banner */}
+            {selectedTemplate && !sourceClipId && !lastGeneration && (
+              <div className="w-full mb-4 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">
+                      Using template: {selectedTemplate.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedTemplate.description}
+                    </p>
+                  </div>
+                  <Link
+                    href="/templates"
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    Change template
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            <InputBar
+              onSubmit={handleUnifiedSubmit}
+              isGenerating={isGenerating}
+              isRefining={isRefining}
+              hasExistingCode={!!lastGeneration}
+              disabled={false}
+              placeholder={promptPlaceholder}
+              settings={settings}
+              onUpdateSetting={updateSetting}
+              onResetSettings={resetSettings}
+            />
           </div>
+          {/* Gradient fade under sticky bar */}
+          <div className="h-6 bg-gradient-to-b from-background to-transparent pointer-events-none" />
         </div>
       )}
 
-      {/* Error state */}
-      {error && !isGenerating && (
-        <div className="w-full max-w-2xl mb-6">
-          <ErrorDisplay
-            message={error.message}
-            onRetry={handleRetry}
-            retryCount={error.retryCount}
-          />
-        </div>
-      )}
-
-      {/* Generating state */}
-      {isGenerating && currentStep && (
-        <div className="mb-8">
-          <GenerationStatus currentStep={currentStep} />
-        </div>
-      )}
-
-      {/* Success state - side-by-side preview and code */}
-      {lastGeneration && !isGenerating && !error && (
-        <div className="w-full max-w-5xl mb-6">
-          {/* Two-column layout: Preview | Code */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Preview - uses validated transformed code or server-transformed code */}
-            <div>
-              <PreviewPlayer
-                code={previewCode}
-                durationInFrames={lastGeneration.durationInFrames}
-                fps={lastGeneration.fps}
-              />
-            </div>
-
-            {/* Code - shows raw JSX for editing */}
-            <div>
-              <CodeDisplay
-                code={editorCode}
-                originalCode={lastGeneration.rawCode}
-                isEditing={isEditing}
-                onEditToggle={handleEditToggle}
-                onChange={handleCodeChange}
-                errors={validation.errors}
-                isValid={validation.isValid}
-              />
-            </div>
+      <div className="w-full px-6 pb-6">
+        {/* Error state */}
+        {error && !isGenerating && (
+          <div className="w-full mb-6">
+            <ErrorDisplay
+              message={error.message}
+              onRetry={handleRetry}
+              retryCount={error.retryCount}
+            />
           </div>
+        )}
 
-          {/* Render section */}
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
-            {/* Animation info */}
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                <p>
-                  <span className="font-medium">Duration:</span>{" "}
-                  {(lastGeneration.durationInFrames / lastGeneration.fps).toFixed(1)}s
-                </p>
-                <p>
-                  <span className="font-medium">Frames:</span>{" "}
-                  {lastGeneration.durationInFrames} @ {lastGeneration.fps}fps
-                </p>
-              </div>
-              <button
-                onClick={handleRetry}
-                className="text-sm text-primary underline hover:no-underline"
-              >
-                Regenerate
-              </button>
-            </div>
+        {/* Generating state */}
+        {isGenerating && currentStep && (
+          <div className="mb-8 pt-6">
+            <GenerationStatus currentStep={currentStep} />
+          </div>
+        )}
 
-            {/* Render controls */}
-            <div className="pt-2 border-t">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {effectiveClipId
-                    ? "Render this clip to MP4 via cloud rendering"
-                    : "Save as a clip first to enable MP4 rendering"}
-                </p>
-                <ClipRenderButton
-                  clipId={effectiveClipId ?? ""}
-                  disabled={!effectiveClipId || !lastGeneration}
-                />
-              </div>
-            </div>
-
-            {/* Contextual actions */}
-            <div className="pt-2 border-t">
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Save as Clip -- always available */}
-                <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(true)}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save as Clip
-                </Button>
-
-                {/* Add to Movie -- available when clip is saved */}
-                {effectiveClipId && (
-                  <Button variant="outline" size="sm" onClick={() => setShowAddToMovieDialog(true)}>
-                    <Film className="h-4 w-4 mr-2" />
-                    Add to Movie
-                  </Button>
-                )}
-
-                {/* Generate Next Scene -- available when clip is saved */}
-                {effectiveClipId && (
-                  <Button variant="outline" size="sm" onClick={() => router.push(`/create?sourceClipId=${effectiveClipId}`)}>
-                    <FastForward className="h-4 w-4 mr-2" />
-                    Generate Next Scene
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Export controls */}
-            <div className="pt-2 border-t">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Export source code for standalone use
-                </p>
-                <ExportButtons
-                  rawCode={lastGeneration.rawCode}
-                  prompt={lastPrompt}
+        {/* Success state - side-by-side preview and code */}
+        {lastGeneration && !isGenerating && !error && (
+          <div className="w-full mb-6">
+            {/* Two-column layout: Preview | Code */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Preview - uses validated transformed code or server-transformed code */}
+              <div>
+                <PreviewPlayer
+                  code={previewCode}
                   durationInFrames={lastGeneration.durationInFrames}
                   fps={lastGeneration.fps}
                 />
               </div>
+
+              {/* Code - shows raw JSX for editing */}
+              <div>
+                <CodeDisplay
+                  code={editorCode}
+                  originalCode={lastGeneration.rawCode}
+                  isEditing={isEditing}
+                  onEditToggle={handleEditToggle}
+                  onChange={handleCodeChange}
+                  errors={validation.errors}
+                  isValid={validation.isValid}
+                />
+              </div>
             </div>
+
+            {/* Render section */}
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+              {/* Animation info */}
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  <p>
+                    <span className="font-medium">Duration:</span>{" "}
+                    {(lastGeneration.durationInFrames / lastGeneration.fps).toFixed(1)}s
+                  </p>
+                  <p>
+                    <span className="font-medium">Frames:</span>{" "}
+                    {lastGeneration.durationInFrames} @ {lastGeneration.fps}fps
+                  </p>
+                </div>
+                <button
+                  onClick={handleRetry}
+                  className="text-sm text-primary underline hover:no-underline"
+                >
+                  Regenerate
+                </button>
+              </div>
+
+              {/* Render controls */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {effectiveClipId
+                      ? "Render this clip to MP4 via cloud rendering"
+                      : "Save as a clip first to enable MP4 rendering"}
+                  </p>
+                  <ClipRenderButton
+                    clipId={effectiveClipId ?? ""}
+                    disabled={!effectiveClipId || !lastGeneration}
+                  />
+                </div>
+              </div>
+
+              {/* Contextual actions */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Save as Clip -- always available */}
+                  <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(true)}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save as Clip
+                  </Button>
+
+                  {/* Add to Movie -- available when clip is saved */}
+                  {effectiveClipId && (
+                    <Button variant="outline" size="sm" onClick={() => setShowAddToMovieDialog(true)}>
+                      <Film className="h-4 w-4 mr-2" />
+                      Add to Movie
+                    </Button>
+                  )}
+
+                  {/* Generate Next Scene -- available when clip is saved */}
+                  {effectiveClipId && (
+                    <Button variant="outline" size="sm" onClick={() => router.push(`/create?sourceClipId=${effectiveClipId}`)}>
+                      <FastForward className="h-4 w-4 mr-2" />
+                      Generate Next Scene
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Export controls */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Export source code for standalone use
+                  </p>
+                  <ExportButtons
+                    rawCode={lastGeneration.rawCode}
+                    prompt={lastPrompt}
+                    durationInFrames={lastGeneration.durationInFrames}
+                    fps={lastGeneration.fps}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Chat messages - shown when conversation exists */}
+            {chatMessages.length > 0 && (
+              <div className="mt-4 border rounded-lg">
+                <ChatMessages messages={chatMessages} isRefining={isRefining} />
+              </div>
+            )}
           </div>
+        )}
 
-          {/* Chat messages - shown when conversation exists */}
-          {chatMessages.length > 0 && (
-            <div className="mt-4 border rounded-lg">
-              <ChatMessages messages={chatMessages} isRefining={isRefining} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Input bar - visible when not generating */}
-      {!isGenerating && (
-        <InputBar
-          onSubmit={handleUnifiedSubmit}
-          isGenerating={isGenerating}
-          isRefining={isRefining}
-          hasExistingCode={!!lastGeneration}
-          disabled={false}
-          placeholder={promptPlaceholder}
-          settings={settings}
-          onUpdateSetting={updateSetting}
-          onResetSettings={resetSettings}
-        />
-      )}
-
-      {/* Generation Feed - shown when no generation is selected */}
-      {!isGenerating && !lastGeneration && (
-        <div className="w-full max-w-2xl mt-8">
-          <h3 className="text-sm font-medium text-muted-foreground mb-4">Past Generations</h3>
-          <GenerationFeed
-            onSelectGeneration={handleSelectGeneration}
-            onSaveGeneration={handleSaveGeneration}
-            onDeleteGeneration={handleDeleteGeneration}
-            onRerunGeneration={handleRerunGeneration}
-            onExtendNextGeneration={handleExtendNextGeneration}
-            onExtendPreviousGeneration={handleExtendPreviousGeneration}
-            pendingGenerations={pendingFeedGenerations}
-          />
-        </div>
-      )}
+        {/* Generation Feed - shown when no generation is selected */}
+        {!isGenerating && !lastGeneration && (
+          <div className="w-full">
+            <GenerationFeed
+              onSelectGeneration={handleSelectGeneration}
+              onSaveGeneration={handleSaveGeneration}
+              onDeleteGeneration={handleDeleteGeneration}
+              onRerunGeneration={handleRerunGeneration}
+              onExtendNextGeneration={handleExtendNextGeneration}
+              onExtendPreviousGeneration={handleExtendPreviousGeneration}
+              deletingIds={deletingIds}
+            />
+          </div>
+        )}
+      </div>
 
       <SaveClipDialog
         open={showSaveDialog}

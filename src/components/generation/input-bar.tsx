@@ -7,6 +7,7 @@ import { ImagePlus, Settings2, Loader2 } from "lucide-react";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { ImageAttachment } from "@/components/generation/image-attachment";
 import { GenerationSettingsPanel } from "@/components/generation/generation-settings";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { GenerationSettings } from "@/hooks/use-generation-settings";
 
 const EXAMPLE_PROMPTS = [
@@ -183,7 +184,7 @@ export function InputBar({
   const variationOptions = [1, 2, 3, 4] as const;
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-2">
+    <div className="w-full space-y-2">
       {/* Main input container with border */}
       <div
         className={`rounded-xl border bg-background shadow-sm transition-all ${
@@ -212,7 +213,7 @@ export function InputBar({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={resolvedPlaceholder}
-            className={`${hasExistingCode ? "min-h-[80px]" : "min-h-[100px]"} resize-none border-0 focus-visible:ring-0 shadow-none pr-4 pb-6`}
+            className={`${hasExistingCode ? "min-h-[100px]" : "min-h-[140px]"} resize-none border-0 focus-visible:ring-0 shadow-none pr-4 pb-6`}
             disabled={isDisabled}
             onPaste={handlePaste}
             onKeyDown={(e) => {
@@ -235,6 +236,32 @@ export function InputBar({
             {charCount}/{MAX_CHARS}
           </div>
         </div>
+
+        {/* Example prompts inside input box — animated height + fade */}
+        {!hasExistingCode && (
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              !prompt
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="flex flex-wrap gap-1.5 px-3 pb-1">
+                {EXAMPLE_PROMPTS.map((example, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleExampleClick(example)}
+                    disabled={isDisabled}
+                    className="text-xs px-2 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {truncateExample(example)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Toolbar row */}
         <div className="flex items-center gap-2 px-3 pb-3 pt-1">
@@ -260,16 +287,26 @@ export function InputBar({
               onChange={handleFileInputChange}
             />
 
-            {/* Settings toggle */}
-            <Button
-              variant={showSettings ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setShowSettings(!showSettings)}
-              aria-label="Toggle settings"
-            >
-              <Settings2 className="h-4 w-4" />
-            </Button>
+            {/* Settings popover */}
+            <Popover open={showSettings} onOpenChange={setShowSettings}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={showSettings ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="Toggle settings"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="start" side="top" sideOffset={8}>
+                <GenerationSettingsPanel
+                  settings={settings}
+                  onUpdateSetting={onUpdateSetting}
+                  onReset={onResetSettings}
+                />
+              </PopoverContent>
+            </Popover>
 
             {/* Variation selector (hidden in refinement mode) */}
             {!hasExistingCode && (
@@ -302,36 +339,6 @@ export function InputBar({
           </div>
         </div>
       </div>
-
-      {/* Settings panel (below the bordered container) */}
-      {showSettings && !hasExistingCode && (
-        <div className="p-4 border rounded-lg">
-          <GenerationSettingsPanel
-            settings={settings}
-            onUpdateSetting={onUpdateSetting}
-            onReset={onResetSettings}
-          />
-        </div>
-      )}
-
-      {/* Example prompts (generation mode only, when no prompt typed) */}
-      {!hasExistingCode && !prompt && (
-        <div className="space-y-2 pt-2">
-          <span className="text-sm text-muted-foreground">Try:</span>
-          <div className="flex flex-wrap gap-2">
-            {EXAMPLE_PROMPTS.map((example, index) => (
-              <button
-                key={index}
-                onClick={() => handleExampleClick(example)}
-                disabled={isDisabled}
-                className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {truncateExample(example)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Hint for refinement mode */}
       {hasExistingCode && (

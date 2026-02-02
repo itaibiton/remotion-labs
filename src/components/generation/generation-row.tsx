@@ -7,8 +7,9 @@ import {
   ASPECT_RATIO_PRESETS,
   type AspectRatioKey,
 } from "@/lib/aspect-ratios";
-import { AlertCircle } from "lucide-react";
-import { GenerationRowActions } from "./generation-row-actions";
+import { AlertCircle, Loader2, Save, FastForward, Rewind, RotateCcw, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GenerationRowProps {
   generation: {
@@ -20,7 +21,7 @@ interface GenerationRowProps {
     fps?: number;
     aspectRatio?: string;
     durationInSeconds?: number;
-    status: "success" | "failed";
+    status: "pending" | "success" | "failed";
     errorMessage?: string;
     createdAt: number;
     batchId?: string;
@@ -33,6 +34,7 @@ interface GenerationRowProps {
   onRerun: (generation: GenerationRowProps["generation"]) => void;
   onExtendNext: (generation: GenerationRowProps["generation"]) => void;
   onExtendPrevious: (generation: GenerationRowProps["generation"]) => void;
+  isDeleting?: boolean;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -52,13 +54,14 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious }: GenerationRowProps) {
+export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting }: GenerationRowProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  const isPending = generation.status === "pending";
   const isFailed = generation.status === "failed";
   const aspectRatioKey = (generation.aspectRatio ?? "16:9") as AspectRatioKey;
   const preset = ASPECT_RATIO_PRESETS[aspectRatioKey] ?? ASPECT_RATIO_PRESETS["16:9"];
@@ -67,23 +70,24 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
   const frameToDisplay = Math.floor(durationInFrames / 2);
 
   return (
-    <div className="w-full flex flex-row gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors text-left">
-      {/* Clickable content area */}
+    <div className={`flex flex-col rounded-lg border overflow-hidden transition-colors ${isDeleting ? "animate-pulse opacity-60 pointer-events-none" : "hover:bg-muted/50"}`}>
+      {/* Clickable thumbnail — fixed height, cover-clipped */}
       <button
         type="button"
-        className="flex flex-row gap-4 flex-1 min-w-0 text-left"
+        className="relative w-full h-40 overflow-hidden cursor-pointer"
         onClick={() => onSelect(generation)}
+        disabled={isDeleting || isPending}
       >
-        {/* Thumbnail */}
-        <div
-          className="flex-shrink-0 rounded-md overflow-hidden bg-black"
-          style={{ width: 200, aspectRatio: `${preset.width} / ${preset.height}` }}
-        >
-          {isFailed ? (
-            <div className="w-full h-full bg-red-950/50 flex items-center justify-center">
-              <AlertCircle className="h-8 w-8 text-red-400" />
-            </div>
-          ) : isMounted && generation.code ? (
+        {isPending ? (
+          <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
+          </div>
+        ) : isFailed ? (
+          <div className="w-full h-full bg-red-950/50 flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-red-400" />
+          </div>
+        ) : isMounted && generation.code ? (
+          <div className="absolute inset-0 flex items-center justify-center">
             <Thumbnail
               component={DynamicCode}
               inputProps={{
@@ -96,58 +100,102 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
               frameToDisplay={frameToDisplay}
               durationInFrames={durationInFrames}
               fps={fps}
-              style={{ width: "100%" }}
+              style={{ width: "100%", minHeight: "100%", objectFit: "cover" }}
             />
-          ) : (
-            <div className="w-full h-full bg-muted animate-pulse" />
-          )}
-        </div>
-
-        {/* Metadata */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-          <p className="text-sm font-medium line-clamp-2">{generation.prompt}</p>
-
-          {isFailed && generation.errorMessage && (
-            <p className="text-xs text-red-400 line-clamp-1">
-              {generation.errorMessage}
-            </p>
-          )}
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-              {aspectRatioKey}
-            </span>
-            {generation.durationInSeconds && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                {generation.durationInSeconds}s
-              </span>
-            )}
-            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-              {fps}fps
-            </span>
-            {isFailed && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-red-950 text-red-400">
-                failed
-              </span>
-            )}
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            {formatRelativeTime(generation.createdAt)}
-          </p>
-        </div>
+        ) : (
+          <div className="w-full h-full bg-muted animate-pulse" />
+        )}
       </button>
 
-      {/* Action menu */}
-      <div className="flex items-start pt-1">
-        <GenerationRowActions
-          generation={generation}
-          onSave={onSave}
-          onDelete={onDelete}
-          onRerun={onRerun}
-          onExtendNext={onExtendNext}
-          onExtendPrevious={onExtendPrevious}
-        />
+      {/* Metadata - pinned to bottom */}
+      <div className="p-2.5 flex flex-col gap-1.5 mt-auto">
+        <p className="text-sm font-medium line-clamp-2">{generation.prompt}</p>
+
+        {isFailed && generation.errorMessage && (
+          <p className="text-xs text-red-400 line-clamp-2">
+            {generation.errorMessage}
+          </p>
+        )}
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+            {aspectRatioKey}
+          </span>
+          {generation.durationInSeconds && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+              {generation.durationInSeconds}s
+            </span>
+          )}
+          <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+            {fps}fps
+          </span>
+          {isPending && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+              generating...
+            </span>
+          )}
+          {isFailed && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-red-950 text-red-400">
+              failed
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground ml-auto">
+            {formatRelativeTime(generation.createdAt)}
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        {!isPending && (
+          <TooltipProvider delayDuration={300}>
+            <div className="flex items-center gap-1 pt-0.5">
+              {!isFailed && (
+                <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSave(generation)} disabled={isDeleting}>
+                        <Save className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>Save to Library</p></TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onExtendPrevious(generation)} disabled={isDeleting}>
+                        <Rewind className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>Extend Previous</p></TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onExtendNext(generation)} disabled={isDeleting}>
+                        <FastForward className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>Extend Next</p></TooltipContent>
+                  </Tooltip>
+                </>
+              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onRerun(generation)} disabled={isDeleting}>
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom"><p>Rerun</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive hover:text-destructive" onClick={() => onDelete(generation)} disabled={isDeleting}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom"><p>Delete</p></TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        )}
       </div>
     </div>
   );

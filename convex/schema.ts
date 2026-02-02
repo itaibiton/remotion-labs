@@ -31,7 +31,7 @@ export default defineSchema({
     // v1.1: Extracted from code generation
     durationInFrames: v.optional(v.number()),
     fps: v.optional(v.number()),
-    status: v.union(v.literal("success"), v.literal("failed")),
+    status: v.union(v.literal("pending"), v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),
     // v0.2 Phase 13: batch/variation tracking

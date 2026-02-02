@@ -3,6 +3,89 @@ import { paginationOptsValidator } from "convex/server";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
+// ============================================================================
+// Pending-generation lifecycle mutations
+// ============================================================================
+
+/**
+ * Insert a "pending" skeleton row before calling Claude.
+ * Returns the generation ID so the action can later patch it to success/failed.
+ */
+export const createPending = internalMutation({
+  args: {
+    userId: v.string(),
+    prompt: v.string(),
+    createdAt: v.number(),
+    batchId: v.optional(v.string()),
+    variationIndex: v.optional(v.number()),
+    variationCount: v.optional(v.number()),
+    aspectRatio: v.optional(v.string()),
+    durationInSeconds: v.optional(v.number()),
+    referenceImageIds: v.optional(v.array(v.id("_storage"))),
+    continuationType: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("generations", {
+      userId: args.userId,
+      prompt: args.prompt,
+      status: "pending",
+      createdAt: args.createdAt,
+      batchId: args.batchId,
+      variationIndex: args.variationIndex,
+      variationCount: args.variationCount,
+      aspectRatio: args.aspectRatio,
+      durationInSeconds: args.durationInSeconds,
+      referenceImageIds: args.referenceImageIds,
+      continuationType: args.continuationType,
+    });
+  },
+});
+
+/**
+ * Patch a pending row to success or failed once the Claude call finishes.
+ */
+export const complete = internalMutation({
+  args: {
+    id: v.id("generations"),
+    status: v.union(v.literal("success"), v.literal("failed")),
+    code: v.optional(v.string()),
+    rawCode: v.optional(v.string()),
+    durationInFrames: v.optional(v.number()),
+    fps: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, fields);
+  },
+});
+
+/**
+ * Mark pending records older than 5 minutes as failed (orphan cleanup).
+ * Called by a cron job.
+ */
+export const cleanupOrphaned = internalMutation({
+  handler: async (ctx) => {
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    const pending = await ctx.db
+      .query("generations")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "pending"),
+          q.lt(q.field("createdAt"), fiveMinutesAgo),
+        )
+      )
+      .collect();
+
+    for (const row of pending) {
+      await ctx.db.patch(row._id, {
+        status: "failed",
+        errorMessage: "Generation timed out",
+      });
+    }
+  },
+});
+
 /**
  * Internal mutation to store a generation result
  * Called by the generateAnimation action after Claude API response
@@ -15,7 +98,7 @@ export const store = internalMutation({
     rawCode: v.optional(v.string()),
     durationInFrames: v.optional(v.number()),
     fps: v.optional(v.number()),
-    status: v.union(v.literal("success"), v.literal("failed")),
+    status: v.union(v.literal("pending"), v.literal("success"), v.literal("failed")),
     errorMessage: v.optional(v.string()),
     createdAt: v.number(),
     // v0.2 Phase 13: batch/variation tracking

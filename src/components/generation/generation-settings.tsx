@@ -39,7 +39,7 @@ export function GenerationSettingsPanel({
         <label className="text-sm font-medium text-muted-foreground">
           Aspect Ratio
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 flex-wrap">
           {(Object.keys(ASPECT_RATIO_PRESETS) as AspectRatioKey[]).map(
             (ratio) => (
               <Button
@@ -48,6 +48,7 @@ export function GenerationSettingsPanel({
                   settings.aspectRatio === ratio ? "default" : "outline"
                 }
                 size="sm"
+                className="text-xs px-2.5"
                 onClick={() => onUpdateSetting("aspectRatio", ratio)}
               >
                 {ASPECT_RATIO_ICONS[ratio]}
