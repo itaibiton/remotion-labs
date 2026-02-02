@@ -99,6 +99,7 @@ function FeedContent() {
           onExtendNextGeneration={noop}
           onExtendPreviousGeneration={noop}
           onUsePrompt={handleUsePrompt}
+          onSaveAsTemplate={handleSaveGeneration}
         />
       </div>
 

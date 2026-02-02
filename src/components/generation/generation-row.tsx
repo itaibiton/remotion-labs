@@ -7,7 +7,7 @@ import {
   ASPECT_RATIO_PRESETS,
   type AspectRatioKey,
 } from "@/lib/aspect-ratios";
-import { AlertCircle, Loader2, Save, FastForward, Rewind, RotateCcw, Trash2, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, Save, FastForward, Rewind, RotateCcw, Trash2, Sparkles, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -37,6 +37,7 @@ interface GenerationRowProps {
   isDeleting?: boolean;
   hideActions?: boolean;
   onUsePrompt?: (generation: GenerationRowProps["generation"]) => void;
+  onSaveAsTemplate?: (generation: GenerationRowProps["generation"]) => void;
 }
 
 function formatRelativeTime(timestamp: number): string {
@@ -56,7 +57,7 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions, onUsePrompt }: GenerationRowProps) {
+export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions, onUsePrompt, onSaveAsTemplate }: GenerationRowProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -157,17 +158,32 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
           </span>
         </div>
 
-        {/* Use prompt button — shown on feed cards */}
-        {!isPending && !isFailed && hideActions && onUsePrompt && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full h-7 text-xs gap-1.5"
-            onClick={() => onUsePrompt(generation)}
-          >
-            <Sparkles className="h-3 w-3" />
-            Use prompt
-          </Button>
+        {/* Feed card actions — icon buttons with tooltips */}
+        {!isPending && !isFailed && hideActions && (onUsePrompt || onSaveAsTemplate) && (
+          <TooltipProvider delayDuration={300}>
+            <div className="flex items-center gap-1 pt-0.5">
+              {onUsePrompt && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onUsePrompt(generation)}>
+                      <Sparkles className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p>Use Prompt</p></TooltipContent>
+                </Tooltip>
+              )}
+              {onSaveAsTemplate && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSaveAsTemplate(generation)}>
+                      <BookmarkPlus className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p>Save as Template</p></TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </TooltipProvider>
         )}
 
         {/* Action buttons */}
