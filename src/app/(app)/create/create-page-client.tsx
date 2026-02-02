@@ -43,9 +43,10 @@ interface CreateContentProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
+  initialPrompt?: string;
 }
 
-function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContentProps) {
+function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
@@ -194,6 +195,16 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
     },
     [generate, generateVariationsAction, settings.aspectRatio, settings.durationInSeconds, settings.fps, settings.variationCount]
   );
+
+  // Auto-generate when arriving with ?prompt= from feed page
+  const [autoGenerateHandled, setAutoGenerateHandled] = useState(false);
+  useEffect(() => {
+    if (initialPrompt && !autoGenerateHandled) {
+      setAutoGenerateHandled(true);
+      window.history.replaceState({}, "", "/create");
+      handleGenerate(initialPrompt);
+    }
+  }, [initialPrompt, autoGenerateHandled, handleGenerate]);
 
   const handleRefine = useCallback(
     async (prompt: string) => {
@@ -770,9 +781,10 @@ interface CreatePageClientProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
+  initialPrompt?: string;
 }
 
-export function CreatePageClient({ selectedTemplate, clipId, sourceClipId }: CreatePageClientProps) {
+export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, initialPrompt }: CreatePageClientProps) {
   return (
     <div className="flex-1 flex flex-col">
       <AuthLoading>
@@ -788,7 +800,7 @@ export function CreatePageClient({ selectedTemplate, clipId, sourceClipId }: Cre
       </Unauthenticated>
 
       <Authenticated>
-        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} />
+        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} initialPrompt={initialPrompt} />
       </Authenticated>
     </div>
   );

@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { InputBar } from "@/components/generation/input-bar";
 import { GenerationFeed } from "@/components/generation/generation-feed";
 import { PreviewPlayer } from "@/components/preview/preview-player";
 import { useGenerationSettings } from "@/hooks/use-generation-settings";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -18,50 +19,17 @@ import {
 } from "@/components/ui/dialog";
 
 function FeedContent() {
-  const generate = useAction(api.generateAnimation.generate);
-  const generateVariationsAction = useAction(api.generateAnimation.generateVariations);
   const saveClip = useMutation(api.clips.save);
+  const router = useRouter();
   const { settings, updateSetting, resetSettings } = useGenerationSettings();
 
-  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedGeneration, setSelectedGeneration] = useState<any>(null);
 
   const handleGenerate = useCallback(
-    async (prompt: string, imageIds: string[]) => {
-      const imgIds = imageIds.length > 0 ? imageIds : undefined;
-      setIsGenerating(true);
-
-      try {
-        const count = settings.variationCount;
-        if (count > 1) {
-          await generateVariationsAction({
-            prompt,
-            variationCount: count,
-            aspectRatio: settings.aspectRatio,
-            durationInSeconds: settings.durationInSeconds,
-            fps: settings.fps,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...(imgIds ? { referenceImageIds: imgIds as any } : {}),
-          });
-          toast.success(`Generated ${count} variation${count > 1 ? "s" : ""}!`);
-        } else {
-          await generate({
-            prompt,
-            aspectRatio: settings.aspectRatio,
-            durationInSeconds: settings.durationInSeconds,
-            fps: settings.fps,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...(imgIds ? { referenceImageIds: imgIds as any } : {}),
-          });
-          toast.success("Animation generated!");
-        }
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Generation failed");
-      } finally {
-        setIsGenerating(false);
-      }
+    async (prompt: string, _imageIds: string[]) => {
+      router.push(`/create?prompt=${encodeURIComponent(prompt)}`);
     },
-    [generate, generateVariationsAction, settings]
+    [router]
   );
 
   const handleSelectGeneration = useCallback((generation: any) => {
@@ -103,7 +71,7 @@ function FeedContent() {
       <div className="sticky top-6 z-10 w-full px-8 relative">
         <InputBar
           onSubmit={handleGenerate}
-          isGenerating={isGenerating}
+          isGenerating={false}
           hasExistingCode={false}
           disabled={false}
           settings={settings}

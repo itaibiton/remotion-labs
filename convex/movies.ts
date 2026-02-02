@@ -159,18 +159,21 @@ export const addScene = mutation({
       throw new Error("Clip not found");
     }
 
-    // Enforce uniform fps
-    if (movie.scenes.length > 0 && clip.fps !== movie.fps) {
-      throw new Error("Clip fps must match movie fps");
-    }
+    // Normalize clip duration to movie fps when they differ
+    const durationOverride =
+      clip.fps !== movie.fps
+        ? Math.round(clip.durationInFrames * (movie.fps / clip.fps))
+        : undefined;
 
-    const newScenes = [...movie.scenes, { clipId: args.clipId }];
+    const newScenes = [
+      ...movie.scenes,
+      { clipId: args.clipId, ...(durationOverride !== undefined && { durationOverride }) },
+    ];
     const totalDuration = await computeTotalDuration(ctx, newScenes);
 
     await ctx.db.patch(args.movieId, {
       scenes: newScenes,
       totalDurationInFrames: totalDuration,
-      fps: clip.fps,
       updatedAt: Date.now(),
     });
   },
