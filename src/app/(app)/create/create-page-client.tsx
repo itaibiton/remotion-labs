@@ -537,58 +537,58 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContent
 
   return (
     <div className="flex flex-col items-center">
-      {/* Sticky input bar with gradient fade */}
+      {/* Gradient fade pinned to top — content scrolls under it */}
       {!isGenerating && (
-        <div className="sticky top-0 z-10 w-full">
-          <div className="bg-background px-6 pt-6 pb-2">
-            {/* Continuation context banner */}
-            {sourceClipId && sourceClipData && !lastGeneration && (
-              <div className="w-full mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                <p className="text-sm font-medium">
-                  Generating continuation from: {sourceClipData.name}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  The next scene will start where this clip&apos;s animation ends.
-                </p>
-              </div>
-            )}
+        <div className="sticky top-0 z-[5] w-full h-32 bg-gradient-to-b from-white via-white/95 via-50% to-transparent pointer-events-none -mb-32" />
+      )}
+      {/* Input bar pinned below the fade */}
+      {!isGenerating && (
+        <div className="sticky top-6 z-10 w-full px-8 relative">
+          {/* Continuation context banner */}
+          {sourceClipId && sourceClipData && !lastGeneration && (
+            <div className="w-full mb-2 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+              <p className="text-sm font-medium">
+                Generating continuation from: {sourceClipData.name}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                The next scene will start where this clip&apos;s animation ends.
+              </p>
+            </div>
+          )}
 
-            {/* Template context banner */}
-            {selectedTemplate && !sourceClipId && !lastGeneration && (
-              <div className="w-full mb-4 p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">
-                      Using template: {selectedTemplate.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {selectedTemplate.description}
-                    </p>
-                  </div>
-                  <Link
-                    href="/templates"
-                    className="text-xs text-muted-foreground hover:text-foreground underline"
-                  >
-                    Change template
-                  </Link>
+          {/* Template context banner */}
+          {selectedTemplate && !sourceClipId && !lastGeneration && (
+            <div className="w-full mb-2 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">
+                    Using template: {selectedTemplate.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedTemplate.description}
+                  </p>
                 </div>
+                <Link
+                  href="/templates"
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Change template
+                </Link>
               </div>
-            )}
+            </div>
+          )}
 
-            <InputBar
-              onSubmit={handleUnifiedSubmit}
-              isGenerating={isGenerating}
-              isRefining={isRefining}
-              hasExistingCode={!!lastGeneration}
-              disabled={false}
-              placeholder={promptPlaceholder}
-              settings={settings}
-              onUpdateSetting={updateSetting}
-              onResetSettings={resetSettings}
-            />
-          </div>
-          {/* Gradient fade under sticky bar */}
-          <div className="h-6 bg-gradient-to-b from-background to-transparent pointer-events-none" />
+          <InputBar
+            onSubmit={handleUnifiedSubmit}
+            isGenerating={isGenerating}
+            isRefining={isRefining}
+            hasExistingCode={!!lastGeneration}
+            disabled={false}
+            placeholder={promptPlaceholder}
+            settings={settings}
+            onUpdateSetting={updateSetting}
+            onResetSettings={resetSettings}
+          />
         </div>
       )}
 
