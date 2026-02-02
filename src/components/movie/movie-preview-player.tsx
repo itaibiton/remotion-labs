@@ -64,24 +64,22 @@ export function MoviePreviewPlayer({
   }
 
   if (!isMounted) {
-    return <div className="aspect-video bg-black rounded-lg animate-pulse" />;
+    return <div className="w-full h-full bg-black/10 animate-pulse" />;
   }
 
   return (
-    <div className="rounded-lg overflow-hidden shadow-lg border">
-      <Player
-        ref={playerRef}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        component={MovieComposition as any}
-        inputProps={{ scenes }}
-        durationInFrames={totalDurationInFrames}
-        fps={fps}
-        compositionWidth={1920}
-        compositionHeight={1080}
-        style={{ width: "100%" }}
-        controls
-        loop
-      />
-    </div>
+    <Player
+      ref={playerRef}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      component={MovieComposition as any}
+      inputProps={{ scenes }}
+      durationInFrames={totalDurationInFrames}
+      fps={fps}
+      compositionWidth={1920}
+      compositionHeight={1080}
+      style={{ width: "100%" }}
+      controls
+      loop
+    />
   );
 }

@@ -12,6 +12,11 @@ import { AddScenePanel } from "./add-scene-panel";
 import { MoviePreviewPlayer } from "@/components/movie/movie-preview-player";
 import { MovieRenderButton } from "@/components/movie/movie-render-button";
 import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
@@ -146,7 +151,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Header */}
-      <div className="border-b px-6 py-4 flex items-center justify-between">
+      <div className="border-b px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold">{movie.name}</h1>
           <p className="text-sm text-muted-foreground">
@@ -176,43 +181,52 @@ export function MovieEditor({ movieId }: { movieId: string }) {
         </div>
       </div>
 
-      {/* Timeline area */}
-      <div className="flex-1 flex flex-col">
-        {movie.scenes.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-center">
-            <div>
-              <Film className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-lg font-semibold mb-1">No scenes yet</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Add clips from your library to build your movie
-              </p>
-              <Button onClick={() => setShowAddScene(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Scene
-              </Button>
-            </div>
+      {/* Content area */}
+      {movie.scenes.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center text-center">
+          <div>
+            <Film className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-lg font-semibold mb-1">No scenes yet</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add clips from your library to build your movie
+            </p>
+            <Button onClick={() => setShowAddScene(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Scene
+            </Button>
           </div>
-        ) : (
-          <>
-            <div className="px-6 pt-6">
-              <MoviePreviewPlayer
-                scenes={validScenes}
-                fps={movie.fps}
-                totalDurationInFrames={totalDurationInFrames}
-                onActiveSceneChange={setActiveSceneIndex}
-              />
-            </div>
-            <div className="p-6">
-              <Timeline
-                scenes={scenesWithClips}
-                activeSceneIndex={activeSceneIndex}
-                onReorder={handleReorder}
-                onRemove={handleRemoveScene}
-              />
-            </div>
-          </>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0">
+          <ResizablePanelGroup orientation="vertical">
+            <ResizablePanel defaultSize={65} minSize={30}>
+              {/* Preview panel */}
+              <div className="h-full w-full flex items-center justify-center p-4 overflow-hidden bg-black/5">
+                <div style={{ aspectRatio: "1920 / 1080", maxHeight: "100%", maxWidth: "100%" }}>
+                  <MoviePreviewPlayer
+                    scenes={validScenes}
+                    fps={movie.fps}
+                    totalDurationInFrames={totalDurationInFrames}
+                    onActiveSceneChange={setActiveSceneIndex}
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={35} minSize={15}>
+              {/* Timeline panel */}
+              <div className="h-full overflow-y-auto p-4">
+                <Timeline
+                  scenes={scenesWithClips}
+                  activeSceneIndex={activeSceneIndex}
+                  onReorder={handleReorder}
+                  onRemove={handleRemoveScene}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+      )}
 
       {/* Add Scene Dialog */}
       <AddScenePanel
