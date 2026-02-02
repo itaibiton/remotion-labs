@@ -5,6 +5,7 @@ import { usePaginatedQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { GenerationRow } from "./generation-row";
 import { VariationGrid } from "./variation-grid";
+import { PendingGenerationSkeleton } from "./pending-generation-skeleton";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -15,6 +16,13 @@ interface GenerationFeedProps {
   onRerunGeneration: (generation: any) => void;
   onExtendNextGeneration: (generation: any) => void;
   onExtendPreviousGeneration: (generation: any) => void;
+  pendingGenerations?: Array<{
+    id: string;
+    prompt: string;
+    type: "prequel" | "generation";
+    aspectRatio?: string;
+    count?: number;
+  }>;
 }
 
 interface BatchGroup {
@@ -59,6 +67,7 @@ export function GenerationFeed({
   onRerunGeneration,
   onExtendNextGeneration,
   onExtendPreviousGeneration,
+  pendingGenerations,
 }: GenerationFeedProps) {
   const { results, status, loadMore } = usePaginatedQuery(
     api.generations.listPaginated,
@@ -92,8 +101,10 @@ export function GenerationFeed({
     );
   }
 
-  // Empty state
-  if (results.length === 0 && status === "Exhausted") {
+  const hasPending = pendingGenerations && pendingGenerations.length > 0;
+
+  // Empty state (only show when no pending generations either)
+  if (results.length === 0 && status === "Exhausted" && !hasPending) {
     return (
       <div className="text-center py-12">
         <p className="text-sm text-muted-foreground">
@@ -105,6 +116,17 @@ export function GenerationFeed({
 
   return (
     <div className="flex flex-col gap-2">
+      {/* Pending generation skeletons */}
+      {pendingGenerations?.map((pending) => (
+        <PendingGenerationSkeleton
+          key={pending.id}
+          prompt={pending.prompt}
+          type={pending.type}
+          aspectRatio={pending.aspectRatio}
+          count={pending.count}
+        />
+      ))}
+
       {/* Generation rows / variation grids */}
       {batches.map((batch) => {
         if (batch.generations.length === 1) {

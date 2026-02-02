@@ -7,8 +7,9 @@ import {
   ASPECT_RATIO_PRESETS,
   type AspectRatioKey,
 } from "@/lib/aspect-ratios";
-import { AlertCircle } from "lucide-react";
-import { GenerationRowActions } from "./generation-row-actions";
+import { AlertCircle, Save, FastForward, Rewind, RotateCcw, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Generation {
   _id: string;
@@ -104,19 +105,9 @@ export function VariationGrid({
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-muted-foreground whitespace-nowrap">
-            {formatRelativeTime(firstVariation.createdAt)}
-          </p>
-          <GenerationRowActions
-            generation={firstVariation}
-            onSave={onSave}
-            onDelete={onDelete}
-            onRerun={onRerun}
-            onExtendNext={onExtendNext}
-            onExtendPrevious={onExtendPrevious}
-          />
-        </div>
+        <p className="text-xs text-muted-foreground whitespace-nowrap">
+          {formatRelativeTime(firstVariation.createdAt)}
+        </p>
       </div>
 
       {/* Thumbnail grid */}
@@ -128,62 +119,98 @@ export function VariationGrid({
           const frameToDisplay = Math.floor(durationInFrames / 2);
 
           return (
-            <div
-              key={variation._id}
-              role="button"
-              tabIndex={0}
-              className="relative rounded-md overflow-hidden bg-black hover:ring-2 hover:ring-primary/50 transition-all group/variation cursor-pointer"
-              style={{
-                aspectRatio: `${preset.width} / ${preset.height}`,
-              }}
-              onClick={() => onSelectVariation(variation)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelectVariation(variation);
-                }
-              }}
-            >
-              {isFailed ? (
-                <div className="w-full h-full bg-red-950/50 flex items-center justify-center">
-                  <AlertCircle className="h-8 w-8 text-red-400" />
-                </div>
-              ) : isMounted && variation.code ? (
-                <Thumbnail
-                  component={DynamicCode}
-                  inputProps={{
-                    code: variation.code,
-                    durationInFrames,
-                    fps: varFps,
-                  }}
-                  compositionWidth={preset.width}
-                  compositionHeight={preset.height}
-                  frameToDisplay={frameToDisplay}
-                  durationInFrames={durationInFrames}
-                  fps={varFps}
-                  style={{ width: "100%" }}
-                />
-              ) : (
-                <div className="w-full h-full bg-muted animate-pulse" />
-              )}
-              {/* V{n} badge */}
-              <span className="absolute top-1 left-1 bg-black/70 text-white text-xs font-mono px-1.5 py-0.5 rounded">
-                V{(variation.variationIndex ?? i) + 1}
-              </span>
-              {/* Action menu - top right corner */}
+            <div key={variation._id} className="flex flex-col gap-1">
+              {/* Clickable thumbnail */}
               <div
-                className="absolute top-1 right-1 opacity-0 group-hover/variation:opacity-100 transition-opacity"
-                onClick={(e) => e.stopPropagation()}
+                role="button"
+                tabIndex={0}
+                className="relative rounded-md overflow-hidden bg-black hover:ring-2 hover:ring-primary/50 transition-all cursor-pointer"
+                style={{
+                  aspectRatio: `${preset.width} / ${preset.height}`,
+                }}
+                onClick={() => onSelectVariation(variation)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectVariation(variation);
+                  }
+                }}
               >
-                <GenerationRowActions
-                  generation={variation}
-                  onSave={onSave}
-                  onDelete={onDelete}
-                  onRerun={onRerun}
-                  onExtendNext={onExtendNext}
-                  onExtendPrevious={onExtendPrevious}
-                />
+                {isFailed ? (
+                  <div className="w-full h-full bg-red-950/50 flex items-center justify-center">
+                    <AlertCircle className="h-8 w-8 text-red-400" />
+                  </div>
+                ) : isMounted && variation.code ? (
+                  <Thumbnail
+                    component={DynamicCode}
+                    inputProps={{
+                      code: variation.code,
+                      durationInFrames,
+                      fps: varFps,
+                    }}
+                    compositionWidth={preset.width}
+                    compositionHeight={preset.height}
+                    frameToDisplay={frameToDisplay}
+                    durationInFrames={durationInFrames}
+                    fps={varFps}
+                    style={{ width: "100%" }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted animate-pulse" />
+                )}
+                {/* V{n} badge */}
+                <span className="absolute top-1 left-1 bg-black/70 text-white text-xs font-mono px-1.5 py-0.5 rounded">
+                  V{(variation.variationIndex ?? i) + 1}
+                </span>
               </div>
+
+              {/* Action buttons row */}
+              {!isFailed && (
+                <TooltipProvider delayDuration={300}>
+                  <div className="flex items-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSave(variation)}>
+                          <Save className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom"><p>Save to Library</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onExtendPrevious(variation)}>
+                          <Rewind className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom"><p>Extend Previous</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onExtendNext(variation)}>
+                          <FastForward className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom"><p>Extend Next</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onRerun(variation)}>
+                          <RotateCcw className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom"><p>Rerun</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive hover:text-destructive" onClick={() => onDelete(variation)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom"><p>Delete</p></TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
+              )}
             </div>
           );
         })}

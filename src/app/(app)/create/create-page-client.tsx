@@ -43,10 +43,9 @@ interface CreateContentProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
-  mode?: string;
 }
 
-function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateContentProps) {
+function CreateContent({ selectedTemplate, clipId, sourceClipId }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
@@ -75,6 +74,11 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
   // Continuation and contextual action state
   const [showAddToMovieDialog, setShowAddToMovieDialog] = useState(false);
   const [savedClipId, setSavedClipId] = useState<string | null>(null);
+
+  // In-feed pending generation state (skeleton cards while generating)
+  const [pendingFeedGenerations, setPendingFeedGenerations] = useState<
+    Array<{ id: string; prompt: string; type: "prequel" | "generation"; sourceGenerationId?: string; aspectRatio?: string; count?: number }>
+  >([]);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -154,25 +158,24 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
   const handleGenerate = useCallback(
     async (prompt: string, referenceImageIds?: string[]) => {
       setLastPrompt(prompt);
-      setError(null);
-      setIsGenerating(true);
-      // Reset editing state on new generation
-      setIsEditing(false);
-      setEditedCode(null);
-      setSkipValidation(true);
-      validation.resetToValid();
-      // Reset chat on new generation
-      setChatMessages([]);
 
-      // Step through: analyzing -> generating
-      setCurrentStep("analyzing");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setCurrentStep("generating");
+      // Add skeleton to feed — page stays fully interactive
+      const skeletonId = `pending-gen-${Date.now()}`;
+      setPendingFeedGenerations((prev) => [
+        ...prev,
+        {
+          id: skeletonId,
+          prompt,
+          type: "generation" as const,
+          aspectRatio: settings.aspectRatio,
+          count: settings.variationCount,
+        },
+      ]);
 
       try {
         if (settings.variationCount > 1) {
           // Multi-variation: use generateVariations action
-          const result = await generateVariationsAction({
+          await generateVariationsAction({
             prompt,
             variationCount: settings.variationCount,
             aspectRatio: settings.aspectRatio,
@@ -182,28 +185,12 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
             ...(referenceImageIds ? { referenceImageIds: referenceImageIds as any } : {}),
           });
 
-          setCurrentStep("validating");
-          await new Promise((resolve) => setTimeout(resolve, 300));
-
-          // Select first successful variation for immediate preview
-          const firstSuccess = result.variations[0];
-          if (firstSuccess) {
-            setLastGeneration({
-              id: firstSuccess.id,
-              rawCode: firstSuccess.rawCode,
-              code: firstSuccess.code,
-              durationInFrames: firstSuccess.durationInFrames,
-              fps: firstSuccess.fps,
-            });
-            toast.success(
-              `Generated ${result.variations.length} variation${result.variations.length > 1 ? "s" : ""}!`
-            );
-          } else {
-            throw new Error("All variations failed to generate");
-          }
+          toast.success(
+            `Generated ${settings.variationCount} variation${settings.variationCount > 1 ? "s" : ""}!`
+          );
         } else {
-          // Single generation: use existing generate action (unchanged)
-          const result = await generate({
+          // Single generation
+          await generate({
             prompt,
             aspectRatio: settings.aspectRatio,
             durationInSeconds: settings.durationInSeconds,
@@ -212,46 +199,20 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
             ...(referenceImageIds ? { referenceImageIds: referenceImageIds as any } : {}),
           });
 
-          // Validating step after successful generation
-          setCurrentStep("validating");
-          await new Promise((resolve) => setTimeout(resolve, 300));
-
-          // Validate result has required fields
-          if (!result || typeof result !== "object") {
-            throw new Error("Invalid response from generation service");
-          }
-
-          const generationResult: GenerationResult = {
-            id: String(result.id),
-            rawCode: result.rawCode,
-            code: result.code,
-            // Provide defaults for safety (should always be present from action)
-            durationInFrames: result.durationInFrames ?? 90,
-            fps: result.fps ?? 30,
-          };
-
-          // Validate we have actual code
-          if (!generationResult.code) {
-            throw new Error("Generation did not return code");
-          }
-
-          setLastGeneration(generationResult);
-          toast.success("Animation generated successfully!");
+          toast.success("Animation generated!");
         }
       } catch (e) {
         const errorMessage =
           e instanceof Error ? e.message : "Generation failed";
-        setError({
-          message: errorMessage,
-          retryCount: (error?.retryCount ?? 0) + 1,
-        });
-        toast.error("Generation failed");
+        toast.error(errorMessage);
       } finally {
-        setIsGenerating(false);
-        setCurrentStep(null);
+        // Remove skeleton — real card appears via Convex reactivity
+        setPendingFeedGenerations((prev) =>
+          prev.filter((p) => p.id !== skeletonId)
+        );
       }
     },
-    [generate, generateVariationsAction, error?.retryCount, validation, settings.aspectRatio, settings.durationInSeconds, settings.fps, settings.variationCount]
+    [generate, generateVariationsAction, settings.aspectRatio, settings.durationInSeconds, settings.fps, settings.variationCount]
   );
 
   const handleRefine = useCallback(
@@ -356,60 +317,10 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
     [sourceClipId, continuationAction, error?.retryCount, validation]
   );
 
-  const handlePrequelGenerate = useCallback(
-    async (prompt: string) => {
-      if (!sourceClipId) return;
-      setError(null);
-      setIsGenerating(true);
-      setIsEditing(false);
-      setEditedCode(null);
-      setSkipValidation(true);
-      validation.resetToValid();
-      setChatMessages([]);
-      setSavedClipId(null);
-
-      setCurrentStep("analyzing");
-      await new Promise((r) => setTimeout(r, 500));
-      setCurrentStep("generating");
-
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = await prequelAction({
-          sourceClipId: sourceClipId as any,
-          prompt: prompt || undefined,
-        });
-
-        setCurrentStep("validating");
-        await new Promise((r) => setTimeout(r, 300));
-
-        setLastGeneration({
-          id: "prequel",
-          rawCode: result.rawCode,
-          code: result.code,
-          durationInFrames: result.durationInFrames,
-          fps: result.fps,
-        });
-        setLastPrompt(prompt || "Prequel leading into target scene");
-        toast.success("Prequel generated!");
-      } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : "Prequel failed";
-        setError({ message: errorMessage, retryCount: (error?.retryCount ?? 0) + 1 });
-        toast.error("Prequel generation failed");
-      } finally {
-        setIsGenerating(false);
-        setCurrentStep(null);
-      }
-    },
-    [sourceClipId, prequelAction, error?.retryCount, validation]
-  );
-
   const handleUnifiedSubmit = useCallback(
     async (text: string, imageIds: string[]) => {
       const imgIds = imageIds.length > 0 ? imageIds : undefined;
-      if (sourceClipId && mode === "prequel" && !lastGeneration) {
-        // Prequel mode: first submission generates prequel (no images)
-        await handlePrequelGenerate(text);
-      } else if (sourceClipId && !lastGeneration) {
+      if (sourceClipId && !lastGeneration) {
         // Continuation mode: first submission generates continuation (no images)
         await handleContinuationGenerate(text);
       } else if (!lastGeneration) {
@@ -430,7 +341,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
         await handleRefine(text);
       }
     },
-    [sourceClipId, mode, lastGeneration, handleGenerate, handleContinuationGenerate, handlePrequelGenerate, handleRefine, validation]
+    [sourceClipId, lastGeneration, handleGenerate, handleContinuationGenerate, handleRefine, validation]
   );
 
   const handleRetry = useCallback(() => {
@@ -513,7 +424,30 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
       toast.error("Cannot extend: generation has no code");
       return;
     }
+
+    const generationId = String(generation._id);
+
+    // Guard: prevent duplicate prequel for same generation
+    if (pendingFeedGenerations.some((p) => p.sourceGenerationId === generationId)) {
+      toast("Already generating a prequel for this generation");
+      return;
+    }
+
+    // Add skeleton entry to feed
+    const skeletonId = `pending-prequel-${generationId}`;
+    setPendingFeedGenerations((prev) => [
+      ...prev,
+      {
+        id: skeletonId,
+        prompt: generation.prompt || "Prequel",
+        sourceGenerationId: generationId,
+        type: "prequel" as const,
+        aspectRatio: generation.aspectRatio ?? settings.aspectRatio,
+      },
+    ]);
+
     try {
+      // Save generation as clip (prequelAction requires a sourceClipId)
       const clipId = await saveClip({
         name: generation.prompt.slice(0, 50) || "Untitled",
         code: generation.code,
@@ -521,12 +455,27 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
         durationInFrames: generation.durationInFrames ?? 90,
         fps: generation.fps ?? 30,
       });
-      toast.success("Saved as clip -- opening prequel generation...");
-      router.push(`/create?sourceClipId=${clipId}&mode=prequel`);
+
+      // Call prequel action with clip ID + source generation's settings
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await prequelAction({
+        sourceClipId: clipId as any,
+        prompt: undefined,
+        aspectRatio: generation.aspectRatio ?? settings.aspectRatio,
+        durationInSeconds: generation.durationInSeconds ?? settings.durationInSeconds,
+      });
+
+      toast.success("Prequel generated!");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to start prequel generation");
+      const errorMessage = e instanceof Error ? e.message : "Prequel generation failed";
+      toast.error(errorMessage);
+    } finally {
+      // Remove skeleton — real card appears via Convex reactivity
+      setPendingFeedGenerations((prev) =>
+        prev.filter((p) => p.id !== skeletonId)
+      );
     }
-  }, [saveClip, router]);
+  }, [saveClip, prequelAction, pendingFeedGenerations, settings.aspectRatio, settings.durationInSeconds]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRerunGeneration = useCallback(async (generation: any) => {
@@ -618,9 +567,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
     }
   }, [generate, generateVariationsAction, validation]);
 
-  const promptPlaceholder = sourceClipId && mode === "prequel"
-    ? "Describe what should lead into this scene (or press Enter for automatic prequel)..."
-    : sourceClipId
+  const promptPlaceholder = sourceClipId
     ? "Describe what should happen next (or press Enter for automatic continuation)..."
     : selectedTemplate
       ? "Describe how you'd like to customize this template..."
@@ -632,14 +579,10 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
       {sourceClipId && sourceClipData && !isGenerating && !lastGeneration && (
         <div className="w-full max-w-2xl mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <p className="text-sm font-medium">
-            {mode === "prequel"
-              ? `Generating prequel for: ${sourceClipData.name}`
-              : `Generating continuation from: ${sourceClipData.name}`}
+            Generating continuation from: {sourceClipData.name}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {mode === "prequel"
-              ? "The new scene will lead into this clip\u0027s opening frame."
-              : "The next scene will start where this clip\u0027s animation ends."}
+            The next scene will start where this clip&apos;s animation ends.
           </p>
         </div>
       )}
@@ -827,6 +770,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, mode }: CreateC
             onRerunGeneration={handleRerunGeneration}
             onExtendNextGeneration={handleExtendNextGeneration}
             onExtendPreviousGeneration={handleExtendPreviousGeneration}
+            pendingGenerations={pendingFeedGenerations}
           />
         </div>
       )}
@@ -857,10 +801,9 @@ interface CreatePageClientProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
-  mode?: string;
 }
 
-export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, mode }: CreatePageClientProps) {
+export function CreatePageClient({ selectedTemplate, clipId, sourceClipId }: CreatePageClientProps) {
   return (
     <div className="flex-1 flex flex-col">
       <AuthLoading>
@@ -876,7 +819,7 @@ export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, mode 
       </Unauthenticated>
 
       <Authenticated>
-        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} mode={mode} />
+        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} />
       </Authenticated>
     </div>
   );

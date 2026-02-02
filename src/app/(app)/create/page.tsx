@@ -4,7 +4,7 @@ import { CreatePageClient } from "./create-page-client";
 export default async function CreatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ template?: string; clipId?: string; sourceClipId?: string; mode?: string }>;
+  searchParams: Promise<{ template?: string; clipId?: string; sourceClipId?: string }>;
 }) {
   const params = await searchParams;
   const templateId = params.template;
@@ -15,7 +15,6 @@ export default async function CreatePage({
       selectedTemplate={selectedTemplate}
       clipId={params.clipId}
       sourceClipId={params.sourceClipId}
-      mode={params.mode}
     />
   );
 }

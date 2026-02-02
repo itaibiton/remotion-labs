@@ -547,6 +547,7 @@ async function buildUserContent(
   }
 
   const content: Array<ImageContentBlock | TextContentBlock> = [];
+  const imageUrls: string[] = [];
 
   for (const storageId of referenceImageIds) {
     const url = await ctx.storage.getUrl(storageId);
@@ -555,10 +556,27 @@ async function buildUserContent(
         type: "image",
         source: { type: "url", url },
       });
+      imageUrls.push(url);
     }
   }
 
-  content.push({ type: "text", text: prompt });
+  const urlList = imageUrls.map((u, i) => `  Image ${i + 1}: ${u}`).join("\n");
+
+  content.push({
+    type: "text",
+    text: [
+      `The user has attached ${imageUrls.length} reference image(s).`,
+      ``,
+      `IMPORTANT: Display the actual image(s) in the animation using the <Img> component with the exact URLs below:`,
+      urlList,
+      ``,
+      `Use: <Img src="URL" style={{...}} />`,
+      `The images are the core visual content. Animate them (scale, pan, fade, etc.) according to the user's prompt.`,
+      `Do NOT try to recreate or redraw the image contents — use the <Img> tag with the provided URL.`,
+      ``,
+      prompt,
+    ].join("\n"),
+  });
   return content;
 }
 
@@ -1121,18 +1139,20 @@ export const generateContinuation = action({
 /**
  * Generate a prequel scene that leads into an existing clip.
  * Fetches the source clip's rawCode, sends it to Claude with the prequel
- * system prompt, validates and transforms the output.
- * Does NOT persist to database -- returns result directly like refine.
+ * system prompt, validates, transforms, and persists to the generations table.
  */
 export const generatePrequel = action({
   args: {
     sourceClipId: v.id("clips"),
     prompt: v.optional(v.string()),
+    aspectRatio: v.optional(v.string()),
+    durationInSeconds: v.optional(v.number()),
   },
   handler: async (
     ctx,
     args
   ): Promise<{
+    id: Id<"generations">;
     rawCode: string;
     code: string;
     durationInFrames: number;
@@ -1219,7 +1239,26 @@ export const generatePrequel = action({
       throw new Error(transformed.error || "Code transformation failed");
     }
 
+    // Persist to generations table (same pattern as generate action)
+    const generationId: Id<"generations"> = await ctx.runMutation(
+      internal.generations.store,
+      {
+        userId: identity.tokenIdentifier,
+        prompt: args.prompt ?? "Prequel leading into target scene",
+        code: transformed.code,
+        rawCode,
+        durationInFrames,
+        fps,
+        status: "success" as const,
+        createdAt: Date.now(),
+        aspectRatio: args.aspectRatio,
+        durationInSeconds: args.durationInSeconds,
+        continuationType: "prequel",
+      }
+    );
+
     return {
+      id: generationId,
       rawCode,
       code: transformed.code,
       durationInFrames,

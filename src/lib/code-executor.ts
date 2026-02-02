@@ -128,9 +128,20 @@ export const RemotionScope = {
 function createExecutionScope() {
   const counter = createOperationCounter();
 
-  // Wrap interpolate to count operations
+  // Wrap interpolate to count operations and guard against mismatched ranges
   const safeInterpolate: typeof interpolate = (...args) => {
     counter.check();
+    const [, inputRange, outputRange] = args;
+    if (
+      Array.isArray(inputRange) &&
+      Array.isArray(outputRange) &&
+      inputRange.length !== outputRange.length
+    ) {
+      // Truncate to the shorter length instead of crashing
+      const len = Math.min(inputRange.length, outputRange.length);
+      args[1] = inputRange.slice(0, len);
+      args[2] = outputRange.slice(0, len);
+    }
     return interpolate(...args);
   };
 
