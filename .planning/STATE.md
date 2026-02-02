@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Release: v0.3.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Defining requirements
+**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 18 (Pro Layout)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-02 -- Milestone v0.3.0 started
+Phase: 18 of 23 (Pro Layout)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-02-02 -- v0.3.0 roadmap created (6 phases, 12 requirements)
 
 ## Milestone History
 
@@ -24,6 +24,7 @@ Last activity: 2026-02-02 -- Milestone v0.3.0 started
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
+| v0.3.0 Movie Editor Revamp | 6 | TBD | 0/12 | 2026-02-02 -> ... |
 
 ## Accumulated Context
 
@@ -31,11 +32,15 @@ Last activity: 2026-02-02 -- Milestone v0.3.0 started
 
 All decisions documented in PROJECT.md Key Decisions table.
 
-v0.3.0 decisions (so far):
+v0.3.0 decisions:
 - Both trim + split for timeline clip editing
 - Inline preview + edit panel (side panel on movie page, not navigate to create page)
-- Mostly single screen layout (core editing in viewport, panels can scroll/expand)
+- Single screen layout (core editing in viewport, panels can scroll/expand)
 - Timeline interactions are highest priority
+- react-resizable-panels for layout (2.7M weekly downloads)
+- @dnd-kit setActivatorNodeRef to separate reorder from trim
+- tinykeys (650B) for blade tool keyboard shortcut
+- Non-destructive trim via trimStart/trimEnd on scene schema
 
 ### Pending Todos
 
@@ -52,10 +57,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Milestone v0.3.0 initialization and research
+Stopped at: v0.3.0 roadmap created -- 6 phases (18-23) mapped to 12 requirements
 Resume file: None
 
-Next step: Research domain, then define requirements and roadmap.
+Next step: Plan Phase 18 (Pro Layout)
 
 ---
-*v0.3.0 started -- 2026-02-02*
+*v0.3.0 roadmap created -- 2026-02-02*

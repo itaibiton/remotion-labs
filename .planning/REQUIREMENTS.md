@@ -81,7 +81,7 @@
 
 ## v0.3.0 Requirements -- Movie Editor Revamp
 
-Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases starting from Phase 18.
+Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases 18-23.
 
 ### Timeline Interactions
 
@@ -164,25 +164,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ACT-01 | Phase 16 | Complete |
 | ACT-02 | Phase 16 | Complete |
 | PREQUEL-01 | Phase 17 | Complete |
-| TL-01 | Phase — | Pending |
-| TL-02 | Phase — | Pending |
-| TL-03 | Phase — | Pending |
-| TL-04 | Phase — | Pending |
-| TL-05 | Phase — | Pending |
-| TL-06 | Phase — | Pending |
-| ACT-03 | Phase — | Pending |
-| ACT-04 | Phase — | Pending |
-| LAYOUT-01 | Phase — | Pending |
-| LAYOUT-02 | Phase — | Pending |
-| EDIT-01 | Phase — | Pending |
-| EDIT-02 | Phase — | Pending |
+| LAYOUT-01 | Phase 18 | Pending |
+| LAYOUT-02 | Phase 18 | Pending |
+| TL-01 | Phase 19 | Pending |
+| TL-05 | Phase 19 | Pending |
+| TL-02 | Phase 20 | Pending |
+| TL-04 | Phase 20 | Pending |
+| TL-06 | Phase 20 | Pending |
+| TL-03 | Phase 21 | Pending |
+| ACT-03 | Phase 22 | Pending |
+| ACT-04 | Phase 22 | Pending |
+| EDIT-01 | Phase 23 | Pending |
+| EDIT-02 | Phase 23 | Pending |
 
 **Coverage:**
 - v0.2.0 requirements: 11/11 complete
-- v0.3.0 requirements: 12 total
-- Mapped to phases: 0/12 (pending roadmap)
-- Unmapped: 12
+- v0.3.0 requirements: 12 total, 12 mapped to phases
+- Mapped to phases: 12/12
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 -- v0.3.0 requirements defined. 12 requirements across 4 categories.*
+*Last updated: 2026-02-02 -- v0.3.0 roadmap created. 12 requirements mapped to 6 phases (18-23).*

@@ -2,7 +2,7 @@
 
 ## Overview
 
-RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity. v0.2.0 (11 requirements) overhauls the create page into a Midjourney-style scrolling feed with multi-variation generation, configurable settings, image upload for reference-based prompts, per-creation actions, and prequel generation.
+RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity. v0.2.0 (11 requirements) overhauls the create page into a Midjourney-style scrolling feed with multi-variation generation, configurable settings, image upload for reference-based prompts, per-creation actions, and prequel generation. v0.3.0 (12 requirements) transforms the movie page into a professional-grade editor with a full-screen resizable layout, proportional timeline with trim/split/zoom interactions, per-clip generation actions, and inline code editing.
 
 ## Phases
 
@@ -42,13 +42,25 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 </details>
 
-### v0.2.0 -- Create Page Overhaul
+<details>
+<summary>v0.2.0 (Complete)</summary>
 
 - [x] **Phase 13: Generation Feed & Settings** - Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
 - [x] **Phase 14: Variations** - Users can generate multiple distinct compositions from one prompt and select among them
-- [x] **Phase 15: Image Upload & Input Bar** - Users can attach reference images to prompts and use a redesigned input bar with all generation controls
-- [x] **Phase 16: Per-Creation Actions** - Users can save, delete, rerun, extend-next, and extend-previous on any generation in the feed
+- [x] **Phase 15: Image Upload & Input Bar** - Users can attach reference images and use a unified input bar with all generation controls
+- [x] **Phase 16: Per-Creation Actions** - Users can manage and extend any generation directly from the feed
 - [x] **Phase 17: Prequel Generation** - Users can generate animations that lead into an existing clip's start state
+
+</details>
+
+### v0.3.0 -- Movie Editor Revamp
+
+- [ ] **Phase 18: Pro Layout** - Movie page fills the viewport with resizable preview and timeline panels
+- [ ] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
+- [ ] **Phase 20: Timeline Interactions** - Users can trim clips, zoom the timeline, and clips snap during operations
+- [ ] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
+- [ ] **Phase 22: Per-Clip Actions** - Each timeline clip has generation and editing action buttons
+- [ ] **Phase 23: Inline Editing** - Selecting a clip opens an inline panel with preview player and code editor
 
 ## Phase Details
 
@@ -263,6 +275,9 @@ Plans:
 
 </details>
 
+<details>
+<summary>v0.2.0 Phase Details (Complete)</summary>
+
 ### Phase 13: Generation Feed & Settings
 **Goal**: Users see all past generations in a scrolling feed and can configure aspect ratio, duration, and FPS before generating
 **Depends on**: Phase 12 (existing create page, generation pipeline, and schema)
@@ -340,10 +355,104 @@ Plans:
 - [x] 17-01-PLAN.md -- Start-state extraction and PREQUEL_SYSTEM_PROMPT (mirrors continuation architecture)
 - [x] 17-02-PLAN.md -- generatePrequel action wiring and extend-previous integration
 
+</details>
+
+### Phase 18: Pro Layout
+**Goal**: Movie page fills the viewport with a professional full-screen editor layout using resizable panels
+**Depends on**: Phase 17 (existing movie page and timeline from v2.0)
+**Requirements**: LAYOUT-01, LAYOUT-02
+**Success Criteria** (what must be TRUE):
+  1. User opens the movie page and it fills the entire viewport with no page-level scrolling
+  2. Preview player occupies the top panel and timeline occupies the bottom panel in a vertical split
+  3. User can drag the divider between preview and timeline to resize panel proportions
+  4. Panel proportions persist visually during the session (no jarring resets on re-render)
+**Plans**: TBD
+
+Plans:
+- [ ] 18-01-PLAN.md -- TBD
+- [ ] 18-02-PLAN.md -- TBD
+
+### Phase 19: Timeline Foundation
+**Goal**: Timeline displays clips as proportional-width blocks with a timecode ruler and synced draggable playhead
+**Depends on**: Phase 18 (pro layout must exist as the container for the new timeline)
+**Requirements**: TL-01, TL-05
+**Success Criteria** (what must be TRUE):
+  1. Each clip on the timeline has a width proportional to its duration relative to the total movie length
+  2. A ruler above the clips displays timecodes (seconds/frames) spanning the full movie duration
+  3. A playhead indicator on the ruler is draggable and scrubbing it updates the preview player position
+  4. Playing the preview player moves the playhead across the timeline in sync
+  5. Clicking a position on the ruler jumps the playhead and preview to that timecode
+**Plans**: TBD
+
+Plans:
+- [ ] 19-01-PLAN.md -- TBD
+- [ ] 19-02-PLAN.md -- TBD
+
+### Phase 20: Timeline Interactions
+**Goal**: Users can non-destructively trim clips and navigate the timeline with zoom controls, with snapping for precision
+**Depends on**: Phase 19 (proportional clips and playhead must exist before trim/zoom/snap)
+**Requirements**: TL-02, TL-04, TL-06
+**Success Criteria** (what must be TRUE):
+  1. User can drag a handle on the left or right edge of a timeline clip to trim its start or end (non-destructive -- adjusts visible frame range, original clip unchanged)
+  2. Trimmed clips visually shrink on the timeline and the preview respects the new frame range
+  3. User can zoom in/out on the timeline via scroll wheel and +/- buttons to see more or less detail
+  4. During trim and drag operations, clips snap to adjacent clip edges and to the playhead position
+  5. Snap indicators (visual guides) appear when a clip edge aligns with a snap target
+**Plans**: TBD
+
+Plans:
+- [ ] 20-01-PLAN.md -- TBD
+- [ ] 20-02-PLAN.md -- TBD
+
+### Phase 21: Blade & Split
+**Goal**: Users can split a clip into two independent clips at the playhead position using a blade tool
+**Depends on**: Phase 20 (trim data model with trimStart/trimEnd must exist; split creates two trimmed entries)
+**Requirements**: TL-03
+**Success Criteria** (what must be TRUE):
+  1. User can activate the blade tool via a keyboard shortcut or toolbar button
+  2. With the blade tool active, clicking on a clip at the playhead position splits it into two clips
+  3. The two resulting clips share the same source code but have different trim ranges that together cover the original range
+  4. Both resulting clips are independently trimmable and reorderable on the timeline
+**Plans**: TBD
+
+Plans:
+- [ ] 21-01-PLAN.md -- TBD
+
+### Phase 22: Per-Clip Actions
+**Goal**: Each timeline clip provides quick actions for generation and editing without leaving the movie page
+**Depends on**: Phase 19 (timeline clips must exist; generation infrastructure from v0.2.0)
+**Requirements**: ACT-03, ACT-04
+**Success Criteria** (what must be TRUE):
+  1. User sees action buttons (generate next, generate previous, re-generate, edit) on each timeline clip when hovering or selecting
+  2. Clicking "Generate Next" on a timeline clip triggers continuation generation and the result is automatically added as the next scene in the movie
+  3. Clicking "Generate Previous" on a timeline clip triggers prequel generation and the result is automatically inserted before that scene
+  4. Clicking "Re-generate" replaces the clip's code with a fresh generation using the same prompt context
+**Plans**: TBD
+
+Plans:
+- [ ] 22-01-PLAN.md -- TBD
+- [ ] 22-02-PLAN.md -- TBD
+
+### Phase 23: Inline Editing
+**Goal**: Users can select any timeline clip to open an inline editing panel with preview and code editor for direct modification
+**Depends on**: Phase 22 (per-clip "edit" action triggers this panel; also needs Phase 19 timeline selection)
+**Requirements**: EDIT-01, EDIT-02
+**Success Criteria** (what must be TRUE):
+  1. User selects a clip on the timeline and an inline editing panel appears (either as a side panel or expanding section)
+  2. The editing panel shows a preview player playing only the selected clip
+  3. The editing panel shows a Monaco code editor with the clip's Remotion JSX code
+  4. User can edit the code in the panel and click "Save" to persist changes back to the clip
+  5. Saved code changes are immediately reflected in the timeline preview and full movie playback
+**Plans**: TBD
+
+Plans:
+- [ ] 23-01-PLAN.md -- TBD
+- [ ] 23-02-PLAN.md -- TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -364,11 +473,18 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 15. Image Upload & Input Bar | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 16. Per-Creation Actions | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 17. Prequel Generation | v0.2.0 | 2/2 | Complete | 2026-02-02 |
+| 18. Pro Layout | v0.3.0 | 0/TBD | Not started | - |
+| 19. Timeline Foundation | v0.3.0 | 0/TBD | Not started | - |
+| 20. Timeline Interactions | v0.3.0 | 0/TBD | Not started | - |
+| 21. Blade & Split | v0.3.0 | 0/TBD | Not started | - |
+| 22. Per-Clip Actions | v0.3.0 | 0/TBD | Not started | - |
+| 23. Inline Editing | v0.3.0 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-27*
 *v1.0 requirements: 14 mapped (complete)*
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped (complete)*
-*v0.2.0 requirements: 11 mapped*
-*Updated: 2026-02-01 -- v0.2.0 roadmap created. 5 phases (13-17), 12 plans, 11 requirements.*
+*v0.2.0 requirements: 11 mapped (complete)*
+*v0.3.0 requirements: 12 mapped across 6 phases (18-23)*
+*Updated: 2026-02-02 -- v0.3.0 roadmap created. 6 phases (18-23), 12 requirements.*
