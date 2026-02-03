@@ -21,7 +21,6 @@ interface TimelineSceneProps {
   } | null;
   index: number;
   isActive?: boolean;
-  widthPx: number;
   trimStart: number;
   trimEnd: number;
   scale: number;
@@ -38,7 +37,6 @@ export function TimelineScene({
   clip,
   index,
   isActive,
-  widthPx,
   trimStart,
   trimEnd,
   scale,
@@ -88,6 +86,9 @@ export function TimelineScene({
   // Use scale directly as pixels per frame (from timeline zoom)
   const pixelsPerFrame = scale;
 
+  // Calculate width from local effective duration for live visual feedback during trim
+  const liveWidthPx = effectiveDuration * scale;
+
   // Handle trim delta for left handle
   const handleLeftTrimDelta = useCallback((deltaFrames: number) => {
     setLocalTrimStart((prev) => {
@@ -129,7 +130,7 @@ export function TimelineScene({
   return (
     <div
       ref={setNodeRef}
-      style={{ ...style, width: `${Math.max(widthPx, 80)}px` }}
+      style={{ ...style, width: `${Math.max(liveWidthPx, 80)}px` }}
       className={`group relative h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden ${isActive ? "ring-2 ring-primary" : ""}`}
     >
       {/* Left trim handle - NOT part of drag system */}

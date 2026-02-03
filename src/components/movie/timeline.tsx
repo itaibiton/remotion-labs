@@ -96,15 +96,6 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
   // Stable IDs derived from index -- used for both SortableContext items and TimelineScene id
   const sceneIds = localScenes.map((_, i) => `scene-${i}`);
 
-  // Calculate pixel widths for each scene based on EFFECTIVE duration (accounting for trim) and scale
-  const sceneWidths = localScenes.map((scene) => {
-    const baseDuration = scene.clip?.durationInFrames ?? 0;
-    const trimStart = scene.trimStart ?? 0;
-    const trimEnd = scene.trimEnd ?? 0;
-    const effectiveDuration = Math.max(1, baseDuration - trimStart - trimEnd);
-    return effectiveDuration * scale;
-  });
-
   // Calculate scene frame ranges for snap targeting
   const sceneFrameRanges = calculateSceneFrameRanges(
     localScenes.map((scene) => ({
@@ -249,7 +240,6 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
                     clip={scene.clip}
                     index={index}
                     isActive={index === activeSceneIndex}
-                    widthPx={sceneWidths[index]}
                     trimStart={scene.trimStart ?? 0}
                     trimEnd={scene.trimEnd ?? 0}
                     scale={scale}
