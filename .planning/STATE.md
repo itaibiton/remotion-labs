@@ -49,6 +49,8 @@ v0.3.0 decisions:
 - Lifted playerRef pattern: MovieEditor owns ref, passes to player + timeline
 - Playhead drag: pointer capture for smooth cross-boundary dragging
 - 12px hit zone around 2px playhead line for easier grabbing
+- Trim handle pointer capture pattern (same as playhead for consistency)
+- Scale used directly as pixelsPerFrame for trim calculations
 - Default scale: 3 px/frame (100%), min: 0.5 px/frame, max: 20 px/frame
 - Zoom factors: 1.25x for button clicks, 1.1x for scroll wheel
 - Ctrl+Meta modifier required for scroll zoom to avoid accidental zoom
