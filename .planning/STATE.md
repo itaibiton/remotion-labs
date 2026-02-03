@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Release: v0.3.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 20 (Timeline Interactions)
+**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 21 (Blade & Split)
 
 ## Current Position
 
-Phase: 20 of 23 (Timeline Interactions)
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-02-03 -- Completed 20-03-PLAN.md
+Phase: 21 of 23 (Blade & Split)
+Plan: 0 of TBD
+Status: Not started
+Last activity: 2026-02-03 -- Completed Phase 20 (Timeline Interactions)
 
-Progress: ████████████████████░░░░ 85%
+Progress: █████████████████████░░░ 87%
 
 ## Milestone History
 
@@ -26,7 +26,7 @@ Progress: ████████████████████░░░�
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
-| v0.3.0 Movie Editor Revamp | 6 | 6/TBD | 7/12 | 2026-02-02 -> ... |
+| v0.3.0 Movie Editor Revamp | 6 | 9/TBD | 10/12 | 2026-02-02 -> ... |
 
 ## Accumulated Context
 
@@ -72,10 +72,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 20-03-PLAN.md
+Stopped at: Completed Phase 20 (Timeline Interactions)
 Resume file: None
 
-Next step: Phase 20 complete. Proceed to Phase 21 (Edit Panel)
+Next step: Plan Phase 21 (Blade & Split)
 
 ---
-*20-03 complete -- 2026-02-03*
+*Phase 20 complete -- 2026-02-03*

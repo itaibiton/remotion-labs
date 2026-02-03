@@ -57,7 +57,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 18: Pro Layout** - Movie page fills the viewport with fixed preview and timeline panels
 - [x] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
-- [ ] **Phase 20: Timeline Interactions** - Users can trim clips, zoom the timeline, and clips snap during operations
+- [x] **Phase 20: Timeline Interactions** - Users can trim clips, zoom the timeline, and clips snap during operations
 - [ ] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
 - [ ] **Phase 22: Per-Clip Actions** - Each timeline clip has generation and editing action buttons
 - [ ] **Phase 23: Inline Editing** - Selecting a clip opens an inline panel with preview player and code editor
@@ -400,9 +400,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 20-01-PLAN.md -- Trim handles with schema support and setActivatorNodeRef pattern
-- [ ] 20-02-PLAN.md -- Timeline zoom controls with scale state and wheel handler
-- [ ] 20-03-PLAN.md -- Snapping system for trim operations with visual indicators
+- [x] 20-01-PLAN.md -- Trim handles with schema support and setActivatorNodeRef pattern
+- [x] 20-02-PLAN.md -- Timeline zoom controls with scale state and wheel handler
+- [x] 20-03-PLAN.md -- Snapping system for trim operations with visual indicators
 
 ### Phase 21: Blade & Split
 **Goal**: Users can split a clip into two independent clips at the playhead position using a blade tool
@@ -475,7 +475,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 17. Prequel Generation | v0.2.0 | 2/2 | Complete | 2026-02-02 |
 | 18. Pro Layout | v0.3.0 | 1/1 | Complete | 2026-02-03 |
 | 19. Timeline Foundation | v0.3.0 | 2/2 | Complete | 2026-02-03 |
-| 20. Timeline Interactions | v0.3.0 | 0/3 | Not started | - |
+| 20. Timeline Interactions | v0.3.0 | 3/3 | Complete | 2026-02-03 |
 | 21. Blade & Split | v0.3.0 | 0/TBD | Not started | - |
 | 22. Per-Clip Actions | v0.3.0 | 0/TBD | Not started | - |
 | 23. Inline Editing | v0.3.0 | 0/TBD | Not started | - |

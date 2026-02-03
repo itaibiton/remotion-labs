@@ -86,11 +86,11 @@ Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases 
 ### Timeline Interactions
 
 - [x] **TL-01**: Timeline displays clips as proportional-width blocks (width reflects duration relative to total movie length)
-- [ ] **TL-02**: User can trim clip start/end by dragging handles on timeline clip edges (non-destructive, adjusts visible frame range)
+- [x] **TL-02**: User can trim clip start/end by dragging handles on timeline clip edges (non-destructive, adjusts visible frame range)
 - [ ] **TL-03**: User can split a clip at the playhead position via blade tool (keyboard shortcut + button)
-- [ ] **TL-04**: Timeline has zoom controls (scroll wheel + buttons) to scale the time view
+- [x] **TL-04**: Timeline has zoom controls (scroll wheel + buttons) to scale the time view
 - [x] **TL-05**: Timeline shows a ruler with timecodes and a draggable playhead synced to the preview player
-- [ ] **TL-06**: Clips snap to adjacent clip edges and playhead during trim/drag operations
+- [x] **TL-06**: Clips snap to adjacent clip edges and playhead during trim/drag operations
 
 ### Per-Clip Actions
 
@@ -168,9 +168,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LAYOUT-02 | Phase 18 | Complete (adapted to fixed layout per user request) |
 | TL-01 | Phase 19 | Complete |
 | TL-05 | Phase 19 | Complete |
-| TL-02 | Phase 20 | Pending |
-| TL-04 | Phase 20 | Pending |
-| TL-06 | Phase 20 | Pending |
+| TL-02 | Phase 20 | Complete |
+| TL-04 | Phase 20 | Complete |
+| TL-06 | Phase 20 | Complete |
 | TL-03 | Phase 21 | Pending |
 | ACT-03 | Phase 22 | Pending |
 | ACT-04 | Phase 22 | Pending |
@@ -185,4 +185,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 -- v0.3.0 roadmap created. 12 requirements mapped to 6 phases (18-23).*
+*Last updated: 2026-02-03 -- Phase 20 complete. TL-02, TL-04, TL-06 marked Complete.*
