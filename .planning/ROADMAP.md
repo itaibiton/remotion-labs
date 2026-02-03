@@ -58,9 +58,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 18: Pro Layout** - Movie page fills the viewport with fixed preview and timeline panels
 - [x] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
 - [x] **Phase 20: Timeline Interactions** - Users can trim clips, zoom the timeline, and clips snap during operations
-- [ ] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
-- [ ] **Phase 22: Per-Clip Actions** - Each timeline clip has generation and editing action buttons
-- [ ] **Phase 23: Inline Editing** - Selecting a clip opens an inline panel with preview player and code editor
+- [x] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
+- [x] **Phase 22: Per-Clip Actions** - Each timeline clip has generation and editing action buttons
+- [ ] **Phase 23: Finalization** - Final polish and cleanup
 
 ## Phase Details
 
@@ -431,8 +431,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 22-01-PLAN.md -- Backend mutations (clips.update, movies.insertScene) and TimelineSceneActions dropdown component
-- [ ] 22-02-PLAN.md -- Generation handlers, SceneEditPanel with code editor + preview, MovieEditor integration
+- [x] 22-01-PLAN.md -- Backend mutations (clips.update, movies.insertScene) and TimelineSceneActions dropdown component
+- [x] 22-02-PLAN.md -- Generation handlers, SceneEditPanel with code editor + preview, MovieEditor integration
 
 ### Phase 23: Inline Editing
 **Goal**: Users can select any timeline clip to open an inline editing panel with preview and code editor for direct modification
@@ -478,8 +478,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 19. Timeline Foundation | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 20. Timeline Interactions | v0.3.0 | 3/3 | Complete | 2026-02-03 |
 | 21. Blade & Split | v0.3.0 | 2/2 | Complete | 2026-02-03 |
-| 22. Per-Clip Actions | v0.3.0 | 0/TBD | Not started | - |
-| 23. Inline Editing | v0.3.0 | 0/TBD | Not started | - |
+| 22. Per-Clip Actions | v0.3.0 | 2/2 | Complete | 2026-02-03 |
+| 23. Finalization | v0.3.0 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-27*
@@ -488,4 +488,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v2.0 requirements: 15 mapped (complete)*
 *v0.2.0 requirements: 11 mapped (complete)*
 *v0.3.0 requirements: 12 mapped across 6 phases (18-23)*
-*Updated: 2026-02-03 -- Phase 21 complete. Blade tool with keyboard shortcuts and split mutation.*
+*Updated: 2026-02-03 -- Phase 22 complete. Per-clip actions with generation handlers and inline edit panel.*

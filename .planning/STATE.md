@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Release: v0.3.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 22 (Per-Clip Actions)
+**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 23 (Finalization)
 
 ## Current Position
 
-Phase: 22 of 23 (Per-Clip Actions)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-03 -- Completed 22-01-PLAN.md
+Phase: 22 of 23 (Per-Clip Actions) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-03 -- Completed 22-02-PLAN.md
 
-Progress: ██████████████████████░░ 92%
+Progress: ███████████████████████░ 96%
 
 ## Milestone History
 
@@ -58,6 +58,9 @@ v0.3.0 decisions:
 - Color-coded snap indicators: blue (clip-edge), yellow (playhead), green (boundary)
 - Dropdown replaces standalone button for per-clip actions (better consolidation)
 - Actions dropdown renders only when all 4 handlers provided (graceful fallback)
+- SceneEditPanel uses existing CodeDisplay and useDebouncedValidation for consistency
+- Regenerate uses continuation action with custom prompt for variation
+- Sheet panel width 550px for preview + editor layout
 
 ### Pending Todos
 
@@ -74,10 +77,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 22-01-PLAN.md
+Stopped at: Completed 22-02-PLAN.md (Phase 22 complete)
 Resume file: None
 
-Next step: Execute 22-02-PLAN.md (Wire handlers in MovieEditor)
+Next step: Plan Phase 23 (Finalization)
 
 ---
-*Plan 22-01 complete -- 2026-02-03*
+*Plan 22-02 complete -- 2026-02-03*
