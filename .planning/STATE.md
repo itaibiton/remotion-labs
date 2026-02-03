@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 20 of 23 (Timeline Interactions)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-02-03 -- Completed 20-02-PLAN.md
+Plan: 3 of 3 complete
+Status: Phase complete
+Last activity: 2026-02-03 -- Completed 20-03-PLAN.md
 
-Progress: ███████████████████░░░░░ 83%
+Progress: ████████████████████░░░░ 85%
 
 ## Milestone History
 
@@ -26,7 +26,7 @@ Progress: ███████████████████░░░░�
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
-| v0.3.0 Movie Editor Revamp | 6 | 5/TBD | 6/12 | 2026-02-02 -> ... |
+| v0.3.0 Movie Editor Revamp | 6 | 6/TBD | 7/12 | 2026-02-02 -> ... |
 
 ## Accumulated Context
 
@@ -54,6 +54,8 @@ v0.3.0 decisions:
 - Default scale: 3 px/frame (100%), min: 0.5 px/frame, max: 20 px/frame
 - Zoom factors: 1.25x for button clicks, 1.1x for scroll wheel
 - Ctrl+Meta modifier required for scroll zoom to avoid accidental zoom
+- 8px snap threshold for trim operations (pixel-based for zoom independence)
+- Color-coded snap indicators: blue (clip-edge), yellow (playhead), green (boundary)
 
 ### Pending Todos
 
@@ -70,10 +72,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 20-02-PLAN.md
+Stopped at: Completed 20-03-PLAN.md
 Resume file: None
 
-Next step: Execute 20-03-PLAN.md (Clip Trimming)
+Next step: Phase 20 complete. Proceed to Phase 21 (Edit Panel)
 
 ---
-*20-02 complete -- 2026-02-03*
+*20-03 complete -- 2026-02-03*
