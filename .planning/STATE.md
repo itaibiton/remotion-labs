@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 19 of 23 (Timeline Foundation)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-03 -- Completed 19-01-PLAN.md
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-02-03 -- Completed 19-02-PLAN.md
 
-Progress: ██████████████████░░░░░░ 79%
+Progress: ███████████████████░░░░░ 81%
 
 ## Milestone History
 
@@ -46,6 +46,9 @@ v0.3.0 decisions:
 - Non-destructive trim via trimStart/trimEnd on scene schema
 - Timeline ruler: 5-second intervals for >30s movies, 1-second otherwise
 - Scene minimum width: 80px to maintain visibility for short clips
+- Lifted playerRef pattern: MovieEditor owns ref, passes to player + timeline
+- Playhead drag: pointer capture for smooth cross-boundary dragging
+- 12px hit zone around 2px playhead line for easier grabbing
 
 ### Pending Todos
 
@@ -62,10 +65,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 19-01-PLAN.md
+Stopped at: Completed 19-02-PLAN.md (Phase 19 complete)
 Resume file: None
 
-Next step: Execute 19-02-PLAN.md (Timeline Scrubber)
+Next step: Begin Phase 20 (Trim & Split Editing)
 
 ---
-*19-01 complete -- 2026-02-03*
+*19-02 complete -- 2026-02-03*
