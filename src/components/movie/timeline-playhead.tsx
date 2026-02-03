@@ -8,6 +8,7 @@ interface TimelinePlayheadProps {
   totalDurationInFrames: number;
   playerRef: React.RefObject<PlayerRef | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  scale: number;
 }
 
 export function TimelinePlayhead({
@@ -15,22 +16,23 @@ export function TimelinePlayhead({
   totalDurationInFrames,
   playerRef,
   containerRef,
+  scale,
 }: TimelinePlayheadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const wasPlayingRef = useRef(false);
 
-  const percent = totalDurationInFrames > 0
-    ? (currentFrame / totalDurationInFrames) * 100
-    : 0;
+  // Position in pixels using scale
+  const position = currentFrame * scale;
 
   const getFrameFromX = useCallback((clientX: number) => {
     const container = containerRef.current;
     if (!container) return 0;
     const rect = container.getBoundingClientRect();
     const x = clientX - rect.left;
-    const fraction = Math.max(0, Math.min(1, x / rect.width));
-    return Math.round(fraction * Math.max(totalDurationInFrames - 1, 0));
-  }, [containerRef, totalDurationInFrames]);
+    // Convert pixels to frame using scale
+    const frame = Math.round(x / scale);
+    return Math.max(0, Math.min(frame, totalDurationInFrames - 1));
+  }, [containerRef, totalDurationInFrames, scale]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -59,7 +61,7 @@ export function TimelinePlayhead({
       data-playhead
       className="absolute top-0 bottom-0 z-50 cursor-ew-resize touch-none group"
       style={{
-        left: `calc(${percent}% - 6px)`,
+        left: `${position - 6}px`,
         width: '12px',
         pointerEvents: 'auto',
       }}
