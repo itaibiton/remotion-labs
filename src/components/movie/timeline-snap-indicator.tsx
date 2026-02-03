@@ -7,6 +7,7 @@ interface SnapIndicatorProps {
   scale: number;
   type: SnapTargetType;
   visible: boolean;
+  paddingOffset?: number;
 }
 
 /**
@@ -14,7 +15,7 @@ interface SnapIndicatorProps {
  * Positioned absolutely within the timeline container.
  * Color varies by snap target type for visual feedback.
  */
-export function SnapIndicator({ frame, scale, type, visible }: SnapIndicatorProps) {
+export function SnapIndicator({ frame, scale, type, visible, paddingOffset = 0 }: SnapIndicatorProps) {
   if (!visible) return null;
 
   // Color based on snap target type
@@ -28,7 +29,7 @@ export function SnapIndicator({ frame, scale, type, visible }: SnapIndicatorProp
     <div
       className={`absolute top-0 bottom-0 w-0.5 ${colorClass} pointer-events-none z-40 animate-pulse`}
       style={{
-        left: `${frame * scale}px`,
+        left: `${paddingOffset + frame * scale}px`,
         transform: "translateX(-50%)", // Center the line on the frame
       }}
       role="presentation"

@@ -9,6 +9,7 @@ interface TimelinePlayheadProps {
   playerRef: React.RefObject<PlayerRef | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   scale: number;
+  paddingOffset?: number;
 }
 
 export function TimelinePlayhead({
@@ -17,22 +18,24 @@ export function TimelinePlayhead({
   playerRef,
   containerRef,
   scale,
+  paddingOffset = 0,
 }: TimelinePlayheadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const wasPlayingRef = useRef(false);
 
-  // Position in pixels using scale
-  const position = currentFrame * scale;
+  // Position in pixels using scale + padding offset to align with clips
+  const position = paddingOffset + currentFrame * scale;
 
   const getFrameFromX = useCallback((clientX: number) => {
     const container = containerRef.current;
     if (!container) return 0;
     const rect = container.getBoundingClientRect();
-    const x = clientX - rect.left;
+    // Subtract padding offset to get position relative to timeline start
+    const x = clientX - rect.left - paddingOffset;
     // Convert pixels to frame using scale
     const frame = Math.round(x / scale);
     return Math.max(0, Math.min(frame, totalDurationInFrames - 1));
-  }, [containerRef, totalDurationInFrames, scale]);
+  }, [containerRef, totalDurationInFrames, scale, paddingOffset]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId);

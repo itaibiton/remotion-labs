@@ -52,6 +52,9 @@ interface TimelineProps {
   onTrimScene: (sceneIndex: number, trimStart?: number, trimEnd?: number) => void;
 }
 
+// Consistent padding for timeline elements (ruler, clips, playhead alignment)
+const TIMELINE_PADDING = 16; // px-4 = 16px
+
 export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene }: TimelineProps) {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -160,8 +163,8 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
     const container = timelineContainerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
-    // Convert click position to frame using scale
-    const clickX = e.clientX - rect.left;
+    // Convert click position to frame using scale (subtract padding offset)
+    const clickX = e.clientX - rect.left - TIMELINE_PADDING;
     const frame = Math.round(clickX / scale);
     const clampedFrame = Math.max(0, Math.min(frame, totalDurationInFrames - 1));
     playerRef.current?.seekTo(clampedFrame);
@@ -200,6 +203,7 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
             playerRef={playerRef}
             containerRef={timelineContainerRef}
             scale={scale}
+            paddingOffset={TIMELINE_PADDING}
           />
 
           {/* Snap indicator */}
@@ -209,6 +213,7 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
               scale={scale}
               type={activeSnap.target.type}
               visible={true}
+              paddingOffset={TIMELINE_PADDING}
             />
           )}
 

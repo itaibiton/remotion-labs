@@ -108,14 +108,17 @@ export function TrimHandle({
 
   return (
     <div
-      className={`absolute top-0 bottom-0 w-2 cursor-ew-resize touch-none z-20
-        ${side === "left" ? "left-0 rounded-l-lg" : "right-0 rounded-r-lg"}
-        ${isDragging ? "bg-primary/50" : "bg-primary/20 hover:bg-primary/40"}
-        transition-colors`}
+      className={`absolute top-0 bottom-0 w-3 cursor-ew-resize touch-none z-20 flex items-center justify-center
+        ${side === "left" ? "left-0" : "right-0"}
+        ${isDragging ? "bg-primary" : "bg-transparent hover:bg-primary/30"}
+        transition-colors group/handle`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-    />
+    >
+      {/* Visual handle indicator */}
+      <div className={`w-1 h-8 rounded-full ${isDragging ? "bg-primary-foreground" : "bg-primary/60 group-hover/handle:bg-primary"} transition-colors`} />
+    </div>
   );
 }
