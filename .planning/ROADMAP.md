@@ -428,11 +428,11 @@ Plans:
   2. Clicking "Generate Next" on a timeline clip triggers continuation generation and the result is automatically added as the next scene in the movie
   3. Clicking "Generate Previous" on a timeline clip triggers prequel generation and the result is automatically inserted before that scene
   4. Clicking "Re-generate" replaces the clip's code with a fresh generation using the same prompt context
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 22-01-PLAN.md -- TBD
-- [ ] 22-02-PLAN.md -- TBD
+- [ ] 22-01-PLAN.md -- Backend mutations (clips.update, movies.insertScene) and TimelineSceneActions dropdown component
+- [ ] 22-02-PLAN.md -- Generation handlers, SceneEditPanel with code editor + preview, MovieEditor integration
 
 ### Phase 23: Inline Editing
 **Goal**: Users can select any timeline clip to open an inline editing panel with preview and code editor for direct modification
