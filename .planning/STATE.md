@@ -26,7 +26,7 @@ Progress: ███████████████████░░░░�
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
-| v0.3.0 Movie Editor Revamp | 6 | 1/TBD | 2/12 | 2026-02-02 -> ... |
+| v0.3.0 Movie Editor Revamp | 6 | 3/TBD | 4/12 | 2026-02-02 -> ... |
 
 ## Accumulated Context
 
@@ -68,7 +68,7 @@ Last session: 2026-02-03
 Stopped at: Completed 19-02-PLAN.md (Phase 19 complete)
 Resume file: None
 
-Next step: Begin Phase 20 (Trim & Split Editing)
+Next step: Plan Phase 20 (Timeline Interactions)
 
 ---
 *19-02 complete -- 2026-02-03*

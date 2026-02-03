@@ -56,7 +56,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### v0.3.0 -- Movie Editor Revamp
 
 - [x] **Phase 18: Pro Layout** - Movie page fills the viewport with fixed preview and timeline panels
-- [ ] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
+- [x] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
 - [ ] **Phase 20: Timeline Interactions** - Users can trim clips, zoom the timeline, and clips snap during operations
 - [ ] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
 - [ ] **Phase 22: Per-Clip Actions** - Each timeline clip has generation and editing action buttons
@@ -384,8 +384,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md -- Proportional clip widths and timecode ruler
-- [ ] 19-02-PLAN.md -- Draggable playhead with bidirectional player sync
+- [x] 19-01-PLAN.md -- Proportional clip widths and timecode ruler
+- [x] 19-02-PLAN.md -- Draggable playhead with bidirectional player sync
 
 ### Phase 20: Timeline Interactions
 **Goal**: Users can non-destructively trim clips and navigate the timeline with zoom controls, with snapping for precision
@@ -473,7 +473,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 16. Per-Creation Actions | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 17. Prequel Generation | v0.2.0 | 2/2 | Complete | 2026-02-02 |
 | 18. Pro Layout | v0.3.0 | 1/1 | Complete | 2026-02-03 |
-| 19. Timeline Foundation | v0.3.0 | 0/TBD | Not started | - |
+| 19. Timeline Foundation | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 20. Timeline Interactions | v0.3.0 | 0/TBD | Not started | - |
 | 21. Blade & Split | v0.3.0 | 0/TBD | Not started | - |
 | 22. Per-Clip Actions | v0.3.0 | 0/TBD | Not started | - |

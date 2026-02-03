@@ -85,11 +85,11 @@ Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases 
 
 ### Timeline Interactions
 
-- [ ] **TL-01**: Timeline displays clips as proportional-width blocks (width reflects duration relative to total movie length)
+- [x] **TL-01**: Timeline displays clips as proportional-width blocks (width reflects duration relative to total movie length)
 - [ ] **TL-02**: User can trim clip start/end by dragging handles on timeline clip edges (non-destructive, adjusts visible frame range)
 - [ ] **TL-03**: User can split a clip at the playhead position via blade tool (keyboard shortcut + button)
 - [ ] **TL-04**: Timeline has zoom controls (scroll wheel + buttons) to scale the time view
-- [ ] **TL-05**: Timeline shows a ruler with timecodes and a draggable playhead synced to the preview player
+- [x] **TL-05**: Timeline shows a ruler with timecodes and a draggable playhead synced to the preview player
 - [ ] **TL-06**: Clips snap to adjacent clip edges and playhead during trim/drag operations
 
 ### Per-Clip Actions
@@ -166,8 +166,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PREQUEL-01 | Phase 17 | Complete |
 | LAYOUT-01 | Phase 18 | Complete |
 | LAYOUT-02 | Phase 18 | Complete (adapted to fixed layout per user request) |
-| TL-01 | Phase 19 | Pending |
-| TL-05 | Phase 19 | Pending |
+| TL-01 | Phase 19 | Complete |
+| TL-05 | Phase 19 | Complete |
 | TL-02 | Phase 20 | Pending |
 | TL-04 | Phase 20 | Pending |
 | TL-06 | Phase 20 | Pending |
