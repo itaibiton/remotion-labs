@@ -140,6 +140,71 @@ export const getWithClips = query({
 });
 
 /**
+ * Insert a scene at a specific position in the movie.
+ * Use afterIndex to insert after a scene, or beforeIndex to insert before.
+ */
+export const insertScene = mutation({
+  args: {
+    movieId: v.id("movies"),
+    clipId: v.id("clips"),
+    afterIndex: v.optional(v.number()),  // Insert after this index
+    beforeIndex: v.optional(v.number()), // Insert before this index
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const movie = await ctx.db.get(args.movieId);
+    if (!movie || movie.userId !== identity.tokenIdentifier) {
+      throw new Error("Movie not found");
+    }
+
+    const clip = await ctx.db.get(args.clipId);
+    if (!clip) throw new Error("Clip not found");
+
+    // Determine insertion index
+    let insertAt: number;
+    if (args.afterIndex !== undefined) {
+      insertAt = args.afterIndex + 1;
+    } else if (args.beforeIndex !== undefined) {
+      insertAt = args.beforeIndex;
+    } else {
+      insertAt = movie.scenes.length; // Append by default
+    }
+
+    // Clamp to valid range
+    insertAt = Math.max(0, Math.min(insertAt, movie.scenes.length));
+
+    // Normalize duration if FPS differs
+    const durationOverride =
+      clip.fps !== movie.fps
+        ? Math.round(clip.durationInFrames * (movie.fps / clip.fps))
+        : undefined;
+
+    const newScene = {
+      clipId: args.clipId,
+      ...(durationOverride !== undefined && { durationOverride }),
+    };
+
+    const newScenes = [
+      ...movie.scenes.slice(0, insertAt),
+      newScene,
+      ...movie.scenes.slice(insertAt),
+    ];
+
+    const totalDuration = await computeTotalDuration(ctx, newScenes);
+
+    await ctx.db.patch(args.movieId, {
+      scenes: newScenes,
+      totalDurationInFrames: totalDuration,
+      updatedAt: Date.now(),
+    });
+
+    return { insertedAt: insertAt };
+  },
+});
+
+/**
  * Add a clip as the last scene in a movie.
  * Enforces uniform fps across all clips in the movie.
  */
