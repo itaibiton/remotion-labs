@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { PlayerRef } from "@remotion/player";
 import { useCurrentPlayerFrame } from "@/hooks/use-current-player-frame";
 import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
@@ -23,6 +23,12 @@ import { TimelineScene } from "./timeline-scene";
 import { TimelineRuler } from "./timeline-ruler";
 import { TimelinePlayhead } from "./timeline-playhead";
 import { TimelineZoomControls } from "./timeline-zoom-controls";
+import { SnapIndicator } from "./timeline-snap-indicator";
+import {
+  buildSnapTargets,
+  calculateSceneFrameRanges,
+  type SnapResult,
+} from "@/lib/timeline-snap";
 
 interface TimelineProps {
   scenes: Array<{
@@ -50,6 +56,11 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentFrame = useCurrentPlayerFrame(playerRef);
+
+  // Active snap state for showing snap indicator
+  const [activeSnap, setActiveSnap] = useState<SnapResult | null>(null);
+  // Track which scene is being trimmed to exclude from snap targets
+  const [trimmingSceneIndex, setTrimmingSceneIndex] = useState<number | null>(null);
 
   // Zoom state
   const { scale, zoomIn, zoomOut, handleWheel, minScale, maxScale } = useTimelineZoom();
@@ -93,6 +104,38 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
     const effectiveDuration = Math.max(1, baseDuration - trimStart - trimEnd);
     return effectiveDuration * scale;
   });
+
+  // Calculate scene frame ranges for snap targeting
+  const sceneFrameRanges = calculateSceneFrameRanges(
+    localScenes.map((scene) => ({
+      durationInFrames: scene.clip?.durationInFrames ?? 0,
+      trimStart: scene.trimStart,
+      trimEnd: scene.trimEnd,
+    }))
+  );
+
+  // Build snap targets for the currently trimming scene
+  const snapTargets = useMemo(() => {
+    if (trimmingSceneIndex === null) return [];
+    return buildSnapTargets(
+      sceneFrameRanges,
+      currentFrame,
+      totalDurationInFrames,
+      trimmingSceneIndex
+    );
+  }, [sceneFrameRanges, currentFrame, totalDurationInFrames, trimmingSceneIndex]);
+
+  // Handle snap change from any scene being trimmed
+  const handleSnapChange = useCallback((sceneIndex: number, result: SnapResult | null) => {
+    if (result === null) {
+      // Trim ended or no snap
+      setActiveSnap(null);
+      setTrimmingSceneIndex(null);
+    } else {
+      setTrimmingSceneIndex(sceneIndex);
+      setActiveSnap(result);
+    }
+  }, []);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -168,6 +211,16 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
             scale={scale}
           />
 
+          {/* Snap indicator */}
+          {activeSnap?.snapped && activeSnap.target && (
+            <SnapIndicator
+              frame={activeSnap.frame}
+              scale={scale}
+              type={activeSnap.target.type}
+              visible={true}
+            />
+          )}
+
           {/* Ruler */}
           <div className="px-4">
             <TimelineRuler
@@ -202,6 +255,9 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
                     scale={scale}
                     onRemove={onRemove}
                     onTrimChange={handleTrimChange}
+                    snapTargets={snapTargets}
+                    sceneStartFrame={sceneFrameRanges[index]?.startFrame ?? 0}
+                    onSnapChange={(result) => handleSnapChange(index, result)}
                   />
                 ))}
               </div>

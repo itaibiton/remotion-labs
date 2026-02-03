@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { findSnapTarget, type SnapTarget, type SnapResult } from "@/lib/timeline-snap";
+
+const SNAP_THRESHOLD_PX = 8;
 
 interface TrimHandleProps {
   side: "left" | "right";
@@ -9,6 +12,12 @@ interface TrimHandleProps {
   pixelsPerFrame: number;
   maxTrimFrames: number;
   currentTrimFrames: number;
+  // Snap-related props
+  snapTargets?: SnapTarget[];
+  scale?: number;
+  sceneStartFrame?: number; // For calculating edge position
+  sceneDuration?: number;   // Current effective duration
+  onSnapChange?: (result: SnapResult | null) => void;
 }
 
 /**
@@ -22,6 +31,11 @@ export function TrimHandle({
   pixelsPerFrame,
   maxTrimFrames,
   currentTrimFrames,
+  snapTargets,
+  scale,
+  sceneStartFrame,
+  sceneDuration,
+  onSnapChange,
 }: TrimHandleProps) {
   const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
@@ -42,7 +56,34 @@ export function TrimHandle({
     // For left handle: positive deltaX = more trim (shrink start)
     // For right handle: negative deltaX = more trim (shrink end)
     const rawDeltaFrames = Math.round(deltaX / pixelsPerFrame);
-    const effectiveDelta = side === "left" ? rawDeltaFrames : -rawDeltaFrames;
+    let effectiveDelta = side === "left" ? rawDeltaFrames : -rawDeltaFrames;
+
+    // Calculate what the new edge frame would be for snapping
+    if (snapTargets && scale && sceneStartFrame !== undefined && sceneDuration !== undefined && onSnapChange) {
+      let newEdgeFrame: number;
+      if (side === "left") {
+        // Left edge moves inward with trim
+        newEdgeFrame = sceneStartFrame + (currentTrimFrames + effectiveDelta);
+      } else {
+        // Right edge moves inward with trim
+        newEdgeFrame = sceneStartFrame + sceneDuration - (currentTrimFrames + effectiveDelta);
+      }
+
+      // Check for snap
+      const snapResult = findSnapTarget(newEdgeFrame, snapTargets, SNAP_THRESHOLD_PX, scale);
+
+      if (snapResult.snapped && snapResult.target) {
+        // Adjust delta to land exactly on snap target
+        if (side === "left") {
+          effectiveDelta = snapResult.frame - sceneStartFrame - currentTrimFrames;
+        } else {
+          effectiveDelta = sceneStartFrame + sceneDuration - snapResult.frame - currentTrimFrames;
+        }
+        onSnapChange(snapResult);
+      } else {
+        onSnapChange(null);
+      }
+    }
 
     // Clamp: can't trim more than maxTrimFrames, can't restore more than currentTrimFrames
     const clampedDelta = Math.max(
@@ -60,6 +101,8 @@ export function TrimHandle({
     if (!isDragging) return;
     e.currentTarget.releasePointerCapture(e.pointerId);
     setIsDragging(false);
+    // Clear snap indicator when drag ends
+    onSnapChange?.(null);
     onTrimEnd();
   };
 

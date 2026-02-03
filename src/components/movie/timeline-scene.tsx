@@ -8,6 +8,7 @@ import { DynamicCode } from "@/remotion/compositions/DynamicCode";
 import { X, FastForward } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TrimHandle } from "./timeline-trim-handle";
+import type { SnapTarget, SnapResult } from "@/lib/timeline-snap";
 
 interface TimelineSceneProps {
   id: string;
@@ -26,6 +27,10 @@ interface TimelineSceneProps {
   scale: number;
   onRemove: (index: number) => void;
   onTrimChange: (index: number, trim: { trimStart?: number; trimEnd?: number }) => void;
+  // Snap-related props
+  snapTargets: SnapTarget[];
+  sceneStartFrame: number;
+  onSnapChange: (result: SnapResult | null) => void;
 }
 
 export function TimelineScene({
@@ -39,6 +44,9 @@ export function TimelineScene({
   scale,
   onRemove,
   onTrimChange,
+  snapTargets,
+  sceneStartFrame,
+  onSnapChange,
 }: TimelineSceneProps) {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
@@ -133,6 +141,11 @@ export function TimelineScene({
           pixelsPerFrame={pixelsPerFrame}
           maxTrimFrames={maxLeftTrim}
           currentTrimFrames={localTrimStart}
+          snapTargets={snapTargets}
+          scale={scale}
+          sceneStartFrame={sceneStartFrame}
+          sceneDuration={effectiveDuration}
+          onSnapChange={onSnapChange}
         />
       )}
 
@@ -153,6 +166,11 @@ export function TimelineScene({
           pixelsPerFrame={pixelsPerFrame}
           maxTrimFrames={maxRightTrim}
           currentTrimFrames={localTrimEnd}
+          snapTargets={snapTargets}
+          scale={scale}
+          sceneStartFrame={sceneStartFrame}
+          sceneDuration={effectiveDuration}
+          onSnapChange={onSnapChange}
         />
       )}
 
