@@ -70,6 +70,8 @@ export default defineSchema({
     scenes: v.array(v.object({
       clipId: v.id("clips"),
       durationOverride: v.optional(v.number()),
+      trimStart: v.optional(v.number()),  // Frames to skip from start (default 0)
+      trimEnd: v.optional(v.number()),    // Frames to cut from end (default 0)
     })),
     totalDurationInFrames: v.number(),
     fps: v.number(),

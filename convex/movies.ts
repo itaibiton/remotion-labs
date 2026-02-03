@@ -4,19 +4,24 @@ import { mutation, query, internalQuery } from "./_generated/server";
 /**
  * Compute total duration in frames from a scenes array.
  * Uses durationOverride if present, otherwise fetches clip's durationInFrames.
+ * Accounts for trimStart/trimEnd (non-destructive trim).
  */
 async function computeTotalDuration(
   ctx: { db: { get: (id: any) => Promise<any> } },
-  scenes: Array<{ clipId: any; durationOverride?: number }>
+  scenes: Array<{ clipId: any; durationOverride?: number; trimStart?: number; trimEnd?: number }>
 ): Promise<number> {
   let total = 0;
   for (const scene of scenes) {
+    let baseDuration: number;
     if (scene.durationOverride) {
-      total += scene.durationOverride;
+      baseDuration = scene.durationOverride;
     } else {
       const clip = await ctx.db.get(scene.clipId);
-      total += clip?.durationInFrames ?? 0;
+      baseDuration = clip?.durationInFrames ?? 0;
     }
+    const trimStart = scene.trimStart ?? 0;
+    const trimEnd = scene.trimEnd ?? 0;
+    total += Math.max(0, baseDuration - trimStart - trimEnd);
   }
   return total;
 }
@@ -223,6 +228,8 @@ export const reorderScenes = mutation({
       v.object({
         clipId: v.id("clips"),
         durationOverride: v.optional(v.number()),
+        trimStart: v.optional(v.number()),
+        trimEnd: v.optional(v.number()),
       })
     ),
   },
@@ -241,6 +248,62 @@ export const reorderScenes = mutation({
 
     await ctx.db.patch(args.movieId, {
       scenes: args.sceneOrder,
+      totalDurationInFrames: totalDuration,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Trim a scene by setting trimStart and/or trimEnd values.
+ * Non-destructive: original clip data is preserved, only playback range changes.
+ */
+export const trimScene = mutation({
+  args: {
+    movieId: v.id("movies"),
+    sceneIndex: v.number(),
+    trimStart: v.optional(v.number()),
+    trimEnd: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const movie = await ctx.db.get(args.movieId);
+    if (!movie || movie.userId !== identity.tokenIdentifier) {
+      throw new Error("Movie not found");
+    }
+
+    const scene = movie.scenes[args.sceneIndex];
+    if (!scene) throw new Error("Scene not found");
+
+    // Get base duration for validation
+    const clip = await ctx.db.get(scene.clipId);
+    const baseDuration = scene.durationOverride ?? clip?.durationInFrames ?? 0;
+    const trimStart = args.trimStart ?? scene.trimStart ?? 0;
+    const trimEnd = args.trimEnd ?? scene.trimEnd ?? 0;
+
+    // Validate: trim values must be non-negative
+    if (trimStart < 0 || trimEnd < 0) {
+      throw new Error("Trim values must be non-negative");
+    }
+    // Validate: effective duration must be at least 1 frame
+    if (trimStart + trimEnd >= baseDuration) {
+      throw new Error("Trim would result in zero or negative duration");
+    }
+
+    // Update scene with new trim values
+    const newScenes = [...movie.scenes];
+    newScenes[args.sceneIndex] = {
+      ...scene,
+      trimStart: args.trimStart ?? scene.trimStart,
+      trimEnd: args.trimEnd ?? scene.trimEnd,
+    };
+
+    const totalDuration = await computeTotalDuration(ctx, newScenes);
+
+    await ctx.db.patch(args.movieId, {
+      scenes: newScenes,
       totalDurationInFrames: totalDuration,
       updatedAt: Date.now(),
     });
