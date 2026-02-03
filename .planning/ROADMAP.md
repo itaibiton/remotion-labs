@@ -397,11 +397,12 @@ Plans:
   3. User can zoom in/out on the timeline via scroll wheel and +/- buttons to see more or less detail
   4. During trim and drag operations, clips snap to adjacent clip edges and to the playhead position
   5. Snap indicators (visual guides) appear when a clip edge aligns with a snap target
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 20-01-PLAN.md -- TBD
-- [ ] 20-02-PLAN.md -- TBD
+- [ ] 20-01-PLAN.md -- Trim handles with schema support and setActivatorNodeRef pattern
+- [ ] 20-02-PLAN.md -- Timeline zoom controls with scale state and wheel handler
+- [ ] 20-03-PLAN.md -- Snapping system for trim operations with visual indicators
 
 ### Phase 21: Blade & Split
 **Goal**: Users can split a clip into two independent clips at the playhead position using a blade tool
@@ -474,7 +475,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 17. Prequel Generation | v0.2.0 | 2/2 | Complete | 2026-02-02 |
 | 18. Pro Layout | v0.3.0 | 1/1 | Complete | 2026-02-03 |
 | 19. Timeline Foundation | v0.3.0 | 2/2 | Complete | 2026-02-03 |
-| 20. Timeline Interactions | v0.3.0 | 0/TBD | Not started | - |
+| 20. Timeline Interactions | v0.3.0 | 0/3 | Not started | - |
 | 21. Blade & Split | v0.3.0 | 0/TBD | Not started | - |
 | 22. Per-Clip Actions | v0.3.0 | 0/TBD | Not started | - |
 | 23. Inline Editing | v0.3.0 | 0/TBD | Not started | - |
