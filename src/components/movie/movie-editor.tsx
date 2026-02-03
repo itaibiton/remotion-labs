@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { type PlayerRef } from "@remotion/player";
 import { api } from "../../../convex/_generated/api";
 import { Film, Plus } from "lucide-react";
 import Link from "next/link";
@@ -17,6 +18,7 @@ import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
   const [activeSceneIndex, setActiveSceneIndex] = useState<number>(-1);
+  const playerRef = useRef<PlayerRef>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const movie = useQuery(api.movies.getWithClips, { id: movieId as any });
@@ -201,6 +203,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
                 scenes={validScenes}
                 fps={movie.fps}
                 totalDurationInFrames={totalDurationInFrames}
+                playerRef={playerRef}
                 onActiveSceneChange={setActiveSceneIndex}
               />
             </div>
@@ -212,6 +215,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               activeSceneIndex={activeSceneIndex}
               totalDurationInFrames={totalDurationInFrames}
               fps={movie.fps}
+              playerRef={playerRef}
               onReorder={handleReorder}
               onRemove={handleRemoveScene}
             />

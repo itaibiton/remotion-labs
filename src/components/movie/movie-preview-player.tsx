@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
 import {
   MovieComposition,
@@ -12,6 +12,7 @@ interface MoviePreviewPlayerProps {
   scenes: MovieScene[];
   fps: number;
   totalDurationInFrames: number;
+  playerRef: React.RefObject<PlayerRef | null>;
   onActiveSceneChange?: (sceneIndex: number) => void;
 }
 
@@ -19,10 +20,10 @@ export function MoviePreviewPlayer({
   scenes,
   fps,
   totalDurationInFrames,
+  playerRef,
   onActiveSceneChange,
 }: MoviePreviewPlayerProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const playerRef = useRef<PlayerRef>(null);
   const currentFrame = useCurrentPlayerFrame(playerRef);
 
   useEffect(() => {

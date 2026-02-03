@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import type { PlayerRef } from "@remotion/player";
 import {
   DndContext,
   closestCenter,
@@ -33,11 +34,12 @@ interface TimelineProps {
   activeSceneIndex?: number;
   totalDurationInFrames: number;
   fps: number;
+  playerRef: React.RefObject<PlayerRef | null>;
   onReorder: (newScenes: Array<{ clipId: string }>) => void;
   onRemove: (sceneIndex: number) => void;
 }
 
-export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, onReorder, onRemove }: TimelineProps) {
+export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove }: TimelineProps) {
   // Optimistic local state to prevent flicker on reorder
   const [localScenes, setLocalScenes] = useState(scenes);
 
