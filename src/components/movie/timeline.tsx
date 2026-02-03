@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { TimelineScene } from "./timeline-scene";
+import { TimelineRuler } from "./timeline-ruler";
 
 interface TimelineProps {
   scenes: Array<{
@@ -30,11 +31,13 @@ interface TimelineProps {
     } | null;
   }>;
   activeSceneIndex?: number;
+  totalDurationInFrames: number;
+  fps: number;
   onReorder: (newScenes: Array<{ clipId: string }>) => void;
   onRemove: (sceneIndex: number) => void;
 }
 
-export function Timeline({ scenes, activeSceneIndex, onReorder, onRemove }: TimelineProps) {
+export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, onReorder, onRemove }: TimelineProps) {
   // Optimistic local state to prevent flicker on reorder
   const [localScenes, setLocalScenes] = useState(scenes);
 
@@ -53,6 +56,16 @@ export function Timeline({ scenes, activeSceneIndex, onReorder, onRemove }: Time
   // Stable IDs derived from index -- used for both SortableContext items and TimelineScene id
   const sceneIds = localScenes.map((_, i) => `scene-${i}`);
 
+  // Calculate proportional widths for each scene based on duration
+  const sceneWidths = useMemo(() => {
+    return localScenes.map((scene) => {
+      const duration = scene.clip?.durationInFrames ?? 0;
+      if (totalDurationInFrames === 0) return "0%";
+      const percent = (duration / totalDurationInFrames) * 100;
+      return `${percent}%`;
+    });
+  }, [localScenes, totalDurationInFrames]);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -70,6 +83,9 @@ export function Timeline({ scenes, activeSceneIndex, onReorder, onRemove }: Time
 
   return (
     <div>
+      <div className="px-4">
+        <TimelineRuler totalDurationInFrames={totalDurationInFrames} fps={fps} />
+      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -80,7 +96,7 @@ export function Timeline({ scenes, activeSceneIndex, onReorder, onRemove }: Time
           items={sceneIds}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="flex flex-row gap-2 overflow-x-auto p-4 min-h-[140px] bg-muted/20 rounded-lg border border-dashed">
+          <div className="flex flex-row overflow-x-auto p-4 min-h-[140px] bg-muted/20 rounded-lg border border-dashed">
             {localScenes.map((scene, index) => (
               <TimelineScene
                 key={`scene-${index}`}
@@ -88,6 +104,7 @@ export function Timeline({ scenes, activeSceneIndex, onReorder, onRemove }: Time
                 clip={scene.clip}
                 index={index}
                 isActive={index === activeSceneIndex}
+                widthPercent={sceneWidths[index]}
                 onRemove={onRemove}
               />
             ))}

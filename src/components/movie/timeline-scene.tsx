@@ -19,6 +19,7 @@ interface TimelineSceneProps {
   } | null;
   index: number;
   isActive?: boolean;
+  widthPercent: string;
   onRemove: (index: number) => void;
 }
 
@@ -27,6 +28,7 @@ export function TimelineScene({
   clip,
   index,
   isActive,
+  widthPercent,
   onRemove,
 }: TimelineSceneProps) {
   const [isMounted, setIsMounted] = useState(false);
@@ -54,10 +56,10 @@ export function TimelineScene({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, width: widthPercent, minWidth: "80px" }}
       {...attributes}
       {...listeners}
-      className={`group relative w-[160px] h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden cursor-grab active:cursor-grabbing ${isActive ? "ring-2 ring-primary" : ""}`}
+      className={`group relative h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden cursor-grab active:cursor-grabbing ${isActive ? "ring-2 ring-primary" : ""}`}
     >
       {/* Remove button */}
       <button

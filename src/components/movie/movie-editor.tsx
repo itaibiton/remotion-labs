@@ -210,6 +210,8 @@ export function MovieEditor({ movieId }: { movieId: string }) {
             <Timeline
               scenes={scenesWithClips}
               activeSceneIndex={activeSceneIndex}
+              totalDurationInFrames={totalDurationInFrames}
+              fps={movie.fps}
               onReorder={handleReorder}
               onRemove={handleRemoveScene}
             />
