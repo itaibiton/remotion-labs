@@ -106,3 +106,36 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+/**
+ * Update an existing clip's code and metadata.
+ * Used for regenerate and edit save operations.
+ */
+export const update = mutation({
+  args: {
+    id: v.id("clips"),
+    code: v.optional(v.string()),
+    rawCode: v.optional(v.string()),
+    name: v.optional(v.string()),
+    durationInFrames: v.optional(v.number()),
+    fps: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const clip = await ctx.db.get(args.id);
+    if (!clip || clip.userId !== identity.tokenIdentifier) {
+      throw new Error("Clip not found");
+    }
+
+    const updates: Record<string, unknown> = { updatedAt: Date.now() };
+    if (args.code !== undefined) updates.code = args.code;
+    if (args.rawCode !== undefined) updates.rawCode = args.rawCode;
+    if (args.name !== undefined) updates.name = args.name;
+    if (args.durationInFrames !== undefined) updates.durationInFrames = args.durationInFrames;
+    if (args.fps !== undefined) updates.fps = args.fps;
+
+    await ctx.db.patch(args.id, updates);
+  },
+});
