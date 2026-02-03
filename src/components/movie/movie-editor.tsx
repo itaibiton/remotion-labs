@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useCallback } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { type PlayerRef } from "@remotion/player";
 import { api } from "../../../convex/_generated/api";
 import { Film, Plus } from "lucide-react";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Timeline } from "./timeline";
 import { AddScenePanel } from "./add-scene-panel";
+import { SceneEditPanel } from "./scene-edit-panel";
 import { MoviePreviewPlayer } from "@/components/movie/movie-preview-player";
 import { MovieRenderButton } from "@/components/movie/movie-render-button";
 import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
@@ -20,6 +21,9 @@ import { useCurrentPlayerFrame } from "@/hooks/use-current-player-frame";
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
   const [activeSceneIndex, setActiveSceneIndex] = useState<number>(-1);
+  const [generatingSceneIndex, setGeneratingSceneIndex] = useState<number | null>(null);
+  const [editingSceneIndex, setEditingSceneIndex] = useState<number | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const playerRef = useRef<PlayerRef>(null);
   const currentFrame = useCurrentPlayerFrame(playerRef);
 
@@ -30,6 +34,11 @@ export function MovieEditor({ movieId }: { movieId: string }) {
   const reorderScenes = useMutation(api.movies.reorderScenes);
   const trimSceneMutation = useMutation(api.movies.trimScene);
   const splitSceneMutation = useMutation(api.movies.splitScene);
+  const continuationAction = useAction(api.generateAnimation.generateContinuation);
+  const prequelAction = useAction(api.generateAnimation.generatePrequel);
+  const saveClip = useMutation(api.clips.save);
+  const updateClip = useMutation(api.clips.update);
+  const insertScene = useMutation(api.movies.insertScene);
 
   const handleAddClip = async (clipId: string) => {
     try {
@@ -199,6 +208,155 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     onSplitAtPlayhead: handleSplitAtPlayhead,
   });
 
+  // Generate continuation and insert as next scene
+  const handleGenerateNext = useCallback(async (sceneIndex: number) => {
+    if (!movie || generatingSceneIndex !== null) return;
+    const scene = scenesWithClips[sceneIndex];
+    if (!scene?.clip) return;
+
+    setGeneratingSceneIndex(sceneIndex);
+    try {
+      toast.loading("Generating continuation...", { id: "gen-next" });
+
+      // 1. Generate continuation code
+      const result = await continuationAction({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sourceClipId: scene.clip._id as any,
+      });
+
+      // 2. Save as new clip
+      const newClipId = await saveClip({
+        name: `${scene.clip.name} (cont.)`,
+        code: result.code,
+        rawCode: result.rawCode,
+        durationInFrames: result.durationInFrames,
+        fps: result.fps,
+      });
+
+      // 3. Insert into movie after source scene
+      await insertScene({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        movieId: movie._id as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clipId: newClipId as any,
+        afterIndex: sceneIndex,
+      });
+
+      toast.success("Continuation added!", { id: "gen-next" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to generate", { id: "gen-next" });
+    } finally {
+      setGeneratingSceneIndex(null);
+    }
+  }, [movie, scenesWithClips, generatingSceneIndex, continuationAction, saveClip, insertScene]);
+
+  // Generate prequel and insert before scene
+  const handleGeneratePrevious = useCallback(async (sceneIndex: number) => {
+    if (!movie || generatingSceneIndex !== null) return;
+    const scene = scenesWithClips[sceneIndex];
+    if (!scene?.clip) return;
+
+    setGeneratingSceneIndex(sceneIndex);
+    try {
+      toast.loading("Generating prequel...", { id: "gen-prev" });
+
+      // 1. Generate prequel code
+      const result = await prequelAction({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sourceClipId: scene.clip._id as any,
+      });
+
+      // 2. Save as new clip
+      const newClipId = await saveClip({
+        name: `${scene.clip.name} (prequel)`,
+        code: result.code,
+        rawCode: result.rawCode,
+        durationInFrames: result.durationInFrames,
+        fps: result.fps,
+      });
+
+      // 3. Insert into movie BEFORE source scene
+      await insertScene({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        movieId: movie._id as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clipId: newClipId as any,
+        beforeIndex: sceneIndex,
+      });
+
+      toast.success("Prequel added!", { id: "gen-prev" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to generate", { id: "gen-prev" });
+    } finally {
+      setGeneratingSceneIndex(null);
+    }
+  }, [movie, scenesWithClips, generatingSceneIndex, prequelAction, saveClip, insertScene]);
+
+  // Regenerate clip code in place
+  const handleRegenerate = useCallback(async (sceneIndex: number) => {
+    if (!movie || generatingSceneIndex !== null) return;
+    const scene = scenesWithClips[sceneIndex];
+    if (!scene?.clip) return;
+
+    setGeneratingSceneIndex(sceneIndex);
+    try {
+      toast.loading("Regenerating clip...", { id: "regen" });
+
+      // Use continuation action with the clip's own code as source for regeneration
+      // This generates a fresh variation based on the same visual style
+      const result = await continuationAction({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sourceClipId: scene.clip._id as any,
+        prompt: "Create a fresh variation with similar style but different animation",
+      });
+
+      // Update the existing clip with new code
+      await updateClip({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        id: scene.clip._id as any,
+        code: result.code,
+        rawCode: result.rawCode,
+        durationInFrames: result.durationInFrames,
+        fps: result.fps,
+      });
+
+      toast.success("Clip regenerated!", { id: "regen" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to regenerate", { id: "regen" });
+    } finally {
+      setGeneratingSceneIndex(null);
+    }
+  }, [movie, scenesWithClips, generatingSceneIndex, continuationAction, updateClip]);
+
+  // Open edit panel for a scene
+  const handleEdit = useCallback((sceneIndex: number) => {
+    setEditingSceneIndex(sceneIndex);
+  }, []);
+
+  // Save edited clip code
+  const handleSaveEdit = useCallback(async (clipId: string, code: string, rawCode: string) => {
+    setIsSavingEdit(true);
+    try {
+      await updateClip({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        id: clipId as any,
+        code,
+        rawCode,
+      });
+      toast.success("Changes saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save");
+      throw error; // Re-throw so panel knows save failed
+    } finally {
+      setIsSavingEdit(false);
+    }
+  }, [updateClip]);
+
+  // Get the clip being edited
+  const editingClip = editingSceneIndex !== null
+    ? scenesWithClips[editingSceneIndex]?.clip ?? null
+    : null;
+
   // Loading state
   if (movie === undefined) {
     return (
@@ -308,6 +466,11 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               isBladeMode={isBladeMode}
               onToggleBladeMode={toggleBladeMode}
               onSplit={handleSplitAtPlayhead}
+              onGenerateNext={handleGenerateNext}
+              onGeneratePrevious={handleGeneratePrevious}
+              onRegenerate={handleRegenerate}
+              onEdit={handleEdit}
+              isGenerating={generatingSceneIndex !== null}
             />
           </div>
         </div>
@@ -318,6 +481,17 @@ export function MovieEditor({ movieId }: { movieId: string }) {
         open={showAddScene}
         onOpenChange={setShowAddScene}
         onAddClip={handleAddClip}
+      />
+
+      {/* Edit Scene Panel */}
+      <SceneEditPanel
+        open={editingSceneIndex !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingSceneIndex(null);
+        }}
+        clip={editingClip}
+        onSave={handleSaveEdit}
+        isSaving={isSavingEdit}
       />
     </div>
   );
