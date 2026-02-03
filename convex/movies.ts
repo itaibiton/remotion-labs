@@ -309,3 +309,78 @@ export const trimScene = mutation({
     });
   },
 });
+
+/**
+ * Split a scene into two at the specified frame position.
+ * Creates two scenes from one: both reference the same clipId but with different trim ranges.
+ * splitFrame is the frame position in the ORIGINAL clip (not the visible portion).
+ */
+export const splitScene = mutation({
+  args: {
+    movieId: v.id("movies"),
+    sceneIndex: v.number(),
+    splitFrame: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const movie = await ctx.db.get(args.movieId);
+    if (!movie || movie.userId !== identity.tokenIdentifier) {
+      throw new Error("Movie not found");
+    }
+
+    const scene = movie.scenes[args.sceneIndex];
+    if (!scene) throw new Error("Scene not found");
+
+    // Get base duration for validation
+    const clip = await ctx.db.get(scene.clipId);
+    const baseDuration = scene.durationOverride ?? clip?.durationInFrames ?? 0;
+    const trimStart = scene.trimStart ?? 0;
+    const trimEnd = scene.trimEnd ?? 0;
+
+    // Validate split position is within the visible range (after trimStart, before trimEnd)
+    if (args.splitFrame <= trimStart) {
+      throw new Error("Split position must be after the trim start");
+    }
+    if (args.splitFrame >= baseDuration - trimEnd) {
+      throw new Error("Split position must be before the trim end");
+    }
+
+    // Create two new scenes from the split
+    const firstScene = {
+      clipId: scene.clipId,
+      ...(scene.durationOverride !== undefined && { durationOverride: scene.durationOverride }),
+      trimStart: trimStart,
+      trimEnd: baseDuration - args.splitFrame,
+    };
+
+    const secondScene = {
+      clipId: scene.clipId,
+      ...(scene.durationOverride !== undefined && { durationOverride: scene.durationOverride }),
+      trimStart: args.splitFrame,
+      trimEnd: trimEnd,
+    };
+
+    // Replace original scene with the two new scenes
+    const newScenes = [
+      ...movie.scenes.slice(0, args.sceneIndex),
+      firstScene,
+      secondScene,
+      ...movie.scenes.slice(args.sceneIndex + 1),
+    ];
+
+    const totalDuration = await computeTotalDuration(ctx, newScenes);
+
+    await ctx.db.patch(args.movieId, {
+      scenes: newScenes,
+      totalDurationInFrames: totalDuration,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      firstSceneIndex: args.sceneIndex,
+      secondSceneIndex: args.sceneIndex + 1,
+    };
+  },
+});
