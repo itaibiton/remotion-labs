@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Release: v0.3.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 19 (Timeline Foundation)
+**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 20 (Timeline Interactions)
 
 ## Current Position
 
-Phase: 19 of 23 (Timeline Foundation)
-Plan: 2 of 2 complete
-Status: Phase complete
-Last activity: 2026-02-03 -- Completed 19-02-PLAN.md
+Phase: 20 of 23 (Timeline Interactions)
+Plan: 2 of 3 complete
+Status: In progress
+Last activity: 2026-02-03 -- Completed 20-02-PLAN.md
 
-Progress: ███████████████████░░░░░ 81%
+Progress: ███████████████████░░░░░ 83%
 
 ## Milestone History
 
@@ -26,7 +26,7 @@ Progress: ███████████████████░░░░�
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
-| v0.3.0 Movie Editor Revamp | 6 | 3/TBD | 4/12 | 2026-02-02 -> ... |
+| v0.3.0 Movie Editor Revamp | 6 | 5/TBD | 6/12 | 2026-02-02 -> ... |
 
 ## Accumulated Context
 
@@ -49,6 +49,9 @@ v0.3.0 decisions:
 - Lifted playerRef pattern: MovieEditor owns ref, passes to player + timeline
 - Playhead drag: pointer capture for smooth cross-boundary dragging
 - 12px hit zone around 2px playhead line for easier grabbing
+- Default scale: 3 px/frame (100%), min: 0.5 px/frame, max: 20 px/frame
+- Zoom factors: 1.25x for button clicks, 1.1x for scroll wheel
+- Ctrl+Meta modifier required for scroll zoom to avoid accidental zoom
 
 ### Pending Todos
 
@@ -65,10 +68,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 19-02-PLAN.md (Phase 19 complete)
+Stopped at: Completed 20-02-PLAN.md
 Resume file: None
 
-Next step: Plan Phase 20 (Timeline Interactions)
+Next step: Execute 20-03-PLAN.md (Clip Trimming)
 
 ---
-*19-02 complete -- 2026-02-03*
+*20-02 complete -- 2026-02-03*
