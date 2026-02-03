@@ -171,9 +171,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TL-02 | Phase 20 | Complete |
 | TL-04 | Phase 20 | Complete |
 | TL-06 | Phase 20 | Complete |
-| TL-03 | Phase 21 | Pending |
-| ACT-03 | Phase 22 | Pending |
-| ACT-04 | Phase 22 | Pending |
+| TL-03 | Phase 21 | Complete |
+| ACT-03 | Phase 22 | Complete |
+| ACT-04 | Phase 22 | Complete |
 | EDIT-01 | Phase 23 | Pending |
 | EDIT-02 | Phase 23 | Pending |
 
@@ -185,4 +185,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 -- Phase 20 complete. TL-02, TL-04, TL-06 marked Complete.*
+*Last updated: 2026-02-03 -- Phase 22 complete. TL-03, ACT-03, ACT-04 marked Complete.*
