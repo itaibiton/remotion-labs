@@ -381,11 +381,11 @@ Plans:
   3. A playhead indicator on the ruler is draggable and scrubbing it updates the preview player position
   4. Playing the preview player moves the playhead across the timeline in sync
   5. Clicking a position on the ruler jumps the playhead and preview to that timecode
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md -- TBD
-- [ ] 19-02-PLAN.md -- TBD
+- [ ] 19-01-PLAN.md -- Proportional clip widths and timecode ruler
+- [ ] 19-02-PLAN.md -- Draggable playhead with bidirectional player sync
 
 ### Phase 20: Timeline Interactions
 **Goal**: Users can non-destructively trim clips and navigate the timeline with zoom controls, with snapping for precision
