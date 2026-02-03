@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 ## Current Position
 
-Phase: 21 of 23 (Blade & Split)
+Phase: 22 of 23 (Per-Clip Actions)
 Plan: 0 of TBD
 Status: Not started
-Last activity: 2026-02-03 -- Completed Phase 20 (Timeline Interactions)
+Last activity: 2026-02-03 -- Completed Phase 21 (Blade & Split)
 
-Progress: █████████████████████░░░ 87%
+Progress: ██████████████████████░░ 91%
 
 ## Milestone History
 
@@ -75,7 +75,7 @@ Last session: 2026-02-03
 Stopped at: Completed Phase 20 (Timeline Interactions)
 Resume file: None
 
-Next step: Plan Phase 21 (Blade & Split)
+Next step: Plan Phase 22 (Per-Clip Actions)
 
 ---
-*Phase 20 complete -- 2026-02-03*
+*Phase 21 complete -- 2026-02-03*
