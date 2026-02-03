@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { type PlayerRef } from "@remotion/player";
 import { api } from "../../../convex/_generated/api";
@@ -13,12 +13,15 @@ import { AddScenePanel } from "./add-scene-panel";
 import { MoviePreviewPlayer } from "@/components/movie/movie-preview-player";
 import { MovieRenderButton } from "@/components/movie/movie-render-button";
 import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
+import { useBladeMode } from "@/hooks/use-blade-mode";
+import { useCurrentPlayerFrame } from "@/hooks/use-current-player-frame";
 
 
 export function MovieEditor({ movieId }: { movieId: string }) {
   const [showAddScene, setShowAddScene] = useState(false);
   const [activeSceneIndex, setActiveSceneIndex] = useState<number>(-1);
   const playerRef = useRef<PlayerRef>(null);
+  const currentFrame = useCurrentPlayerFrame(playerRef);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const movie = useQuery(api.movies.getWithClips, { id: movieId as any });
@@ -26,6 +29,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
   const removeScene = useMutation(api.movies.removeScene);
   const reorderScenes = useMutation(api.movies.reorderScenes);
   const trimSceneMutation = useMutation(api.movies.trimScene);
+  const splitSceneMutation = useMutation(api.movies.splitScene);
 
   const handleAddClip = async (clipId: string) => {
     try {
@@ -143,6 +147,58 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     [JSON.stringify(scenesWithClips)]
   );
 
+  // Find which scene contains a given playback frame and convert to clip frame
+  const findSceneAtFrame = useCallback((targetFrame: number): { sceneIndex: number; frameInClip: number } | null => {
+    let offset = 0;
+    for (let i = 0; i < scenesWithClips.length; i++) {
+      const scene = scenesWithClips[i];
+      if (!scene.clip) continue;
+
+      const trimStart = scene.trimStart ?? 0;
+      const trimEnd = scene.trimEnd ?? 0;
+      const baseDuration = scene.clip.durationInFrames;
+      const effectiveDuration = Math.max(0, baseDuration - trimStart - trimEnd);
+
+      if (targetFrame >= offset && targetFrame < offset + effectiveDuration) {
+        // Frame is in this scene - convert playback frame to clip frame
+        const frameInScene = targetFrame - offset;
+        const frameInClip = trimStart + frameInScene;
+        return { sceneIndex: i, frameInClip };
+      }
+
+      offset += effectiveDuration;
+    }
+    return null;
+  }, [scenesWithClips]);
+
+  // Split handler for blade mode
+  const handleSplitAtPlayhead = useCallback(async () => {
+    if (!movie) return;
+
+    const location = findSceneAtFrame(currentFrame);
+    if (!location) {
+      toast.error("No clip at playhead position");
+      return;
+    }
+
+    try {
+      await splitSceneMutation({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        movieId: movie._id as any,
+        sceneIndex: location.sceneIndex,
+        splitFrame: location.frameInClip,
+      });
+      toast.success("Clip split");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to split clip");
+    }
+  }, [movie, currentFrame, findSceneAtFrame, splitSceneMutation]);
+
+  // Blade mode with keyboard shortcuts
+  const { isBladeMode, toggleBladeMode } = useBladeMode({
+    onSplitAtPlayhead: handleSplitAtPlayhead,
+  });
+
   // Loading state
   if (movie === undefined) {
     return (
@@ -249,6 +305,9 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               onReorder={handleReorder}
               onRemove={handleRemoveScene}
               onTrimScene={handleTrimScene}
+              isBladeMode={isBladeMode}
+              onToggleBladeMode={toggleBladeMode}
+              onSplit={handleSplitAtPlayhead}
             />
           </div>
         </div>

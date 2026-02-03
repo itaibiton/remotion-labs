@@ -23,6 +23,8 @@ import { TimelineScene } from "./timeline-scene";
 import { TimelineRuler } from "./timeline-ruler";
 import { TimelinePlayhead } from "./timeline-playhead";
 import { TimelineZoomControls } from "./timeline-zoom-controls";
+import { Button } from "@/components/ui/button";
+import { Scissors } from "lucide-react";
 
 interface TimelineProps {
   scenes: Array<{
@@ -44,12 +46,15 @@ interface TimelineProps {
   onReorder: (newScenes: Array<{ clipId: string; trimStart?: number; trimEnd?: number }>) => void;
   onRemove: (sceneIndex: number) => void;
   onTrimScene: (sceneIndex: number, trimStart?: number, trimEnd?: number) => void;
+  isBladeMode?: boolean;
+  onToggleBladeMode?: () => void;
+  onSplit?: () => void;
 }
 
 // Consistent padding for timeline elements (ruler, clips, playhead alignment)
 const TIMELINE_PADDING = 16; // px-4 = 16px
 
-export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene }: TimelineProps) {
+export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene, isBladeMode, onToggleBladeMode, onSplit }: TimelineProps) {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentFrame = useCurrentPlayerFrame(playerRef);
@@ -112,11 +117,19 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
     onTrimScene(index, trim.trimStart, trim.trimEnd);
   }, [onTrimScene]);
 
-  // Click-to-seek: clicking on the timeline background/ruler seeks to that position
+  // Click-to-seek or split: clicking on the timeline background/ruler
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Don't seek if clicking on a clip or playhead (only background/ruler)
+    // Don't interact if clicking on a clip or playhead (only background/ruler)
     if ((e.target as HTMLElement).closest('[data-sortable]')) return;
     if ((e.target as HTMLElement).closest('[data-playhead]')) return;
+
+    // In blade mode, trigger split at current playhead position
+    if (isBladeMode && onSplit) {
+      onSplit();
+      return;
+    }
+
+    // Normal mode: seek to click position
     const container = timelineContainerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
@@ -125,13 +138,25 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
     const frame = Math.round(clickX / scale);
     const clampedFrame = Math.max(0, Math.min(frame, totalDurationInFrames - 1));
     playerRef.current?.seekTo(clampedFrame);
-  }, [playerRef, totalDurationInFrames, scale]);
+  }, [isBladeMode, onSplit, playerRef, totalDurationInFrames, scale]);
 
   return (
     <div>
       {/* Header with zoom controls */}
       <div className="flex items-center justify-between px-4 py-2 border-b">
-        <span className="text-sm text-muted-foreground">Timeline</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Timeline</span>
+          {onToggleBladeMode && (
+            <Button
+              variant={isBladeMode ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleBladeMode}
+              title={isBladeMode ? "Exit blade mode (Esc)" : "Blade tool (B)"}
+            >
+              <Scissors className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         <TimelineZoomControls
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
@@ -149,7 +174,7 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
         {/* Timeline content with fixed width based on scale */}
         <div
           ref={timelineContainerRef}
-          className="relative cursor-pointer"
+          className={`relative ${isBladeMode ? "cursor-crosshair" : "cursor-pointer"}`}
           style={{ width: `${Math.max(timelineWidth, 100)}px`, minWidth: '100%' }}
           onClick={handleTimelineClick}
         >
@@ -191,6 +216,7 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
                     clip={scene.clip}
                     index={index}
                     isActive={index === activeSceneIndex}
+                    isBladeMode={isBladeMode}
                     trimStart={scene.trimStart ?? 0}
                     trimEnd={scene.trimEnd ?? 0}
                     scale={scale}
@@ -205,7 +231,7 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
       </div>
 
       <p className="text-xs text-muted-foreground mt-2 text-center">
-        Drag to reorder | Drag edges to trim | Ctrl+scroll to zoom
+        Drag to reorder | Drag edges to trim | Ctrl+scroll to zoom | B for blade tool
       </p>
     </div>
   );

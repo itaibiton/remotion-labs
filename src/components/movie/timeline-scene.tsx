@@ -20,6 +20,7 @@ interface TimelineSceneProps {
   } | null;
   index: number;
   isActive?: boolean;
+  isBladeMode?: boolean;
   trimStart: number;
   trimEnd: number;
   scale: number;
@@ -32,6 +33,7 @@ export function TimelineScene({
   clip,
   index,
   isActive,
+  isBladeMode,
   trimStart,
   trimEnd,
   scale,
@@ -110,7 +112,7 @@ export function TimelineScene({
     <div
       ref={setNodeRef}
       style={{ ...style, width: `${Math.max(liveWidthPx, 80)}px` }}
-      className={`group relative h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden ${isActive ? "ring-2 ring-primary" : ""}`}
+      className={`group relative h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden ${isActive ? "ring-2 ring-primary" : ""} ${isBladeMode ? "cursor-crosshair" : ""}`}
     >
       {/* Left trim handle */}
       {clip && (
@@ -130,7 +132,7 @@ export function TimelineScene({
         ref={setActivatorNodeRef}
         {...attributes}
         {...listeners}
-        className="absolute inset-x-3 inset-y-0 cursor-grab active:cursor-grabbing z-10"
+        className={`absolute inset-x-3 inset-y-0 z-10 ${isBladeMode ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
       />
 
       {/* Right trim handle */}
