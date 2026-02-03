@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Thumbnail } from "@remotion/player";
@@ -20,10 +20,10 @@ interface TimelineSceneProps {
   } | null;
   index: number;
   isActive?: boolean;
-  widthPercent: string;
+  widthPx: number;
   trimStart: number;
   trimEnd: number;
-  totalDurationInFrames: number;
+  scale: number;
   onRemove: (index: number) => void;
   onTrimChange: (index: number, trim: { trimStart?: number; trimEnd?: number }) => void;
 }
@@ -33,16 +33,15 @@ export function TimelineScene({
   clip,
   index,
   isActive,
-  widthPercent,
+  widthPx,
   trimStart,
   trimEnd,
-  totalDurationInFrames,
+  scale,
   onRemove,
   onTrimChange,
 }: TimelineSceneProps) {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Local trim state for real-time visual feedback during drag
   const [localTrimStart, setLocalTrimStart] = useState(trimStart);
@@ -78,26 +77,8 @@ export function TimelineScene({
   const baseDuration = clip?.durationInFrames ?? 0;
   const effectiveDuration = Math.max(1, baseDuration - localTrimStart - localTrimEnd);
 
-  // Calculate pixels per frame based on container width
-  // We need the actual rendered width to convert between pixels and frames
-  const [containerWidth, setContainerWidth] = useState(100);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      const resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          setContainerWidth(entry.contentRect.width);
-        }
-      });
-      resizeObserver.observe(containerRef.current);
-      return () => resizeObserver.disconnect();
-    }
-  }, []);
-
-  // Calculate pixelsPerFrame based on container width and effective duration
-  const pixelsPerFrame = containerWidth > 0 && effectiveDuration > 0
-    ? containerWidth / effectiveDuration
-    : 1;
+  // Use scale directly as pixels per frame (from timeline zoom)
+  const pixelsPerFrame = scale;
 
   // Handle trim delta for left handle
   const handleLeftTrimDelta = useCallback((deltaFrames: number) => {
@@ -139,11 +120,8 @@ export function TimelineScene({
 
   return (
     <div
-      ref={(node) => {
-        setNodeRef(node);
-        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-      }}
-      style={{ ...style, width: widthPercent, minWidth: "80px" }}
+      ref={setNodeRef}
+      style={{ ...style, width: `${Math.max(widthPx, 80)}px` }}
       className={`group relative h-[110px] flex-shrink-0 rounded-lg border bg-card overflow-hidden ${isActive ? "ring-2 ring-primary" : ""}`}
     >
       {/* Left trim handle - NOT part of drag system */}

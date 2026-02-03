@@ -25,6 +25,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
   const addScene = useMutation(api.movies.addScene);
   const removeScene = useMutation(api.movies.removeScene);
   const reorderScenes = useMutation(api.movies.reorderScenes);
+  const trimSceneMutation = useMutation(api.movies.trimScene);
 
   const handleAddClip = async (clipId: string) => {
     try {
@@ -50,17 +51,37 @@ export function MovieEditor({ movieId }: { movieId: string }) {
     }
   };
 
-  const handleReorder = async (newScenes: Array<{ clipId: string }>) => {
+  const handleReorder = async (newScenes: Array<{ clipId: string; trimStart?: number; trimEnd?: number }>) => {
     try {
       await reorderScenes({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         movieId: movie!._id as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sceneOrder: newScenes.map((s) => ({ clipId: s.clipId as any })),
+        sceneOrder: newScenes.map((s) => ({
+          clipId: s.clipId as any,
+          trimStart: s.trimStart,
+          trimEnd: s.trimEnd,
+        })),
       });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to reorder"
+      );
+    }
+  };
+
+  const handleTrimScene = async (sceneIndex: number, trimStart?: number, trimEnd?: number) => {
+    try {
+      await trimSceneMutation({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        movieId: movie!._id as any,
+        sceneIndex,
+        trimStart,
+        trimEnd,
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to trim scene"
       );
     }
   };
@@ -72,6 +93,8 @@ export function MovieEditor({ movieId }: { movieId: string }) {
       movie
         ? movie.scenes.map((scene, index) => ({
             clipId: scene.clipId,
+            trimStart: scene.trimStart,
+            trimEnd: scene.trimEnd,
             clip: movie.sceneClips[index] ?? null,
           }))
         : [],
@@ -80,6 +103,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
   );
 
   // Build valid scenes array for the preview player (only scenes with loaded clips)
+  // Include trimStart/trimEnd for non-destructive playback
   const validScenes = useMemo(
     () =>
       scenesWithClips
@@ -88,13 +112,19 @@ export function MovieEditor({ movieId }: { movieId: string }) {
           code: s.clip!.code,
           durationInFrames: s.clip!.durationInFrames,
           fps: s.clip!.fps,
+          trimStart: s.trimStart ?? 0,
+          trimEnd: s.trimEnd ?? 0,
         })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(scenesWithClips)]
   );
 
+  // Calculate total duration accounting for trim values
   const totalDurationInFrames = useMemo(
-    () => validScenes.reduce((sum, s) => sum + s.durationInFrames, 0),
+    () => validScenes.reduce((sum, s) => {
+      const effectiveDuration = Math.max(0, s.durationInFrames - s.trimStart - s.trimEnd);
+      return sum + effectiveDuration;
+    }, 0),
     [validScenes]
   );
 
@@ -218,6 +248,7 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               playerRef={playerRef}
               onReorder={handleReorder}
               onRemove={handleRemoveScene}
+              onTrimScene={handleTrimScene}
             />
           </div>
         </div>
