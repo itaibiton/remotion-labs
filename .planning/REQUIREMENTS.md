@@ -164,8 +164,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ACT-01 | Phase 16 | Complete |
 | ACT-02 | Phase 16 | Complete |
 | PREQUEL-01 | Phase 17 | Complete |
-| LAYOUT-01 | Phase 18 | Pending |
-| LAYOUT-02 | Phase 18 | Pending |
+| LAYOUT-01 | Phase 18 | Complete |
+| LAYOUT-02 | Phase 18 | Complete (adapted to fixed layout per user request) |
 | TL-01 | Phase 19 | Pending |
 | TL-05 | Phase 19 | Pending |
 | TL-02 | Phase 20 | Pending |

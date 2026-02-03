@@ -55,7 +55,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v0.3.0 -- Movie Editor Revamp
 
-- [ ] **Phase 18: Pro Layout** - Movie page fills the viewport with resizable preview and timeline panels
+- [x] **Phase 18: Pro Layout** - Movie page fills the viewport with fixed preview and timeline panels
 - [ ] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
 - [ ] **Phase 20: Timeline Interactions** - Users can trim clips, zoom the timeline, and clips snap during operations
 - [ ] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
@@ -369,7 +369,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 18-01-PLAN.md -- Install react-resizable-panels v4, create resizable UI wrapper, refactor movie editor to pro layout
+- [x] 18-01-PLAN.md -- Install react-resizable-panels v4, create resizable UI wrapper, refactor movie editor to fixed flex layout
 
 ### Phase 19: Timeline Foundation
 **Goal**: Timeline displays clips as proportional-width blocks with a timecode ruler and synced draggable playhead
@@ -472,7 +472,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 15. Image Upload & Input Bar | v0.2.0 | 3/3 | Complete | 2026-02-01 |
 | 16. Per-Creation Actions | v0.2.0 | 2/2 | Complete | 2026-02-01 |
 | 17. Prequel Generation | v0.2.0 | 2/2 | Complete | 2026-02-02 |
-| 18. Pro Layout | v0.3.0 | 0/1 | Not started | - |
+| 18. Pro Layout | v0.3.0 | 1/1 | Complete | 2026-02-03 |
 | 19. Timeline Foundation | v0.3.0 | 0/TBD | Not started | - |
 | 20. Timeline Interactions | v0.3.0 | 0/TBD | Not started | - |
 | 21. Blade & Split | v0.3.0 | 0/TBD | Not started | - |

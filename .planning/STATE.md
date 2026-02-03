@@ -6,14 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Release: v0.3.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 18 (Pro Layout)
+**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 19 (Timeline Foundation)
 
 ## Current Position
 
-Phase: 18 of 23 (Pro Layout)
-Plan: 01 in progress (tasks 1-2 of 3 complete, awaiting checkpoint)
-Status: In progress
-Last activity: 2026-02-02 -- 18-01 tasks 1-2 complete (resizable panels + pro layout)
+Phase: 19 of 23 (Timeline Foundation)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-02-03 -- Phase 18 (Pro Layout) complete
+
+Progress: ██████████████████░░░░░░ 78%
 
 ## Milestone History
 
@@ -24,7 +26,7 @@ Last activity: 2026-02-02 -- 18-01 tasks 1-2 complete (resizable panels + pro la
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
-| v0.3.0 Movie Editor Revamp | 6 | TBD | 0/12 | 2026-02-02 -> ... |
+| v0.3.0 Movie Editor Revamp | 6 | 1/TBD | 2/12 | 2026-02-02 -> ... |
 
 ## Accumulated Context
 
@@ -37,7 +39,8 @@ v0.3.0 decisions:
 - Inline preview + edit panel (side panel on movie page, not navigate to create page)
 - Single screen layout (core editing in viewport, panels can scroll/expand)
 - Timeline interactions are highest priority
-- react-resizable-panels for layout (2.7M weekly downloads)
+- react-resizable-panels for layout (2.7M weekly downloads) -- installed but not used; user requested fixed layout
+- Fixed flex layout for preview/timeline split (flex-[3]/flex-[2])
 - @dnd-kit setActivatorNodeRef to separate reorder from trim
 - tinykeys (650B) for blade tool keyboard shortcut
 - Non-destructive trim via trimStart/trimEnd on scene schema
@@ -56,11 +59,11 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: 18-01 tasks 1-2 complete, awaiting checkpoint (task 3)
+Last session: 2026-02-03
+Stopped at: Phase 18 complete
 Resume file: None
 
-Next step: 18-01 checkpoint verification (task 3) then continue phase 18
+Next step: Plan Phase 19 (Timeline Foundation)
 
 ---
-*v0.3.0 roadmap created -- 2026-02-02*
+*Phase 18 complete -- 2026-02-03*
