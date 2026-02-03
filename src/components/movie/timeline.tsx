@@ -90,8 +90,9 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
 
   // Click-to-seek: clicking on the timeline background/ruler seeks to that position
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Don't seek if clicking on a clip (only background/ruler)
+    // Don't seek if clicking on a clip or playhead (only background/ruler)
     if ((e.target as HTMLElement).closest('[data-sortable]')) return;
+    if ((e.target as HTMLElement).closest('[data-playhead]')) return;
     const container = timelineContainerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();

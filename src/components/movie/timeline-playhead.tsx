@@ -56,21 +56,22 @@ export function TimelinePlayhead({
 
   return (
     <div
-      className="absolute top-0 bottom-0 z-20 cursor-ew-resize touch-none group"
-      style={{ left: `calc(${percent}% - 6px)` }}
+      data-playhead
+      className="absolute top-0 bottom-0 z-50 cursor-ew-resize touch-none group"
+      style={{
+        left: `calc(${percent}% - 6px)`,
+        width: '12px',
+        pointerEvents: 'auto',
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
-      {/* Hit zone for easier grabbing (12px wide, invisible) */}
-      <div
-        className="absolute inset-0 w-3"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      />
       {/* Visible line (2px wide, centered) */}
-      <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-primary group-hover:bg-primary/80" />
+      <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-primary group-hover:bg-primary/80 pointer-events-none" />
       {/* Playhead triangle at top */}
-      <div className="absolute left-[3px] top-0 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-l-transparent border-r-transparent border-t-primary" />
+      <div className="absolute left-[3px] top-0 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-l-transparent border-r-transparent border-t-primary pointer-events-none" />
     </div>
   );
 }
