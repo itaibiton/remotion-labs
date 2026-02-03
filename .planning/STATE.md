@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Release: v0.3.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 21 (Blade & Split)
+**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 22 (Per-Clip Actions)
 
 ## Current Position
 
 Phase: 22 of 23 (Per-Clip Actions)
-Plan: 0 of TBD
-Status: Not started
-Last activity: 2026-02-03 -- Completed Phase 21 (Blade & Split)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-03 -- Completed 22-01-PLAN.md
 
-Progress: ██████████████████████░░ 91%
+Progress: ██████████████████████░░ 92%
 
 ## Milestone History
 
@@ -56,6 +56,8 @@ v0.3.0 decisions:
 - Ctrl+Meta modifier required for scroll zoom to avoid accidental zoom
 - 8px snap threshold for trim operations (pixel-based for zoom independence)
 - Color-coded snap indicators: blue (clip-edge), yellow (playhead), green (boundary)
+- Dropdown replaces standalone button for per-clip actions (better consolidation)
+- Actions dropdown renders only when all 4 handlers provided (graceful fallback)
 
 ### Pending Todos
 
@@ -72,10 +74,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed Phase 20 (Timeline Interactions)
+Stopped at: Completed 22-01-PLAN.md
 Resume file: None
 
-Next step: Plan Phase 22 (Per-Clip Actions)
+Next step: Execute 22-02-PLAN.md (Wire handlers in MovieEditor)
 
 ---
-*Phase 21 complete -- 2026-02-03*
+*Plan 22-01 complete -- 2026-02-03*
