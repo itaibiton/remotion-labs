@@ -44,19 +44,20 @@ export function TimelineScene({
   // Local trim state for real-time visual feedback during drag
   const [localTrimStart, setLocalTrimStart] = useState(trimStart);
   const [localTrimEnd, setLocalTrimEnd] = useState(trimEnd);
-  const [isTrimming, setIsTrimming] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Sync local state with props when NOT trimming
+  // Only sync from props when they actually change (external update)
+  // This prevents the flash-back when releasing drag before mutation completes
   useEffect(() => {
-    if (!isTrimming) {
-      setLocalTrimStart(trimStart);
-      setLocalTrimEnd(trimEnd);
-    }
-  }, [trimStart, trimEnd, isTrimming]);
+    setLocalTrimStart(trimStart);
+  }, [trimStart]);
+
+  useEffect(() => {
+    setLocalTrimEnd(trimEnd);
+  }, [trimEnd]);
 
   const {
     attributes,
@@ -83,19 +84,16 @@ export function TimelineScene({
 
   // Handle left trim change (live update)
   const handleLeftTrimChange = (newTrim: number) => {
-    setIsTrimming(true);
     setLocalTrimStart(newTrim);
   };
 
   // Handle right trim change (live update)
   const handleRightTrimChange = (newTrim: number) => {
-    setIsTrimming(true);
     setLocalTrimEnd(newTrim);
   };
 
   // Handle left trim end (persist to database)
   const handleLeftTrimEnd = () => {
-    setIsTrimming(false);
     if (localTrimStart !== trimStart) {
       onTrimChange(index, { trimStart: localTrimStart });
     }
@@ -103,7 +101,6 @@ export function TimelineScene({
 
   // Handle right trim end (persist to database)
   const handleRightTrimEnd = () => {
-    setIsTrimming(false);
     if (localTrimEnd !== trimEnd) {
       onTrimChange(index, { trimEnd: localTrimEnd });
     }
