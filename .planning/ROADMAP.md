@@ -413,10 +413,11 @@ Plans:
   2. With the blade tool active, clicking on a clip at the playhead position splits it into two clips
   3. The two resulting clips share the same source code but have different trim ranges that together cover the original range
   4. Both resulting clips are independently trimmable and reorderable on the timeline
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 21-01-PLAN.md -- TBD
+- [ ] 21-01-PLAN.md -- Install tinykeys, create useBladeMode hook, add splitScene mutation
+- [ ] 21-02-PLAN.md -- Blade button UI, visual mode indicator, click-to-split wiring
 
 ### Phase 22: Per-Clip Actions
 **Goal**: Each timeline clip provides quick actions for generation and editing without leaving the movie page
@@ -476,7 +477,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 18. Pro Layout | v0.3.0 | 1/1 | Complete | 2026-02-03 |
 | 19. Timeline Foundation | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 20. Timeline Interactions | v0.3.0 | 3/3 | Complete | 2026-02-03 |
-| 21. Blade & Split | v0.3.0 | 0/TBD | Not started | - |
+| 21. Blade & Split | v0.3.0 | 0/2 | Not started | - |
 | 22. Per-Clip Actions | v0.3.0 | 0/TBD | Not started | - |
 | 23. Inline Editing | v0.3.0 | 0/TBD | Not started | - |
 
@@ -487,4 +488,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v2.0 requirements: 15 mapped (complete)*
 *v0.2.0 requirements: 11 mapped (complete)*
 *v0.3.0 requirements: 12 mapped across 6 phases (18-23)*
-*Updated: 2026-02-02 -- v0.3.0 roadmap created. 6 phases (18-23), 12 requirements.*
+*Updated: 2026-02-03 -- Phase 21 planned. 2 plans in 2 waves.*
