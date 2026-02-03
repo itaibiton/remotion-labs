@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import type { PlayerRef } from "@remotion/player";
+import { useCurrentPlayerFrame } from "@/hooks/use-current-player-frame";
 import {
   DndContext,
   closestCenter,
@@ -19,6 +20,7 @@ import {
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { TimelineScene } from "./timeline-scene";
 import { TimelineRuler } from "./timeline-ruler";
+import { TimelinePlayhead } from "./timeline-playhead";
 
 interface TimelineProps {
   scenes: Array<{
@@ -40,6 +42,9 @@ interface TimelineProps {
 }
 
 export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove }: TimelineProps) {
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
+  const currentFrame = useCurrentPlayerFrame(playerRef);
+
   // Optimistic local state to prevent flicker on reorder
   const [localScenes, setLocalScenes] = useState(scenes);
 
@@ -83,36 +88,66 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
     onReorder(newOrder.map((s) => ({ clipId: s.clipId })));
   }
 
+  // Click-to-seek: clicking on the timeline background/ruler seeks to that position
+  const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't seek if clicking on a clip (only background/ruler)
+    if ((e.target as HTMLElement).closest('[data-sortable]')) return;
+    const container = timelineContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const frame = Math.round(fraction * Math.max(totalDurationInFrames - 1, 0));
+    playerRef.current?.seekTo(frame);
+  }, [playerRef, totalDurationInFrames]);
+
   return (
     <div>
-      <div className="px-4">
-        <TimelineRuler totalDurationInFrames={totalDurationInFrames} fps={fps} />
-      </div>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        modifiers={[restrictToHorizontalAxis]}
-        onDragEnd={handleDragEnd}
+      {/* Timeline container with playhead overlay */}
+      <div
+        ref={timelineContainerRef}
+        className="relative cursor-pointer"
+        onClick={handleTimelineClick}
       >
-        <SortableContext
-          items={sceneIds}
-          strategy={horizontalListSortingStrategy}
+        {/* Playhead indicator */}
+        <TimelinePlayhead
+          currentFrame={currentFrame}
+          totalDurationInFrames={totalDurationInFrames}
+          playerRef={playerRef}
+          containerRef={timelineContainerRef}
+        />
+
+        {/* Ruler */}
+        <div className="px-4">
+          <TimelineRuler totalDurationInFrames={totalDurationInFrames} fps={fps} />
+        </div>
+
+        {/* Clip track */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToHorizontalAxis]}
+          onDragEnd={handleDragEnd}
         >
-          <div className="flex flex-row overflow-x-auto p-4 min-h-[140px] bg-muted/20 rounded-lg border border-dashed">
-            {localScenes.map((scene, index) => (
-              <TimelineScene
-                key={`scene-${index}`}
-                id={`scene-${index}`}
-                clip={scene.clip}
-                index={index}
-                isActive={index === activeSceneIndex}
-                widthPercent={sceneWidths[index]}
-                onRemove={onRemove}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+          <SortableContext
+            items={sceneIds}
+            strategy={horizontalListSortingStrategy}
+          >
+            <div className="flex flex-row overflow-x-auto p-4 min-h-[140px] bg-muted/20 rounded-lg border border-dashed">
+              {localScenes.map((scene, index) => (
+                <TimelineScene
+                  key={`scene-${index}`}
+                  id={`scene-${index}`}
+                  clip={scene.clip}
+                  index={index}
+                  isActive={index === activeSceneIndex}
+                  widthPercent={sceneWidths[index]}
+                  onRemove={onRemove}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
       <p className="text-xs text-muted-foreground mt-2 text-center">
         Drag to reorder scenes
       </p>
