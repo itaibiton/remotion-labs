@@ -30,12 +30,15 @@ export function MoviePreviewPlayer({
     setIsMounted(true);
   }, []);
 
-  // Compute cumulative start/end frame offsets for each scene
+  // Compute cumulative start/end frame offsets for each scene (accounting for trim)
   const sceneTimings = useMemo(() => {
     let offset = 0;
     return scenes.map((scene) => {
+      const trimStart = scene.trimStart ?? 0;
+      const trimEnd = scene.trimEnd ?? 0;
+      const effectiveDuration = Math.max(0, scene.durationInFrames - trimStart - trimEnd);
       const startFrame = offset;
-      const endFrame = offset + scene.durationInFrames;
+      const endFrame = offset + effectiveDuration;
       offset = endFrame;
       return { startFrame, endFrame };
     });

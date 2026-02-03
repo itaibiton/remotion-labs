@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore, useState, useEffect } from "react";
 import type { PlayerRef } from "@remotion/player";
 
 /**
@@ -14,6 +14,27 @@ import type { PlayerRef } from "@remotion/player";
 export function useCurrentPlayerFrame(
   ref: React.RefObject<PlayerRef | null>
 ): number {
+  // Track when player becomes available to trigger re-subscription
+  const [playerReady, setPlayerReady] = useState(false);
+
+  // Check for player availability on mount and periodically
+  useEffect(() => {
+    if (ref.current) {
+      setPlayerReady(true);
+      return;
+    }
+
+    // Poll for player availability (it mounts async)
+    const interval = setInterval(() => {
+      if (ref.current) {
+        setPlayerReady(true);
+        clearInterval(interval);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [ref]);
+
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       const player = ref.current;
@@ -30,7 +51,8 @@ export function useCurrentPlayerFrame(
         player.removeEventListener("frameupdate", handler);
       };
     },
-    [ref]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ref, playerReady] // Re-subscribe when player becomes ready
   );
 
   const getSnapshot = useCallback(() => {
