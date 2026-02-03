@@ -49,12 +49,17 @@ interface TimelineProps {
   isBladeMode?: boolean;
   onToggleBladeMode?: () => void;
   onSplit?: () => void;
+  onGenerateNext?: (sceneIndex: number) => void;
+  onGeneratePrevious?: (sceneIndex: number) => void;
+  onRegenerate?: (sceneIndex: number) => void;
+  onEdit?: (sceneIndex: number) => void;
+  isGenerating?: boolean;
 }
 
 // Consistent padding for timeline elements (ruler, clips, playhead alignment)
 const TIMELINE_PADDING = 16; // px-4 = 16px
 
-export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene, isBladeMode, onToggleBladeMode, onSplit }: TimelineProps) {
+export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene, isBladeMode, onToggleBladeMode, onSplit, onGenerateNext, onGeneratePrevious, onRegenerate, onEdit, isGenerating }: TimelineProps) {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentFrame = useCurrentPlayerFrame(playerRef);
@@ -222,6 +227,11 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
                     scale={scale}
                     onRemove={onRemove}
                     onTrimChange={handleTrimChange}
+                    onGenerateNext={onGenerateNext}
+                    onGeneratePrevious={onGeneratePrevious}
+                    onRegenerate={onRegenerate}
+                    onEdit={onEdit}
+                    isGenerating={isGenerating}
                   />
                 ))}
               </div>

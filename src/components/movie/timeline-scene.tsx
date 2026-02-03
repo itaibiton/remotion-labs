@@ -5,9 +5,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Thumbnail } from "@remotion/player";
 import { DynamicCode } from "@/remotion/compositions/DynamicCode";
-import { X, FastForward } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { TrimHandle } from "./timeline-trim-handle";
+import { TimelineSceneActions } from "./timeline-scene-actions";
 
 interface TimelineSceneProps {
   id: string;
@@ -26,6 +26,11 @@ interface TimelineSceneProps {
   scale: number;
   onRemove: (index: number) => void;
   onTrimChange: (index: number, trim: { trimStart?: number; trimEnd?: number }) => void;
+  onGenerateNext?: (sceneIndex: number) => void;
+  onGeneratePrevious?: (sceneIndex: number) => void;
+  onRegenerate?: (sceneIndex: number) => void;
+  onEdit?: (sceneIndex: number) => void;
+  isGenerating?: boolean;
 }
 
 export function TimelineScene({
@@ -39,9 +44,13 @@ export function TimelineScene({
   scale,
   onRemove,
   onTrimChange,
+  onGenerateNext,
+  onGeneratePrevious,
+  onRegenerate,
+  onEdit,
+  isGenerating,
 }: TimelineSceneProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
 
   // Local trim state for real-time visual feedback during drag
   const [localTrimStart, setLocalTrimStart] = useState(trimStart);
@@ -150,6 +159,20 @@ export function TimelineScene({
 
       {/* Content layer - pointer-events-none to allow drag/trim through */}
       <div className="pointer-events-none absolute inset-0">
+        {/* Actions dropdown - replaces individual generate button */}
+        {clip && onGenerateNext && onGeneratePrevious && onRegenerate && onEdit && (
+          <div className="pointer-events-auto absolute top-1 left-1 z-30">
+            <TimelineSceneActions
+              sceneIndex={index}
+              onGenerateNext={onGenerateNext}
+              onGeneratePrevious={onGeneratePrevious}
+              onRegenerate={onRegenerate}
+              onEdit={onEdit}
+              disabled={isGenerating}
+            />
+          </div>
+        )}
+
         {/* Remove button */}
         <button
           className="pointer-events-auto absolute top-1 right-1 z-30 rounded-full bg-background/80 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
@@ -164,22 +187,6 @@ export function TimelineScene({
         >
           <X className="h-3.5 w-3.5" />
         </button>
-
-        {/* Generate next scene button */}
-        {clip && (
-          <button
-            className="pointer-events-auto absolute bottom-1 right-1 z-30 rounded-full bg-primary/80 text-primary-foreground p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              router.push(`/create?sourceClipId=${clip._id}`);
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            title="Generate next scene"
-          >
-            <FastForward className="h-3 w-3" />
-          </button>
-        )}
 
         {clip ? (
           <>
