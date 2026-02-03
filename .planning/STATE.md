@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 ## Current Position
 
 Phase: 19 of 23 (Timeline Foundation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-02-03 -- Phase 18 (Pro Layout) complete
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-03 -- Completed 19-01-PLAN.md
 
-Progress: ██████████████████░░░░░░ 78%
+Progress: ██████████████████░░░░░░ 79%
 
 ## Milestone History
 
@@ -44,6 +44,8 @@ v0.3.0 decisions:
 - @dnd-kit setActivatorNodeRef to separate reorder from trim
 - tinykeys (650B) for blade tool keyboard shortcut
 - Non-destructive trim via trimStart/trimEnd on scene schema
+- Timeline ruler: 5-second intervals for >30s movies, 1-second otherwise
+- Scene minimum width: 80px to maintain visibility for short clips
 
 ### Pending Todos
 
@@ -60,10 +62,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Phase 18 complete
+Stopped at: Completed 19-01-PLAN.md
 Resume file: None
 
-Next step: Plan Phase 19 (Timeline Foundation)
+Next step: Execute 19-02-PLAN.md (Timeline Scrubber)
 
 ---
-*Phase 18 complete -- 2026-02-03*
+*19-01 complete -- 2026-02-03*
