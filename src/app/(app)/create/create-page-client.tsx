@@ -555,18 +555,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
       {/* Input bar pinned below the fade */}
       {!isGenerating && (
         <div className="sticky top-6 z-10 w-full px-8 relative">
-          {/* Continuation context banner */}
-          {sourceClipId && sourceClipData && !lastGeneration && (
-            <div className="w-full mb-2 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-              <p className="text-sm font-medium">
-                Generating continuation from: {sourceClipData.name}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                The next scene will start where this clip&apos;s animation ends.
-              </p>
-            </div>
-          )}
-
           {/* Template context banner */}
           {selectedTemplate && !sourceClipId && !lastGeneration && (
             <div className="w-full mb-2 p-4 bg-muted/50 rounded-lg">
@@ -599,6 +587,16 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
             settings={settings}
             onUpdateSetting={updateSetting}
             onResetSettings={resetSettings}
+            sourceClip={
+              sourceClipId && sourceClipData && !lastGeneration
+                ? {
+                    id: sourceClipId,
+                    name: sourceClipData.name,
+                    type: "continuation",
+                  }
+                : undefined
+            }
+            onClearSourceClip={() => router.push("/create")}
           />
         </div>
       )}

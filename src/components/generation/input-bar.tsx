@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, Settings2, Loader2 } from "lucide-react";
+import { ImagePlus, Settings2, Loader2, FastForward, Rewind, X } from "lucide-react";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { ImageAttachment } from "@/components/generation/image-attachment";
 import { GenerationSettingsPanel } from "@/components/generation/generation-settings";
@@ -20,6 +20,12 @@ const EXAMPLE_PROMPTS = [
 const MAX_CHARS = 2000;
 const WARN_CHARS = 1500;
 
+interface SourceClipInfo {
+  id: string;
+  name: string;
+  type: "continuation" | "prequel";
+}
+
 interface InputBarProps {
   onSubmit: (prompt: string, imageIds: string[]) => Promise<void>;
   isGenerating: boolean;
@@ -33,6 +39,8 @@ interface InputBarProps {
     value: GenerationSettings[K]
   ) => void;
   onResetSettings: () => void;
+  sourceClip?: SourceClipInfo;
+  onClearSourceClip?: () => void;
 }
 
 export function InputBar({
@@ -45,6 +53,8 @@ export function InputBar({
   settings,
   onUpdateSetting,
   onResetSettings,
+  sourceClip,
+  onClearSourceClip,
 }: InputBarProps) {
   const [prompt, setPrompt] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -194,6 +204,32 @@ export function InputBar({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        {/* Source clip reference chip (Midjourney-style) */}
+        {sourceClip && (
+          <div className="px-3 pt-3">
+            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-sm">
+              {sourceClip.type === "continuation" ? (
+                <FastForward className="h-4 w-4 text-primary" />
+              ) : (
+                <Rewind className="h-4 w-4 text-primary" />
+              )}
+              <span className="text-muted-foreground">
+                {sourceClip.type === "continuation" ? "Continue from:" : "Prequel to:"}
+              </span>
+              <span className="font-medium truncate max-w-[200px]">{sourceClip.name}</span>
+              {onClearSourceClip && (
+                <button
+                  onClick={onClearSourceClip}
+                  className="ml-1 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+                  title="Cancel"
+                >
+                  <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Image chips section (top, inside border) */}
         {images.length > 0 && (
           <div className="px-3 pt-3">
