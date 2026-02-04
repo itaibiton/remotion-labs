@@ -661,19 +661,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
           </div>
         )}
 
-        {/* Generating state - inline skeleton for source clip generation */}
-        {isSourceClipGenerating && (
-          <div className="w-full mb-6">
-            <div className="p-6 bg-muted/50 rounded-lg border border-dashed flex items-center justify-center">
-              <div className="text-center py-8">
-                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  {sourceMode === "prequel" ? "Generating prequel..." : "Generating continuation..."}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Success state - side-by-side preview and code */}
         {lastGeneration && !isGenerating && !error && (
@@ -814,6 +801,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
               onExtendNextGeneration={handleExtendNextGeneration}
               onExtendPreviousGeneration={handleExtendPreviousGeneration}
               deletingIds={deletingIds}
+              showLoadingSkeleton={!!isSourceClipGenerating}
+              loadingLabel={sourceMode === "prequel" ? "Generating prequel..." : "Generating continuation..."}
             />
           </div>
         )}
