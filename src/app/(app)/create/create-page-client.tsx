@@ -17,12 +17,12 @@ import { toast } from "sonner";
 import { ExportButtons } from "@/components/export/export-buttons";
 import { SaveClipDialog } from "@/components/library/save-clip-dialog";
 import { Button } from "@/components/ui/button";
-import { Save, FastForward, Film } from "lucide-react";
+import { Save, FastForward, Film, ArrowLeft } from "lucide-react";
 import { ClipRenderButton } from "@/components/render/clip-render-button";
 import { AddToMovieDialog } from "@/components/library/add-to-movie-dialog";
 import { GenerationFeed } from "@/components/generation/generation-feed";
 import { useGenerationSettings } from "@/hooks/use-generation-settings";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type GenerationStep = "analyzing" | "generating" | "validating" | null;
 
@@ -118,6 +118,23 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
   useEffect(() => {
     storeUser().catch(console.error);
   }, [storeUser]);
+
+  // Watch for URL param changes to reset view when navigating to plain /create
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const hasParams = searchParams.has("clipId") || searchParams.has("sourceClipId") || searchParams.has("prompt");
+    // Reset view when URL params are cleared (e.g., clicking sidebar Create link)
+    if (!hasParams && lastGeneration && !clipId && !sourceClipId) {
+      setLastGeneration(null);
+      setLastPrompt("");
+      setEditedCode(null);
+      setIsEditing(false);
+      setSkipValidation(true);
+      setChatMessages([]);
+      setSavedClipId(null);
+      setError(null);
+    }
+  }, [searchParams, clipId, sourceClipId, lastGeneration]);
 
   // Load clip from URL param (when opening from library)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -342,6 +359,22 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
       handleGenerate(lastPrompt);
     }
   }, [lastPrompt, handleGenerate]);
+
+  const handleBackToFeed = useCallback(() => {
+    setLastGeneration(null);
+    setLastPrompt("");
+    setEditedCode(null);
+    setIsEditing(false);
+    setSkipValidation(true);
+    setChatMessages([]);
+    setSavedClipId(null);
+    setError(null);
+    validation.resetToValid();
+    // Clear URL params if viewing a clip
+    if (clipId) {
+      router.push("/create");
+    }
+  }, [clipId, router, validation]);
 
   const handleSelectGeneration = useCallback((generation: any) => {
     if (generation.status === "failed" || !generation.code) return;
@@ -645,6 +678,17 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
         {/* Success state - side-by-side preview and code */}
         {lastGeneration && !isGenerating && !error && (
           <div className="w-full mb-6">
+            {/* Back button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mb-4"
+              onClick={handleBackToFeed}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Create
+            </Button>
+
             {/* Two-column layout: Preview | Code */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Preview - uses validated transformed code or server-transformed code */}
