@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "../../../convex/_generated/api";
 import { GenerationRow } from "./generation-row";
 import { Loader2 } from "lucide-react";
