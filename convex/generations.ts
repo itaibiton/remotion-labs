@@ -42,7 +42,8 @@ export const createPending = internalMutation({
 });
 
 /**
- * Patch a pending row to success or failed once the Claude call finishes.
+ * Patch a pending row to success or delete if failed.
+ * Failed generations are removed so they don't clutter the feed.
  */
 export const complete = internalMutation({
   args: {
@@ -55,18 +56,27 @@ export const complete = internalMutation({
     errorMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...fields } = args;
-    await ctx.db.patch(id, fields);
+    const { id, status, ...fields } = args;
+
+    if (status === "failed") {
+      // Delete failed generations instead of keeping them
+      await ctx.db.delete(id);
+      return;
+    }
+
+    await ctx.db.patch(id, { status, ...fields });
   },
 });
 
 /**
- * Mark pending records older than 5 minutes as failed (orphan cleanup).
+ * Delete pending records older than 5 minutes (orphan cleanup).
  * Called by a cron job.
  */
 export const cleanupOrphaned = internalMutation({
   handler: async (ctx) => {
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+    // Clean up orphaned pending generations
     const pending = await ctx.db
       .query("generations")
       .filter((q) =>
@@ -78,10 +88,17 @@ export const cleanupOrphaned = internalMutation({
       .collect();
 
     for (const row of pending) {
-      await ctx.db.patch(row._id, {
-        status: "failed",
-        errorMessage: "Generation timed out",
-      });
+      await ctx.db.delete(row._id);
+    }
+
+    // Also clean up any old failed generations
+    const failed = await ctx.db
+      .query("generations")
+      .filter((q) => q.eq(q.field("status"), "failed"))
+      .collect();
+
+    for (const row of failed) {
+      await ctx.db.delete(row._id);
     }
   },
 });
@@ -163,6 +180,7 @@ export const list = query({
 /**
  * Paginated query for the generation feed
  * Returns generations newest-first with cursor-based pagination
+ * Filters out failed generations (they should be deleted, but filter just in case)
  */
 export const listPaginated = query({
   args: {
@@ -174,13 +192,19 @@ export const listPaginated = query({
       throw new Error("Must be logged in to view generations");
     }
 
-    return await ctx.db
+    const result = await ctx.db
       .query("generations")
       .withIndex("by_user_created", (q) =>
         q.eq("userId", identity.tokenIdentifier)
       )
       .order("desc")
       .paginate(args.paginationOpts);
+
+    // Filter out any failed generations that might still exist
+    return {
+      ...result,
+      page: result.page.filter((gen) => gen.status !== "failed"),
+    };
   },
 });
 
@@ -258,5 +282,36 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(args.id);
+  },
+});
+
+/**
+ * Query to list all variations (children) of a parent generation.
+ * Returns generations that have the specified parentGenerationId.
+ * Note: The parentGenerationId field will be added in Phase 27.
+ * For now, returns empty array until schema is updated.
+ */
+export const listByParent = query({
+  args: {
+    parentId: v.id("generations"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Must be logged in to view variations");
+    }
+
+    // Filter by parentGenerationId (field added in Phase 27)
+    // For now, returns empty until schema is updated
+    // Using type assertion since field doesn't exist in schema yet
+    const generations = await ctx.db
+      .query("generations")
+      .filter((q) =>
+        q.eq(q.field("parentGenerationId" as any), args.parentId)
+      )
+      .order("desc")
+      .take(20);
+
+    return generations;
   },
 });
