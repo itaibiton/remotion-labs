@@ -404,12 +404,24 @@ export const splitScene = mutation({
     const trimStart = scene.trimStart ?? 0;
     const trimEnd = scene.trimEnd ?? 0;
 
-    // Validate split position is within the visible range (after trimStart, before trimEnd)
-    if (args.splitFrame <= trimStart) {
-      throw new Error("Split position must be after the trim start");
+    // Calculate visible range bounds
+    const visibleStart = trimStart;
+    const visibleEnd = baseDuration - trimEnd;
+    const effectiveDuration = visibleEnd - visibleStart;
+
+    // Need at least 2 frames to split (1 frame per resulting clip minimum)
+    if (effectiveDuration < 2) {
+      throw new Error("Clip is too short to split");
     }
-    if (args.splitFrame >= baseDuration - trimEnd) {
-      throw new Error("Split position must be before the trim end");
+
+    // Clamp splitFrame to valid range (at least 1 frame from each boundary)
+    const minSplitFrame = visibleStart + 1;
+    const maxSplitFrame = visibleEnd - 1;
+    const clampedSplitFrame = Math.max(minSplitFrame, Math.min(maxSplitFrame, args.splitFrame));
+
+    // Validate split position is within the visible range
+    if (clampedSplitFrame <= visibleStart || clampedSplitFrame >= visibleEnd) {
+      throw new Error("Split position must be within the visible clip range");
     }
 
     // Create two new scenes from the split
@@ -417,13 +429,13 @@ export const splitScene = mutation({
       clipId: scene.clipId,
       ...(scene.durationOverride !== undefined && { durationOverride: scene.durationOverride }),
       trimStart: trimStart,
-      trimEnd: baseDuration - args.splitFrame,
+      trimEnd: baseDuration - clampedSplitFrame,
     };
 
     const secondScene = {
       clipId: scene.clipId,
       ...(scene.durationOverride !== undefined && { durationOverride: scene.durationOverride }),
-      trimStart: args.splitFrame,
+      trimStart: clampedSplitFrame,
       trimEnd: trimEnd,
     };
 
