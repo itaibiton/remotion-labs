@@ -24,7 +24,7 @@ import { TimelineRuler } from "./timeline-ruler";
 import { TimelinePlayhead } from "./timeline-playhead";
 import { TimelineZoomControls } from "./timeline-zoom-controls";
 import { Button } from "@/components/ui/button";
-import { Scissors } from "lucide-react";
+import { Scissors, Undo2, Redo2 } from "lucide-react";
 
 interface TimelineProps {
   scenes: Array<{
@@ -55,12 +55,16 @@ interface TimelineProps {
   onRegenerate?: (sceneIndex: number) => void;
   onEdit?: (sceneIndex: number) => void;
   isGenerating?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 // Consistent padding for timeline elements (ruler, clips, playhead alignment)
 const TIMELINE_PADDING = 16; // px-4 = 16px
 
-export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene, isBladeMode, onToggleBladeMode, onSplit, onGenerateNext, onGeneratePrevious, onRegenerate, onEdit, isGenerating }: TimelineProps) {
+export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps, playerRef, onReorder, onRemove, onTrimScene, isBladeMode, onToggleBladeMode, onSplit, onGenerateNext, onGeneratePrevious, onRegenerate, onEdit, isGenerating, onUndo, onRedo, canUndo, canRedo }: TimelineProps) {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentFrame = useCurrentPlayerFrame(playerRef);
@@ -152,6 +156,28 @@ export function Timeline({ scenes, activeSceneIndex, totalDurationInFrames, fps,
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Timeline</span>
+          {onUndo && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onUndo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+          )}
+          {onRedo && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRedo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Shift+Z)"
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          )}
           {onToggleBladeMode && (
             <Button
               variant={isBladeMode ? "default" : "outline"}

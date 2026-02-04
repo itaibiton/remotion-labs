@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { type PlayerRef } from "@remotion/player";
 import { api } from "../../../convex/_generated/api";
@@ -16,6 +16,7 @@ import { MovieRenderButton } from "@/components/movie/movie-render-button";
 import { MovieExportButtons } from "@/components/movie/movie-export-buttons";
 import { useBladeMode } from "@/hooks/use-blade-mode";
 import { useCurrentPlayerFrame } from "@/hooks/use-current-player-frame";
+import { useTimelineHistory } from "@/hooks/use-timeline-history";
 
 
 export function MovieEditor({ movieId }: { movieId: string }) {
@@ -207,6 +208,41 @@ export function MovieEditor({ movieId }: { movieId: string }) {
   const { isBladeMode, toggleBladeMode } = useBladeMode({
     onSplitAtPlayhead: handleSplitAtPlayhead,
   });
+
+  // Undo/redo for timeline operations
+  const { undo, redo, canUndo, canRedo } = useTimelineHistory({
+    movieId: movie?._id,
+    currentScenes: movie?.scenes,
+  });
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if typing in input
+      const target = e.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Undo: Ctrl/Cmd+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) undo();
+      }
+      // Redo: Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y
+      if ((e.ctrlKey || e.metaKey) && ((e.key === "z" && e.shiftKey) || e.key === "y")) {
+        e.preventDefault();
+        if (canRedo) redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo, canUndo, canRedo]);
 
   // Generate continuation and insert as next scene
   const handleGenerateNext = useCallback(async (sceneIndex: number) => {
@@ -471,6 +507,10 @@ export function MovieEditor({ movieId }: { movieId: string }) {
               onRegenerate={handleRegenerate}
               onEdit={handleEdit}
               isGenerating={generatingSceneIndex !== null}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
             />
           </div>
         </div>

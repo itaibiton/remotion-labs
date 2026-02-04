@@ -461,3 +461,35 @@ export const splitScene = mutation({
     };
   },
 });
+
+// Restore scenes from history (for undo/redo)
+export const restoreScenes = mutation({
+  args: {
+    movieId: v.id("movies"),
+    scenes: v.array(
+      v.object({
+        clipId: v.id("clips"),
+        durationOverride: v.optional(v.number()),
+        trimStart: v.optional(v.number()),
+        trimEnd: v.optional(v.number()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const movie = await ctx.db.get(args.movieId);
+    if (!movie || movie.userId !== identity.tokenIdentifier) {
+      throw new Error("Movie not found");
+    }
+
+    const totalDuration = await computeTotalDuration(ctx, args.scenes);
+
+    await ctx.db.patch(args.movieId, {
+      scenes: args.scenes,
+      totalDurationInFrames: totalDuration,
+      updatedAt: Date.now(),
+    });
+  },
+});
