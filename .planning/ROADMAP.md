@@ -444,11 +444,10 @@ Plans:
   3. The editing panel shows a Monaco code editor with the clip's Remotion JSX code
   4. User can edit the code in the panel and click "Save" to persist changes back to the clip
   5. Saved code changes are immediately reflected in the timeline preview and full movie playback
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 23-01-PLAN.md -- TBD
-- [ ] 23-02-PLAN.md -- TBD
+- [ ] 23-01-PLAN.md -- Finalization polish (unsaved changes dialog, thumbnail cache) and documentation updates
 
 ## Progress
 
@@ -479,7 +478,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 20. Timeline Interactions | v0.3.0 | 3/3 | Complete | 2026-02-03 |
 | 21. Blade & Split | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 22. Per-Clip Actions | v0.3.0 | 2/2 | Complete | 2026-02-03 |
-| 23. Finalization | v0.3.0 | 0/TBD | Not started | - |
+| 23. Finalization | v0.3.0 | 0/1 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-27*
@@ -488,4 +487,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v2.0 requirements: 15 mapped (complete)*
 *v0.2.0 requirements: 11 mapped (complete)*
 *v0.3.0 requirements: 12 mapped across 6 phases (18-23)*
-*Updated: 2026-02-03 -- Phase 22 complete. Per-clip actions with generation handlers and inline edit panel.*
+*Updated: 2026-02-04 -- Phase 23 planned. Single finalization plan for polish and documentation.*
