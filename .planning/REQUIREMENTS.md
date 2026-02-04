@@ -87,25 +87,25 @@ Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases 
 
 - [x] **TL-01**: Timeline displays clips as proportional-width blocks (width reflects duration relative to total movie length)
 - [x] **TL-02**: User can trim clip start/end by dragging handles on timeline clip edges (non-destructive, adjusts visible frame range)
-- [ ] **TL-03**: User can split a clip at the playhead position via blade tool (keyboard shortcut + button)
+- [x] **TL-03**: User can split a clip at the playhead position via blade tool (keyboard shortcut + button)
 - [x] **TL-04**: Timeline has zoom controls (scroll wheel + buttons) to scale the time view
 - [x] **TL-05**: Timeline shows a ruler with timecodes and a draggable playhead synced to the preview player
 - [x] **TL-06**: Clips snap to adjacent clip edges and playhead during trim/drag operations
 
 ### Per-Clip Actions
 
-- [ ] **ACT-03**: Each timeline clip has action buttons: generate next, generate previous, re-generate, and edit
-- [ ] **ACT-04**: Generate next/previous from timeline clip triggers continuation/prequel generation and adds result to movie
+- [x] **ACT-03**: Each timeline clip has action buttons: generate next, generate previous, re-generate, and edit
+- [x] **ACT-04**: Generate next/previous from timeline clip triggers continuation/prequel generation and adds result to movie
 
 ### Layout
 
-- [ ] **LAYOUT-01**: Movie page uses a full-screen pro layout with resizable panels (preview on top, timeline at bottom)
-- [ ] **LAYOUT-02**: Panels are resizable via drag handles (user can adjust preview vs timeline proportions)
+- [x] **LAYOUT-01**: Movie page uses a full-screen pro layout with resizable panels (preview on top, timeline at bottom)
+- [x] **LAYOUT-02**: Panels are resizable via drag handles (user can adjust preview vs timeline proportions)
 
 ### Inline Editing
 
-- [ ] **EDIT-01**: Selecting a clip opens an inline editing panel with preview player and Monaco code editor
-- [ ] **EDIT-02**: User can edit clip code in the panel and save changes back to the clip
+- [x] **EDIT-01**: Selecting a clip opens an inline editing panel with preview player and Monaco code editor
+- [x] **EDIT-02**: User can edit clip code in the panel and save changes back to the clip
 
 ## Future Requirements
 
@@ -174,15 +174,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TL-03 | Phase 21 | Complete |
 | ACT-03 | Phase 22 | Complete |
 | ACT-04 | Phase 22 | Complete |
-| EDIT-01 | Phase 23 | Pending |
-| EDIT-02 | Phase 23 | Pending |
+| EDIT-01 | Phase 23 | Complete |
+| EDIT-02 | Phase 23 | Complete |
 
 **Coverage:**
 - v0.2.0 requirements: 11/11 complete
-- v0.3.0 requirements: 12 total, 12 mapped to phases
+- v0.3.0 requirements: 12/12 complete
 - Mapped to phases: 12/12
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 -- Phase 22 complete. TL-03, ACT-03, ACT-04 marked Complete.*
+*Last updated: 2026-02-04 -- v0.3.0 complete. All 12 requirements marked Complete.*
