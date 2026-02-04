@@ -550,14 +550,18 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
       ? "Describe how you'd like to customize this template..."
       : undefined; // Let InputBar choose based on hasExistingCode
 
+  // In source clip mode, keep the UI visible during generation (show skeleton instead of loader)
+  const isSourceClipGenerating = isGenerating && sourceClipId;
+  const showFullLoader = isGenerating && !sourceClipId;
+
   return (
     <div className="flex flex-col items-center">
       {/* Gradient fade pinned to top — content scrolls under it */}
-      {!isGenerating && (
+      {!showFullLoader && (
         <div className="sticky top-0 z-[5] w-full h-32 bg-gradient-to-b from-white via-white/95 via-50% to-transparent pointer-events-none -mb-32" />
       )}
       {/* Input bar pinned below the fade */}
-      {!isGenerating && (
+      {!showFullLoader && (
         <div className="sticky top-6 z-10 w-full px-8 relative">
           {/* Template context banner */}
           {selectedTemplate && !sourceClipId && !lastGeneration && (
@@ -617,10 +621,29 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
           </div>
         )}
 
-        {/* Generating state */}
-        {isGenerating && currentStep && (
+        {/* Generating state - full loader for normal generation */}
+        {showFullLoader && currentStep && (
           <div className="mb-8 pt-6">
             <GenerationStatus currentStep={currentStep} />
+          </div>
+        )}
+
+        {/* Generating state - skeleton for source clip generation */}
+        {isSourceClipGenerating && (
+          <div className="w-full mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Preview skeleton */}
+              <div className="aspect-video bg-muted rounded-lg animate-pulse flex items-center justify-center">
+                <div className="text-center">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {sourceMode === "prequel" ? "Generating prequel..." : "Generating continuation..."}
+                  </p>
+                </div>
+              </div>
+              {/* Code skeleton */}
+              <div className="h-[300px] bg-muted rounded-lg animate-pulse" />
+            </div>
           </div>
         )}
 
