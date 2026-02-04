@@ -17,6 +17,7 @@ interface TimelineSceneProps {
     name: string;
     durationInFrames: number;
     fps: number;
+    updatedAt?: number;
   } | null;
   index: number;
   isActive?: boolean;
@@ -194,6 +195,7 @@ export function TimelineScene({
             <div className="h-[72px] bg-black overflow-hidden">
               {isMounted ? (
                 <Thumbnail
+                  key={`thumb-${clip._id}-${clip.updatedAt ?? 0}`}
                   component={DynamicCode}
                   inputProps={{
                     code: clip.code,

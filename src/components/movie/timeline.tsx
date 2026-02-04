@@ -37,6 +37,7 @@ interface TimelineProps {
       name: string;
       durationInFrames: number;
       fps: number;
+      updatedAt?: number;
     } | null;
   }>;
   activeSceneIndex?: number;
