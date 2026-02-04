@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Release: v0.4.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.4.0 Creation Detail Modal Revamp -- Phase 24 (Route Infrastructure)
+**Current focus:** v0.4.0 Creation Detail Modal Revamp -- Phase 24 Complete, Ready for Phase 25
 
 ## Current Position
 
 Phase: 24 of 28 (Route Infrastructure)
-Plan: 0 of 1 in current phase
-Status: Ready to execute
-Last activity: 2026-02-04 -- Phase 24 planned (1 plan)
+Plan: 1 of 1 in current phase (COMPLETE)
+Status: Phase complete
+Last activity: 2026-02-04 -- Completed 24-01-PLAN.md
 
-Progress: ████████████████████░░░░ 82% (23/28 phases)
+Progress: ████████████████████░░░░ 86% (24/28 phases)
 
 ## Milestone History
 
@@ -35,8 +35,10 @@ Progress: ████████████████████░░░�
 
 All decisions documented in PROJECT.md Key Decisions table.
 
-v0.4.0 decisions (pending):
-- None yet -- milestone just started
+v0.4.0 decisions:
+- Phase 24: listByParent uses type assertion for parentGenerationId (not yet in schema)
+- Phase 24: Pending/failed generations render as div (non-navigable)
+- Phase 24: Feed page uses Link navigation (removed Dialog preview)
 
 Research findings to consider:
 - Use `@modal` slot at (app)/ level with `(.)create/[id]` intercepting route
@@ -56,14 +58,15 @@ None.
 - Convex storage URL accessibility from Claude API servers (may need base64 fallback)
 - Timeline performance with many clips + trim/split interactions (needs profiling)
 - Modal state bugs reported in research -- won't reopen, persists after nav (test thoroughly)
+- **Phase 24:** Missing components (CreationDetailPanel, CreationEditBar, VariationStack) cause TypeScript errors until Phase 25-27 implement them
 
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Roadmap created for v0.4.0 milestone
+Stopped at: Completed 24-01-PLAN.md (Route Infrastructure)
 Resume file: None
 
-Next step: `/gsd:execute-phase 24` (Route Infrastructure)
+Next step: `/gsd:execute-phase 25` (Creation Modal UI)
 
 ---
-*State updated: 2026-02-04 -- Phase 24 planned*
+*State updated: 2026-02-04 -- Phase 24 complete*
