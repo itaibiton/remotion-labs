@@ -1,6 +1,6 @@
-# Requirements: RemotionLab v0.3.0
+# Requirements: RemotionLab v0.4.0
 
-**Defined:** 2026-02-02
+**Defined:** 2026-02-04
 **Core Value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
 
 ## v2.0 Requirements (Complete)
@@ -79,9 +79,10 @@
 
 </details>
 
-## v0.3.0 Requirements -- Movie Editor Revamp
+## v0.3.0 Requirements (Complete)
 
-Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases 18-23.
+<details>
+<summary>v0.3.0 -- Movie Editor Revamp (12/12 complete)</summary>
 
 ### Timeline Interactions
 
@@ -107,9 +108,37 @@ Requirements for the Movie Editor Revamp milestone. Each maps to roadmap phases 
 - [x] **EDIT-01**: Selecting a clip opens an inline editing panel with preview player and Monaco code editor
 - [x] **EDIT-02**: User can edit clip code in the panel and save changes back to the clip
 
+</details>
+
+## v0.4.0 Requirements -- Creation Detail Modal Revamp
+
+Requirements for the Creation Detail Modal Revamp milestone. Each maps to roadmap phases 24-28.
+
+### Modal Route & Navigation
+
+- [ ] **NAV-01**: Clicking a creation in the feed navigates to `/create/[id]` as an intercepting modal (sidebar stays visible)
+- [ ] **NAV-02**: Direct URL access to `/create/[id]` works (refresh, bookmark, shared link)
+- [ ] **NAV-03**: Pressing Escape closes the modal and returns to the feed
+- [ ] **NAV-04**: Clicking outside the modal closes it and returns to the feed
+- [ ] **NAV-05**: Arrow keys navigate between creations (left/right to prev/next in feed)
+
+### Modal Layout & UI
+
+- [ ] **UI-01**: Modal displays large preview player in center area
+- [ ] **UI-02**: Details panel on right shows prompt text, thumbnail, metadata (aspect ratio, duration, FPS, timestamp)
+- [ ] **UI-03**: Details panel includes action buttons (save to library, delete, rerun, extend next/prev)
+- [ ] **UI-04**: Edit textarea at top of modal for inline refinement prompts
+
+### Variation Threading
+
+- [ ] **VAR-01**: Submitting an edit creates a new generation linked to the parent via `parentGenerationId`
+- [ ] **VAR-02**: Variations display in a scrollable vertical stack below the current creation
+- [ ] **VAR-03**: Each variation shows full-size preview (not thumbnails)
+- [ ] **VAR-04**: Each variation has its own action buttons (save, delete, extend, etc.)
+
 ## Future Requirements
 
-Deferred to v0.4+. Tracked but not in current roadmap.
+Deferred to v0.5+. Tracked but not in current roadmap.
 
 ### Transitions
 
@@ -142,8 +171,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | Real-time collaboration | Solo creation first; Convex reactive queries enable later |
 | Sharing/publishing movies | Distribution feature, not creation; export MP4 suffices |
 | Payments/subscriptions | Focus on core value first |
-| Undo/redo (v0.3) | Adds significant state complexity; defer to v0.4 |
-| Speed/retime control (v0.3) | No native Remotion support for code compositions; needs prototyping |
+| Undo/redo (v0.4) | Adds significant state complexity; defer to v0.5 |
+| Speed/retime control (v0.4) | No native Remotion support for code compositions; needs prototyping |
 | Tool modes (Premiere-style blade/select toggle) | Contextual interactions (hover = trim) are better for content creators |
 | Filmstrip thumbnail strips on clips | Performance risk with DynamicCode rendering; defer to polish phase |
 
@@ -157,8 +186,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FEED-02 | Phase 13 | Complete |
 | SET-01 | Phase 13 | Complete |
 | SET-02 | Phase 13 | Complete |
-| VAR-01 | Phase 14 | Complete |
-| VAR-02 | Phase 14 | Complete |
+| VAR-01 (v0.2) | Phase 14 | Complete |
+| VAR-02 (v0.2) | Phase 14 | Complete |
 | UPLOAD-01 | Phase 15 | Complete |
 | INPUT-01 | Phase 15 | Complete |
 | ACT-01 | Phase 16 | Complete |
@@ -176,13 +205,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ACT-04 | Phase 22 | Complete |
 | EDIT-01 | Phase 23 | Complete |
 | EDIT-02 | Phase 23 | Complete |
+| NAV-01 | Phase 24 | Complete |
+| NAV-02 | Phase 24 | Complete |
+| NAV-03 | Phase 25 | Pending |
+| NAV-04 | Phase 25 | Pending |
+| NAV-05 | Phase 25 | Pending |
+| UI-01 (v0.4) | Phase 26 | Pending |
+| UI-02 (v0.4) | Phase 26 | Pending |
+| UI-03 (v0.4) | Phase 26 | Pending |
+| UI-04 (v0.4) | Phase 26 | Pending |
+| VAR-01 (v0.4) | Phase 27 | Pending |
+| VAR-02 (v0.4) | Phase 28 | Pending |
+| VAR-03 (v0.4) | Phase 28 | Pending |
+| VAR-04 (v0.4) | Phase 28 | Pending |
 
 **Coverage:**
 - v0.2.0 requirements: 11/11 complete
 - v0.3.0 requirements: 12/12 complete
-- Mapped to phases: 12/12
+- v0.4.0 requirements: 13/13 mapped (2 complete)
+- Mapped to phases: 13/13
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-04 -- v0.3.0 complete. All 12 requirements marked Complete.*
+*Last updated: 2026-02-04 -- Phase 24 complete (NAV-01, NAV-02).*

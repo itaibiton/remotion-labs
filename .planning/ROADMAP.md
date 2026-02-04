@@ -67,7 +67,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v0.4.0 -- Creation Detail Modal Revamp
 
-- [ ] **Phase 24: Route Infrastructure** - Intercepting routes and parallel route slots enable modal navigation
+- [x] **Phase 24: Route Infrastructure** - Intercepting routes and parallel route slots enable modal navigation
 - [ ] **Phase 25: Modal Shell & Navigation** - Modal container with dismiss behaviors and keyboard navigation
 - [ ] **Phase 26: Modal Content Layout** - Preview player, details panel, and edit textarea in modal
 - [ ] **Phase 27: Schema & Variation Threading** - parentGenerationId links variations into chains
@@ -552,7 +552,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 21. Blade & Split | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 22. Per-Clip Actions | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 23. Finalization | v0.3.0 | 1/1 | Complete | 2026-02-04 |
-| 24. Route Infrastructure | v0.4.0 | 0/1 | Not started | - |
+| 24. Route Infrastructure | v0.4.0 | 1/1 | Complete | 2026-02-04 |
 | 25. Modal Shell & Navigation | v0.4.0 | 0/TBD | Not started | - |
 | 26. Modal Content Layout | v0.4.0 | 0/TBD | Not started | - |
 | 27. Schema & Variation Threading | v0.4.0 | 0/TBD | Not started | - |
@@ -566,4 +566,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v0.2.0 requirements: 11 mapped (complete)*
 *v0.3.0 requirements: 12 mapped across 6 phases (18-23) (complete)*
 *v0.4.0 requirements: 13 mapped across 5 phases (24-28)*
-*Updated: 2026-02-04 -- v0.4.0 Creation Detail Modal Revamp milestone roadmapped.*
+*Updated: 2026-02-04 -- Phase 24 (Route Infrastructure) complete.*
