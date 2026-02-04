@@ -2,20 +2,20 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-02)
+See: .planning/PROJECT.md (updated 2026-02-04)
 
-**Release: v0.3.0**
+**Release: v0.4.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.3.0 Movie Editor Revamp -- Phase 23 (Finalization)
+**Current focus:** v0.4.0 Creation Detail Modal Revamp -- Phase 24 (Route Infrastructure)
 
 ## Current Position
 
-Phase: 23 of 23 (Finalization) -- COMPLETE
-Plan: 1 of 1 in current phase
-Status: Milestone complete
-Last activity: 2026-02-04 -- Completed 23-01-PLAN.md
+Phase: 24 of 28 (Route Infrastructure)
+Plan: 0 of 1 in current phase
+Status: Ready to execute
+Last activity: 2026-02-04 -- Phase 24 planned (1 plan)
 
-Progress: ████████████████████████ 100%
+Progress: ████████████████████░░░░ 82% (23/28 phases)
 
 ## Milestone History
 
@@ -25,8 +25,9 @@ Progress: ███████████████████████�
 | v1.1 Full Code Generation | 3 | 10 | 11/11 | 2026-01-28 -> 2026-01-29 |
 | v2.0 Scenes & Timeline | 4 | 11 | 15/15 | 2026-01-29 -> 2026-02-01 |
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
-| **Total (shipped)** | **17** | **46** | **51** | 2026-01-27 -> 2026-02-02 |
 | v0.3.0 Movie Editor Revamp | 6 | 10 | 12/12 | 2026-02-02 -> 2026-02-04 |
+| **Total (shipped)** | **23** | **56** | **63** | 2026-01-27 -> 2026-02-04 |
+| v0.4.0 Creation Detail Modal | 5 | TBD | 13/13 | 2026-02-04 -> in progress |
 
 ## Accumulated Context
 
@@ -34,33 +35,14 @@ Progress: ███████████████████████�
 
 All decisions documented in PROJECT.md Key Decisions table.
 
-v0.3.0 decisions:
-- Both trim + split for timeline clip editing
-- Inline preview + edit panel (side panel on movie page, not navigate to create page)
-- Single screen layout (core editing in viewport, panels can scroll/expand)
-- Timeline interactions are highest priority
-- react-resizable-panels for layout (2.7M weekly downloads) -- installed but not used; user requested fixed layout
-- Fixed flex layout for preview/timeline split (flex-[3]/flex-[2])
-- @dnd-kit setActivatorNodeRef to separate reorder from trim
-- tinykeys (650B) for blade tool keyboard shortcut
-- Non-destructive trim via trimStart/trimEnd on scene schema
-- Timeline ruler: 5-second intervals for >30s movies, 1-second otherwise
-- Scene minimum width: 80px to maintain visibility for short clips
-- Lifted playerRef pattern: MovieEditor owns ref, passes to player + timeline
-- Playhead drag: pointer capture for smooth cross-boundary dragging
-- 12px hit zone around 2px playhead line for easier grabbing
-- Trim handle pointer capture pattern (same as playhead for consistency)
-- Scale used directly as pixelsPerFrame for trim calculations
-- Default scale: 3 px/frame (100%), min: 0.5 px/frame, max: 20 px/frame
-- Zoom factors: 1.25x for button clicks, 1.1x for scroll wheel
-- Ctrl+Meta modifier required for scroll zoom to avoid accidental zoom
-- 8px snap threshold for trim operations (pixel-based for zoom independence)
-- Color-coded snap indicators: blue (clip-edge), yellow (playhead), green (boundary)
-- Dropdown replaces standalone button for per-clip actions (better consolidation)
-- Actions dropdown renders only when all 4 handlers provided (graceful fallback)
-- SceneEditPanel uses existing CodeDisplay and useDebouncedValidation for consistency
-- Regenerate uses continuation action with custom prompt for variation
-- Sheet panel width 550px for preview + editor layout
+v0.4.0 decisions (pending):
+- None yet -- milestone just started
+
+Research findings to consider:
+- Use `@modal` slot at (app)/ level with `(.)create/[id]` intercepting route
+- Add default.tsx files to prevent 404 on hard navigation
+- Schema: add `parentGenerationId` field with `by_parent` index
+- Pagination for deep variation chains to prevent memory issues
 
 ### Pending Todos
 
@@ -73,15 +55,15 @@ None.
 - Claude API cost at scale with 4 variations (implement usage tracking)
 - Convex storage URL accessibility from Claude API servers (may need base64 fallback)
 - Timeline performance with many clips + trim/split interactions (needs profiling)
+- Modal state bugs reported in research -- won't reopen, persists after nav (test thoroughly)
 
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Completed 23-01-PLAN.md (v0.3.0 complete)
+Stopped at: Roadmap created for v0.4.0 milestone
 Resume file: None
 
-Next step: Plan v0.4.0 or ship
+Next step: `/gsd:execute-phase 24` (Route Infrastructure)
 
 ---
-*Plan 23-01 complete -- 2026-02-04*
-*v0.3.0 Movie Editor Revamp milestone complete*
+*State updated: 2026-02-04 -- Phase 24 planned*

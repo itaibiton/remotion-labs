@@ -2,7 +2,7 @@
 
 ## Overview
 
-RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity. v0.2.0 (11 requirements) overhauls the create page into a Midjourney-style scrolling feed with multi-variation generation, configurable settings, image upload for reference-based prompts, per-creation actions, and prequel generation. v0.3.0 (12 requirements) transforms the movie page into a professional-grade editor with a full-screen resizable layout, proportional timeline with trim/split/zoom interactions, per-clip generation actions, and inline code editing.
+RemotionLab delivers AI-powered video creation. v1.0 (14 requirements) validated the core value: users can go from text prompt to rendered video without coding knowledge. v1.1 (11 requirements) unlocks unlimited animation possibilities by having Claude generate actual Remotion JSX code with secure validation and execution. v2.0 (15 requirements) evolves from single-clip creation into a multi-scene movie editor with a clip library, horizontal timeline, full-movie rendering, and continuation-based generation for scene-to-scene visual continuity. v0.2.0 (11 requirements) overhauls the create page into a Midjourney-style scrolling feed with multi-variation generation, configurable settings, image upload for reference-based prompts, per-creation actions, and prequel generation. v0.3.0 (12 requirements) transforms the movie page into a professional-grade editor with a full-screen resizable layout, proportional timeline with trim/split/zoom interactions, per-clip generation actions, and inline code editing. v0.4.0 (13 requirements) adds a creation detail modal with intercepting routes, variation threading, and inline refinement capabilities.
 
 ## Phases
 
@@ -53,7 +53,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 </details>
 
-### v0.3.0 -- Movie Editor Revamp
+<details>
+<summary>v0.3.0 (Complete)</summary>
 
 - [x] **Phase 18: Pro Layout** - Movie page fills the viewport with fixed preview and timeline panels
 - [x] **Phase 19: Timeline Foundation** - Timeline displays proportional clips with a synced ruler and draggable playhead
@@ -61,6 +62,16 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 21: Blade & Split** - Users can split clips at the playhead position via blade tool
 - [x] **Phase 22: Per-Clip Actions** - Each timeline clip has generation and editing action buttons
 - [x] **Phase 23: Finalization** - Final polish and cleanup
+
+</details>
+
+### v0.4.0 -- Creation Detail Modal Revamp
+
+- [ ] **Phase 24: Route Infrastructure** - Intercepting routes and parallel route slots enable modal navigation
+- [ ] **Phase 25: Modal Shell & Navigation** - Modal container with dismiss behaviors and keyboard navigation
+- [ ] **Phase 26: Modal Content Layout** - Preview player, details panel, and edit textarea in modal
+- [ ] **Phase 27: Schema & Variation Threading** - parentGenerationId links variations into chains
+- [ ] **Phase 28: Variation Stack UI** - Variation chain displays in scrollable vertical stack
 
 ## Phase Details
 
@@ -357,6 +368,9 @@ Plans:
 
 </details>
 
+<details>
+<summary>v0.3.0 Phase Details (Complete)</summary>
+
 ### Phase 18: Pro Layout
 **Goal**: Movie page fills the viewport with a professional full-screen editor layout using resizable panels
 **Depends on**: Phase 17 (existing movie page and timeline from v2.0)
@@ -449,10 +463,69 @@ Plans:
 Plans:
 - [x] 23-01-PLAN.md -- Finalization polish (unsaved changes dialog, thumbnail cache) and documentation updates
 
+</details>
+
+### Phase 24: Route Infrastructure
+**Goal**: Intercepting routes and parallel route slots enable modal navigation without losing feed context
+**Depends on**: Phase 23 (existing feed and generation infrastructure)
+**Requirements**: NAV-01, NAV-02
+**Success Criteria** (what must be TRUE):
+  1. Clicking a creation in the feed navigates to `/create/[id]` and the URL updates
+  2. The sidebar remains visible when the modal is open (not replaced by modal page)
+  3. Refreshing the page at `/create/[id]` loads the creation detail (not 404)
+  4. Bookmarking and sharing `/create/[id]` URLs works correctly
+**Plans**: 1 plan
+
+Plans:
+- [ ] 24-01-PLAN.md -- Wire feed navigation to Link-based routing and add listByParent query
+
+### Phase 25: Modal Shell & Navigation
+**Goal**: Modal container with dismiss behaviors and keyboard navigation between creations
+**Depends on**: Phase 24 (route infrastructure must exist)
+**Requirements**: NAV-03, NAV-04, NAV-05
+**Success Criteria** (what must be TRUE):
+  1. Pressing Escape closes the modal and returns to the feed
+  2. Clicking outside the modal (on the backdrop) closes it and returns to the feed
+  3. Left/right arrow keys navigate to the previous/next creation in the feed
+  4. Navigation wraps or stops at feed boundaries (first/last creation)
+**Plans**: TBD
+
+### Phase 26: Modal Content Layout
+**Goal**: Modal displays preview player, details panel, and edit textarea for inline refinement
+**Depends on**: Phase 25 (modal shell must exist)
+**Requirements**: UI-01, UI-02, UI-03, UI-04
+**Success Criteria** (what must be TRUE):
+  1. Modal displays a large preview player in the center area
+  2. Details panel on right shows prompt text, thumbnail, and metadata (aspect ratio, duration, FPS, timestamp)
+  3. Details panel includes action buttons (save to library, delete, rerun, extend next/prev)
+  4. Edit textarea at top of modal accepts refinement prompts for inline editing
+**Plans**: TBD
+
+### Phase 27: Schema & Variation Threading
+**Goal**: Generations can be linked into parent-child variation chains via parentGenerationId
+**Depends on**: Phase 26 (modal content layout provides the UI context for variations)
+**Requirements**: VAR-01
+**Success Criteria** (what must be TRUE):
+  1. Submitting an edit in the modal creates a new generation linked to the parent via `parentGenerationId`
+  2. Schema includes `parentGenerationId` field with `by_parent` index for efficient queries
+  3. Variation chains can be queried from any generation (find all descendants)
+**Plans**: TBD
+
+### Phase 28: Variation Stack UI
+**Goal**: Variation chains display in a scrollable vertical stack within the modal
+**Depends on**: Phase 27 (schema must support parentGenerationId)
+**Requirements**: VAR-02, VAR-03, VAR-04
+**Success Criteria** (what must be TRUE):
+  1. Variations display in a scrollable vertical stack below the current creation in the modal
+  2. Each variation shows a full-size preview (not thumbnails)
+  3. Each variation has its own action buttons (save, delete, extend, etc.)
+  4. Clicking a variation in the stack makes it the "current" creation in the modal
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17 -> 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24 -> 25 -> 26 -> 27 -> 28
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -479,6 +552,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 21. Blade & Split | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 22. Per-Clip Actions | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 23. Finalization | v0.3.0 | 1/1 | Complete | 2026-02-04 |
+| 24. Route Infrastructure | v0.4.0 | 0/1 | Not started | - |
+| 25. Modal Shell & Navigation | v0.4.0 | 0/TBD | Not started | - |
+| 26. Modal Content Layout | v0.4.0 | 0/TBD | Not started | - |
+| 27. Schema & Variation Threading | v0.4.0 | 0/TBD | Not started | - |
+| 28. Variation Stack UI | v0.4.0 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-27*
@@ -486,5 +564,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v1.1 requirements: 11 mapped (complete)*
 *v2.0 requirements: 15 mapped (complete)*
 *v0.2.0 requirements: 11 mapped (complete)*
-*v0.3.0 requirements: 12 mapped across 6 phases (18-23)*
-*Updated: 2026-02-04 -- v0.3.0 Movie Editor Revamp milestone complete.*
+*v0.3.0 requirements: 12 mapped across 6 phases (18-23) (complete)*
+*v0.4.0 requirements: 13 mapped across 5 phases (24-28)*
+*Updated: 2026-02-04 -- v0.4.0 Creation Detail Modal Revamp milestone roadmapped.*
