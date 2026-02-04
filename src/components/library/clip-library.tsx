@@ -34,15 +34,9 @@ export function ClipLibrary() {
   // Loading state
   if (clips === undefined) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-0">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-lg overflow-hidden border">
-            <div className="aspect-video bg-muted animate-pulse" />
-            <div className="p-3 space-y-2">
-              <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
-              <div className="h-3 bg-muted animate-pulse rounded w-1/4" />
-            </div>
-          </div>
+          <div key={i} className="aspect-video rounded-lg bg-muted animate-pulse" />
         ))}
       </div>
     );
@@ -66,7 +60,7 @@ export function ClipLibrary() {
 
   // Normal state
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-0">
       {clips.map((clip) => (
         <ClipCard
           key={clip._id}

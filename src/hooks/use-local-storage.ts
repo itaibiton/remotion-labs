@@ -1,33 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 /**
  * SSR-safe localStorage hook.
  *
- * Initializes with `initialValue` during SSR and first render (no
- * hydration mismatch). Reads the persisted value from localStorage
- * in a useEffect that only runs on the client after hydration.
- * Writes are synchronous to state and localStorage.
+ * Uses a lazy initializer to read from localStorage on the client,
+ * avoiding the flash of default values when navigating between pages.
+ * Falls back to initialValue during SSR.
  */
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((prev: T) => T)) => void] {
-  // Always initialize with the default value (SSR-safe)
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-
-  // Read from localStorage after mount (client-only)
-  useEffect(() => {
+  // Lazy initializer reads from localStorage on client, uses default on server
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === "undefined") {
+      return initialValue;
+    }
     try {
       const item = window.localStorage.getItem(key);
-      if (item !== null) {
-        setStoredValue(JSON.parse(item));
-      }
+      return item !== null ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
+      return initialValue;
     }
-  }, [key]);
+  });
 
   // Write to localStorage on change
   const setValue = useCallback(

@@ -9,6 +9,70 @@ import * as acorn from "acorn";
 import jsx from "acorn-jsx";
 import { transform as sucraseTransform } from "sucrase";
 
+// Model configuration with fallback
+const PRIMARY_MODEL = "claude-sonnet-4-5-20250929";
+const FALLBACK_MODEL = "claude-3-5-sonnet-20241022";
+
+/**
+ * Retry helper with exponential backoff and model fallback for handling API overload errors
+ */
+async function withRetry<T>(
+  fn: (model: string) => Promise<T>,
+  maxRetries: number = 3,
+  baseDelayMs: number = 1500
+): Promise<T> {
+  let lastError: Error | undefined;
+  let currentModel = PRIMARY_MODEL;
+
+  for (let attempt = 0; attempt <= maxRetries * 2; attempt++) {
+    // Switch to fallback model after first round of retries
+    if (attempt === maxRetries + 1) {
+      console.log(`[withRetry] Switching to fallback model: ${FALLBACK_MODEL}`);
+      currentModel = FALLBACK_MODEL;
+    }
+
+    console.log(`[withRetry] Attempt ${attempt + 1} with model: ${currentModel}`);
+
+    try {
+      const result = await fn(currentModel);
+      console.log(`[withRetry] Success on attempt ${attempt + 1}`);
+      return result;
+    } catch (error: unknown) {
+      lastError = error as Error;
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorString = String(error);
+
+      console.log(`[withRetry] Error on attempt ${attempt + 1}:`, errorMessage.substring(0, 150));
+
+      // Check for overload/rate limit errors (529, 429)
+      const isRetryable = errorString.includes("529") ||
+                          errorString.includes("overloaded") ||
+                          errorString.includes("Overloaded") ||
+                          errorString.includes("429") ||
+                          errorString.includes("rate_limit");
+
+      if (!isRetryable) {
+        console.log(`[withRetry] Error not retryable, throwing immediately`);
+        throw error;
+      }
+
+      if (attempt === maxRetries * 2) {
+        console.log(`[withRetry] All retries exhausted, throwing`);
+        throw error;
+      }
+
+      // Shorter backoff: 1.5s, 3s, 4.5s + jitter
+      const jitter = Math.random() * 500;
+      const delay = baseDelayMs * (1 + (attempt % (maxRetries + 1))) + jitter;
+      console.log(`[withRetry] Waiting ${Math.round(delay)}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
 /**
  * System prompt for Claude to generate full Remotion JSX code
  * Outputs complete, self-contained Remotion compositions
@@ -600,14 +664,16 @@ async function generateSingleVariation(
   enhancedPrompt: string,
   temperature?: number,
 ): Promise<{ rawCode: string; code: string; durationInFrames: number; fps: number }> {
-  // Call Claude API (only include temperature if explicitly provided)
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-5-20250929",
-    max_tokens: 4096,
-    system: enhancedPrompt,
-    messages: [{ role: "user", content: promptOrContent }],
-    ...(temperature !== undefined ? { temperature } : {}),
-  });
+  // Call Claude API with retry logic for overload errors (with model fallback)
+  const response = await withRetry((model) =>
+    client.messages.create({
+      model,
+      max_tokens: 4096,
+      system: enhancedPrompt,
+      messages: [{ role: "user", content: promptOrContent }],
+      ...(temperature !== undefined ? { temperature } : {}),
+    })
+  );
 
   // Extract text content from response
   const textContent = response.content.find((block) => block.type === "text");
@@ -980,13 +1046,15 @@ export const refine = action({
       },
     ];
 
-    // Call Claude API with refinement system prompt
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 4096,
-      system: REFINEMENT_SYSTEM_PROMPT,
-      messages,
-    });
+    // Call Claude API with refinement system prompt (with retry and model fallback)
+    const response = await withRetry((model) =>
+      client.messages.create({
+        model,
+        max_tokens: 4096,
+        system: REFINEMENT_SYSTEM_PROMPT,
+        messages,
+      })
+    );
 
     // Extract text content
     const textContent = response.content.find((block) => block.type === "text");
@@ -1091,13 +1159,15 @@ export const generateContinuation = action({
       ? `PREVIOUS SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate the next scene: ${args.prompt}`
       : `PREVIOUS SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a natural, visually interesting continuation.`;
 
-    // Call Claude API with continuation system prompt
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 4096,
-      system: CONTINUATION_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userContent }],
-    });
+    // Call Claude API with continuation system prompt (with retry and model fallback)
+    const response = await withRetry((model) =>
+      client.messages.create({
+        model,
+        max_tokens: 4096,
+        system: CONTINUATION_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userContent }],
+      })
+    );
 
     // Extract text content from response
     const textContent = response.content.find((block) => block.type === "text");
@@ -1222,13 +1292,15 @@ export const generatePrequel = action({
         ? `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a prequel that leads into this scene: ${args.prompt}`
         : `TARGET SCENE CODE:\n\`\`\`\n${sourceClip.rawCode}\n\`\`\`\n\nGenerate a natural, visually interesting prequel that leads into this scene.`;
 
-      // Call Claude API with prequel system prompt
-      const response = await client.messages.create({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 4096,
-        system: PREQUEL_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userContent }],
-      });
+      // Call Claude API with prequel system prompt (with retry and model fallback)
+      const response = await withRetry((model) =>
+        client.messages.create({
+          model,
+          max_tokens: 4096,
+          system: PREQUEL_SYSTEM_PROMPT,
+          messages: [{ role: "user", content: userContent }],
+        })
+      );
 
       // Extract text content from response
       const textContent = response.content.find((block) => block.type === "text");

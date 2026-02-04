@@ -85,19 +85,9 @@ export function GenerationFeed({
   // Loading first page
   if (status === "LoadingFirstPage") {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex flex-col rounded-lg border overflow-hidden">
-            <div className="w-full aspect-video bg-muted animate-pulse" />
-            <div className="p-2.5 flex flex-col gap-2">
-              <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
-              <div className="h-3 w-1/2 bg-muted animate-pulse rounded" />
-              <div className="flex gap-1.5">
-                <div className="h-5 w-10 bg-muted animate-pulse rounded" />
-                <div className="h-5 w-10 bg-muted animate-pulse rounded" />
-              </div>
-            </div>
-          </div>
+          <div key={i} className="aspect-video rounded-lg bg-muted animate-pulse" />
         ))}
       </div>
     );
@@ -115,9 +105,9 @@ export function GenerationFeed({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-0">
       {/* Bento grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0">
         <AnimatePresence mode="popLayout">
           {/* Loading skeleton card */}
           {showLoadingSkeleton && (
@@ -130,18 +120,12 @@ export function GenerationFeed({
               exit="exit"
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <div className="flex flex-col rounded-lg border overflow-hidden">
-                <div className="w-full aspect-video bg-muted animate-pulse flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2" />
-                    <p className="text-xs text-muted-foreground">
-                      {loadingLabel || "Generating..."}
-                    </p>
-                  </div>
-                </div>
-                <div className="p-2.5 flex flex-col gap-2">
-                  <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
-                  <div className="h-3 w-1/2 bg-muted animate-pulse rounded" />
+              <div className="aspect-video rounded-lg bg-muted animate-pulse flex items-center justify-center">
+                <div className="text-center">
+                  <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {loadingLabel || "Generating..."}
+                  </p>
                 </div>
               </div>
             </motion.div>
