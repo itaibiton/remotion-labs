@@ -215,6 +215,30 @@ export const get = query({
 });
 
 /**
+ * Count pending generations for the current user.
+ * Used to show badge in sidebar.
+ */
+export const countPending = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return 0;
+    }
+
+    const pending = await ctx.db
+      .query("generations")
+      .withIndex("by_user_created", (q) =>
+        q.eq("userId", identity.tokenIdentifier)
+      )
+      .filter((q) => q.eq(q.field("status"), "pending"))
+      .collect();
+
+    return pending.length;
+  },
+});
+
+/**
  * Remove a generation. Only the owning user can delete their generations.
  * Follows the same pattern as clips.remove.
  */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { InputBar } from "@/components/generation/input-bar";
@@ -20,16 +20,35 @@ import {
 
 function FeedContent() {
   const saveClip = useMutation(api.clips.save);
+  const generate = useAction(api.generateAnimation.generate);
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useGenerationSettings();
 
   const [selectedGeneration, setSelectedGeneration] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = useCallback(
     async (prompt: string, _imageIds: string[]) => {
-      router.push(`/create?prompt=${encodeURIComponent(prompt)}`);
+      if (isGenerating) return;
+
+      setIsGenerating(true);
+      toast.success("Creation started! Check the Create page for progress.");
+
+      try {
+        await generate({
+          prompt,
+          aspectRatio: settings.aspectRatio,
+          durationInSeconds: settings.durationInSeconds,
+          fps: settings.fps,
+        });
+        toast.success("Creation completed!");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Generation failed");
+      } finally {
+        setIsGenerating(false);
+      }
     },
-    [router]
+    [generate, settings.aspectRatio, settings.durationInSeconds, settings.fps, isGenerating]
   );
 
   const handleSelectGeneration = useCallback((generation: any) => {
@@ -72,13 +91,13 @@ function FeedContent() {
   return (
     <div className="flex flex-col items-center">
       {/* Gradient fade pinned to top */}
-      <div className="sticky top-0 z-[5] w-full h-32 bg-gradient-to-b from-white via-white/95 via-50% to-transparent pointer-events-none -mb-32" />
+      <div className="sticky top-0 z-[5] w-full h-32 bg-gradient-to-b from-background via-background/95 via-50% to-transparent pointer-events-none -mb-32" />
 
       {/* Input bar */}
       <div className="sticky top-6 z-10 w-full px-8 relative">
         <InputBar
           onSubmit={handleGenerate}
-          isGenerating={false}
+          isGenerating={isGenerating}
           hasExistingCode={false}
           disabled={false}
           settings={settings}

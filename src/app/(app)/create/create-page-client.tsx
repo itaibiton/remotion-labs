@@ -599,7 +599,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
     <div className="flex flex-col items-center">
       {/* Gradient fade pinned to top — content scrolls under it */}
       {!showFullLoader && (
-        <div className="sticky top-0 z-[5] w-full h-32 bg-gradient-to-b from-white via-white/95 via-50% to-transparent pointer-events-none -mb-32" />
+        <div className="sticky top-0 z-[5] w-full h-32 bg-gradient-to-b from-background via-background/95 via-50% to-transparent pointer-events-none -mb-32" />
       )}
       {/* Input bar pinned below the fade */}
       {!showFullLoader && (
