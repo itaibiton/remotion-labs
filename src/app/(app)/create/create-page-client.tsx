@@ -37,6 +37,7 @@ interface GenerationResult {
   code: string;
   durationInFrames: number;
   fps: number;
+  aspectRatio?: string;
 }
 
 interface CreateContentProps {
@@ -160,6 +161,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
         code: clipData.code,
         durationInFrames: clipData.durationInFrames,
         fps: clipData.fps,
+        aspectRatio: clipData.aspectRatio,
       });
       setLastPrompt(clipData.name);
       // Reset editing state for clean load
@@ -320,6 +322,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
           code: result.code,
           durationInFrames: result.durationInFrames,
           fps: result.fps,
+          aspectRatio: sourceClipData?.aspectRatio,
         });
         setLastPrompt(prompt || (sourceMode === "prequel" ? "Prequel to next scene" : "Continuation from previous scene"));
         toast.success(sourceMode === "prequel" ? "Prequel generated!" : "Continuation generated!");
@@ -332,7 +335,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
         setCurrentStep(null);
       }
     },
-    [sourceClipId, sourceMode, continuationAction, prequelAction, error?.retryCount, validation]
+    [sourceClipId, sourceMode, continuationAction, prequelAction, error?.retryCount, validation, sourceClipData?.aspectRatio]
   );
 
   const handleUnifiedSubmit = useCallback(
@@ -384,22 +387,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
     }
   }, [clipId, router, validation]);
 
-  const handleSelectGeneration = useCallback((generation: any) => {
-    if (generation.status === "failed" || !generation.code) return;
-    setLastGeneration({
-      id: String(generation._id),
-      rawCode: generation.rawCode ?? "",
-      code: generation.code,
-      durationInFrames: generation.durationInFrames ?? 90,
-      fps: generation.fps ?? 30,
-    });
-    setLastPrompt(generation.prompt);
-    setEditedCode(null);
-    setIsEditing(false);
-    setSkipValidation(true);
-    setChatMessages([]);
-    setSavedClipId(null);
-  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveGeneration = useCallback(async (generation: any) => {
@@ -543,6 +530,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
             code: firstSuccess.code,
             durationInFrames: firstSuccess.durationInFrames,
             fps: firstSuccess.fps,
+            aspectRatio,
           });
           setLastPrompt(prompt);
           toast.success(`Rerun complete: ${result.variations.length} variation(s) generated!`);
@@ -569,6 +557,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
           code: result.code,
           durationInFrames: result.durationInFrames ?? 90,
           fps: result.fps ?? 30,
+          aspectRatio,
         });
         setLastPrompt(prompt);
         toast.success("Rerun complete!");
@@ -687,12 +676,15 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
             {/* Two-column layout: Preview | Code */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Preview - uses validated transformed code or server-transformed code */}
-              <div>
-                <PreviewPlayer
-                  code={previewCode}
-                  durationInFrames={lastGeneration.durationInFrames}
-                  fps={lastGeneration.fps}
-                />
+              <div className={`flex items-start ${lastGeneration.aspectRatio === "9:16" ? "justify-center" : ""}`}>
+                <div className={lastGeneration.aspectRatio === "9:16" ? "w-[45%] min-w-[200px]" : "w-full"}>
+                  <PreviewPlayer
+                    code={previewCode}
+                    durationInFrames={lastGeneration.durationInFrames}
+                    fps={lastGeneration.fps}
+                    aspectRatio={lastGeneration.aspectRatio}
+                  />
+                </div>
               </div>
 
               {/* Code - shows raw JSX for editing */}
@@ -802,7 +794,6 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
         {!showFullLoader && !lastGeneration && (
           <div className="w-full">
             <GenerationFeed
-              onSelectGeneration={handleSelectGeneration}
               onSaveGeneration={handleSaveGeneration}
               onDeleteGeneration={handleDeleteGeneration}
               onRerunGeneration={handleRerunGeneration}
@@ -811,6 +802,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
               deletingIds={deletingIds}
               showLoadingSkeleton={!!isSourceClipGenerating}
               loadingLabel={sourceMode === "prequel" ? "Generating prequel..." : "Generating continuation..."}
+              loadingAspectRatio={sourceClipData?.aspectRatio ?? "16:9"}
             />
           </div>
         )}
@@ -823,6 +815,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
         code={previewCode}
         durationInFrames={lastGeneration?.durationInFrames ?? 90}
         fps={lastGeneration?.fps ?? 30}
+        aspectRatio={lastGeneration?.aspectRatio ?? "16:9"}
         defaultName={lastPrompt.slice(0, 50) || "Untitled Clip"}
         onSaved={(newClipId) => setSavedClipId(newClipId)}
       />

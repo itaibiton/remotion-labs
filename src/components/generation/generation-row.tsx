@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Thumbnail } from "@remotion/player";
 import { DynamicCode } from "@/remotion/compositions/DynamicCode";
 import {
@@ -28,7 +29,6 @@ interface GenerationRowProps {
     variationIndex?: number;
     variationCount?: number;
   };
-  onSelect: (generation: GenerationRowProps["generation"]) => void;
   onSave: (generation: GenerationRowProps["generation"]) => void;
   onDelete: (generation: GenerationRowProps["generation"]) => void;
   onRerun: (generation: GenerationRowProps["generation"]) => void;
@@ -57,7 +57,7 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions, onUsePrompt, onSaveAsTemplate }: GenerationRowProps) {
+export function GenerationRow({ generation, onSave, onDelete, onRerun, onExtendNext, onExtendPrevious, isDeleting, hideActions, onUsePrompt, onSaveAsTemplate }: GenerationRowProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -72,14 +72,11 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
   const fps = generation.fps ?? 30;
   const frameToDisplay = Math.floor(durationInFrames / 2);
 
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className={`group relative aspect-video rounded-lg overflow-hidden ${isDeleting ? "animate-pulse opacity-60 pointer-events-none" : ""} ${isDeleting || isPending ? "pointer-events-none" : "cursor-pointer"}`}
-      onClick={() => { if (!isDeleting && !isPending) onSelect(generation); }}
-      onKeyDown={(e) => { if (e.key === "Enter" && !isDeleting && !isPending) onSelect(generation); }}
-    >
+  const wrapperClassName = `group relative w-full overflow-hidden block ${isDeleting ? "animate-pulse opacity-60 pointer-events-none" : ""} ${isDeleting || isPending ? "pointer-events-none" : ""}`;
+  const wrapperStyle = { aspectRatio: `${preset.width} / ${preset.height}` };
+
+  const content = (
+    <>
       {/* Thumbnail fills entire card */}
       {isPending ? (
         <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
@@ -156,14 +153,14 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
           </span>
         </div>
 
-        {/* Feed card actions — icon buttons with tooltips */}
+        {/* Feed card actions -- icon buttons with tooltips */}
         {!isPending && !isFailed && hideActions && (onUsePrompt || onSaveAsTemplate) && (
           <TooltipProvider delayDuration={300}>
             <div className="flex items-center gap-1 pt-1.5">
               {onUsePrompt && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onUsePrompt(generation); }}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onUsePrompt(generation); }}>
                       <Sparkles className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -173,7 +170,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
               {onSaveAsTemplate && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onSaveAsTemplate(generation); }}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onSaveAsTemplate(generation); }}>
                       <BookmarkPlus className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -192,7 +189,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
                 <>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onSave(generation); }} disabled={isDeleting}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onSave(generation); }} disabled={isDeleting}>
                         <Save className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -200,7 +197,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onExtendPrevious(generation); }} disabled={isDeleting}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onExtendPrevious(generation); }} disabled={isDeleting}>
                         <Rewind className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -208,7 +205,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onExtendNext(generation); }} disabled={isDeleting}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onExtendNext(generation); }} disabled={isDeleting}>
                         <FastForward className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -218,7 +215,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onRerun(generation); }} disabled={isDeleting}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onRerun(generation); }} disabled={isDeleting}>
                     <RotateCcw className="h-3.5 w-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -226,7 +223,7 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-400 hover:text-red-300 hover:bg-white/20" onClick={(e) => { e.stopPropagation(); onDelete(generation); }} disabled={isDeleting}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-400 hover:text-red-300 hover:bg-white/20" onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(generation); }} disabled={isDeleting}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -236,6 +233,27 @@ export function GenerationRow({ generation, onSelect, onSave, onDelete, onRerun,
           </TooltipProvider>
         )}
       </div>
-    </div>
+    </>
+  );
+
+  // Pending or failed generations render as non-navigable div
+  if (isPending || isFailed) {
+    return (
+      <div className={wrapperClassName} style={wrapperStyle}>
+        {content}
+      </div>
+    );
+  }
+
+  // Successful generations render as Link for navigation to /create/[id]
+  return (
+    <Link
+      href={`/create/${generation._id}`}
+      scroll={false}
+      className={wrapperClassName}
+      style={wrapperStyle}
+    >
+      {content}
+    </Link>
   );
 }

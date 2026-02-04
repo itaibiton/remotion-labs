@@ -5,10 +5,10 @@ import { usePaginatedQuery } from "convex-helpers/react/cache";
 import { api } from "../../../convex/_generated/api";
 import { GenerationRow } from "./generation-row";
 import { Loader2 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { MasonryGrid, MasonryGridSkeleton } from "@/components/ui/masonry-grid";
+import { getHeightWeight } from "@/lib/masonry-utils";
 
 interface GenerationFeedProps {
-  onSelectGeneration: (generation: any) => void;
   onSaveGeneration: (generation: any) => void;
   onDeleteGeneration: (generation: any) => void;
   onRerunGeneration: (generation: any) => void;
@@ -23,16 +23,11 @@ interface GenerationFeedProps {
   showLoadingSkeleton?: boolean;
   /** Label for the loading skeleton */
   loadingLabel?: string;
+  /** Aspect ratio of the loading skeleton */
+  loadingAspectRatio?: string;
 }
 
-const itemVariants = {
-  initial: { opacity: 0, scale: 0.9 },
-  animate: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.9 },
-};
-
 export function GenerationFeed({
-  onSelectGeneration,
   onSaveGeneration,
   onDeleteGeneration,
   onRerunGeneration,
@@ -45,6 +40,7 @@ export function GenerationFeed({
   onSaveAsTemplate,
   showLoadingSkeleton,
   loadingLabel,
+  loadingAspectRatio = "16:9",
 }: GenerationFeedProps) {
   const queryFn = queryType === "public"
     ? api.generations.listPublicPaginated
@@ -84,13 +80,7 @@ export function GenerationFeed({
 
   // Loading first page
   if (status === "LoadingFirstPage") {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="aspect-video rounded-lg bg-muted animate-pulse" />
-        ))}
-      </div>
-    );
+    return <MasonryGridSkeleton columns={{ sm: 2, md: 3, lg: 4 }} gap={12} itemCount={8} />;
   }
 
   // Empty state
@@ -104,61 +94,48 @@ export function GenerationFeed({
     );
   }
 
-  return (
-    <div className="flex flex-col gap-0">
-      {/* Bento grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0">
-        <AnimatePresence mode="popLayout">
-          {/* Loading skeleton card */}
-          {showLoadingSkeleton && (
-            <motion.div
-              key="loading-skeleton"
-              layout
-              variants={itemVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
-              <div className="aspect-video rounded-lg bg-muted animate-pulse flex items-center justify-center">
-                <div className="text-center">
-                  <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2" />
-                  <p className="text-xs text-muted-foreground">
-                    {loadingLabel || "Generating..."}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Generation cards — each rendered individually */}
-          {results.map((gen: any) => (
-            <motion.div
-              key={gen._id}
-              layout
-              variants={itemVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
-              <GenerationRow
-                generation={gen}
-                onSelect={onSelectGeneration}
-                onSave={onSaveGeneration}
-                onDelete={onDeleteGeneration}
-                onRerun={onRerunGeneration}
-                onExtendNext={onExtendNextGeneration}
-                onExtendPrevious={onExtendPreviousGeneration}
-                isDeleting={deletingIds?.has(gen._id) ?? false}
-                hideActions={hideActions}
-                onUsePrompt={onUsePrompt}
-                onSaveAsTemplate={onSaveAsTemplate}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+  // Loading skeleton prepend item
+  const loadingSkeletonNode = showLoadingSkeleton ? (
+    <div
+      className="bg-muted animate-pulse flex items-center justify-center"
+      style={{ aspectRatio: loadingAspectRatio.replace(":", " / ") }}
+    >
+      <div className="text-center">
+        <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2" />
+        <p className="text-xs text-muted-foreground">
+          {loadingLabel || "Generating..."}
+        </p>
       </div>
+    </div>
+  ) : undefined;
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Masonry grid */}
+      <MasonryGrid
+        items={results}
+        renderItem={(gen: any) => (
+          <GenerationRow
+            generation={gen}
+            onSave={onSaveGeneration}
+            onDelete={onDeleteGeneration}
+            onRerun={onRerunGeneration}
+            onExtendNext={onExtendNextGeneration}
+            onExtendPrevious={onExtendPreviousGeneration}
+            isDeleting={deletingIds?.has(gen._id) ?? false}
+            hideActions={hideActions}
+            onUsePrompt={onUsePrompt}
+            onSaveAsTemplate={onSaveAsTemplate}
+          />
+        )}
+        getItemHeight={(gen: any) => getHeightWeight(gen.aspectRatio ?? "16:9")}
+        getItemKey={(gen: any) => gen._id}
+        columns={{ sm: 2, md: 3, lg: 4 }}
+        gap={12}
+        prependItem={loadingSkeletonNode}
+        prependKey="loading-skeleton"
+        prependHeight={getHeightWeight(loadingAspectRatio)}
+      />
 
       {/* Infinite scroll sentinel */}
       {status === "CanLoadMore" && (

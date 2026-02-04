@@ -6,17 +6,9 @@ import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { InputBar } from "@/components/generation/input-bar";
 import { GenerationFeed } from "@/components/generation/generation-feed";
-import { PreviewPlayer } from "@/components/preview/preview-player";
 import { useGenerationSettings } from "@/hooks/use-generation-settings";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 function FeedContent() {
   const saveClip = useMutation(api.clips.save);
@@ -24,7 +16,6 @@ function FeedContent() {
   const router = useRouter();
   const { settings, updateSetting, resetSettings } = useGenerationSettings();
 
-  const [selectedGeneration, setSelectedGeneration] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = useCallback(
@@ -51,11 +42,6 @@ function FeedContent() {
     [generate, settings.aspectRatio, settings.durationInSeconds, settings.fps, isGenerating]
   );
 
-  const handleSelectGeneration = useCallback((generation: any) => {
-    if (generation.status === "failed" || !generation.code) return;
-    setSelectedGeneration(generation);
-  }, []);
-
   const handleSaveGeneration = useCallback(
     async (generation: any) => {
       if (!generation.code || !generation.rawCode) {
@@ -69,6 +55,7 @@ function FeedContent() {
           rawCode: generation.rawCode,
           durationInFrames: generation.durationInFrames ?? 90,
           fps: generation.fps ?? 30,
+          aspectRatio: generation.aspectRatio,
         });
         toast.success("Saved to clip library!");
       } catch (e) {
@@ -106,12 +93,11 @@ function FeedContent() {
         />
       </div>
 
-      {/* Public generation feed */}
+      {/* Public generation feed - clicking navigates to /create/[id] via Link */}
       <div className="w-full px-6 pb-6 pt-12">
         <GenerationFeed
           queryType="public"
           hideActions
-          onSelectGeneration={handleSelectGeneration}
           onSaveGeneration={handleSaveGeneration}
           onDeleteGeneration={noop}
           onRerunGeneration={noop}
@@ -121,32 +107,6 @@ function FeedContent() {
           onSaveAsTemplate={handleSaveGeneration}
         />
       </div>
-
-      {/* Preview dialog */}
-      <Dialog
-        open={!!selectedGeneration}
-        onOpenChange={(open) => { if (!open) setSelectedGeneration(null); }}
-      >
-        <DialogContent className="max-w-[95vw] w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 gap-3">
-          <DialogHeader className="space-y-1">
-            <DialogTitle className="text-base sm:text-lg leading-snug break-words whitespace-normal">
-              {selectedGeneration?.prompt}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedGeneration?.aspectRatio ?? "16:9"} &middot;{" "}
-              {selectedGeneration?.fps ?? 30}fps &middot;{" "}
-              {((selectedGeneration?.durationInFrames ?? 90) / (selectedGeneration?.fps ?? 30)).toFixed(1)}s
-            </DialogDescription>
-          </DialogHeader>
-          {selectedGeneration?.code && (
-            <PreviewPlayer
-              code={selectedGeneration.code}
-              durationInFrames={selectedGeneration.durationInFrames ?? 90}
-              fps={selectedGeneration.fps ?? 30}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
