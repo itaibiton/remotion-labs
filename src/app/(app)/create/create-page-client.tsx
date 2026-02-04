@@ -43,10 +43,11 @@ interface CreateContentProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
+  sourceMode?: "continuation" | "prequel";
   initialPrompt?: string;
 }
 
-function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }: CreateContentProps) {
+function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "continuation", initialPrompt }: CreateContentProps) {
   const storeUser = useMutation(api.users.storeUser);
   const generate = useAction(api.generateAnimation.generate);
   const refine = useAction(api.generateAnimation.refine);
@@ -261,7 +262,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
     [editorCode, chatMessages, refine]
   );
 
-  const handleContinuationGenerate = useCallback(
+  const handleSourceClipGenerate = useCallback(
     async (prompt: string) => {
       if (!sourceClipId) return;
       setError(null);
@@ -279,7 +280,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
 
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = await continuationAction({
+        const action = sourceMode === "prequel" ? prequelAction : continuationAction;
+        const result = await action({
           sourceClipId: sourceClipId as any,
           prompt: prompt || undefined,
         });
@@ -288,32 +290,32 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
         await new Promise((r) => setTimeout(r, 300));
 
         setLastGeneration({
-          id: "continuation",
+          id: sourceMode === "prequel" ? "prequel" : "continuation",
           rawCode: result.rawCode,
           code: result.code,
           durationInFrames: result.durationInFrames,
           fps: result.fps,
         });
-        setLastPrompt(prompt || "Continuation from previous scene");
-        toast.success("Continuation generated!");
+        setLastPrompt(prompt || (sourceMode === "prequel" ? "Prequel to next scene" : "Continuation from previous scene"));
+        toast.success(sourceMode === "prequel" ? "Prequel generated!" : "Continuation generated!");
       } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : "Continuation failed";
+        const errorMessage = e instanceof Error ? e.message : `${sourceMode === "prequel" ? "Prequel" : "Continuation"} failed`;
         setError({ message: errorMessage, retryCount: (error?.retryCount ?? 0) + 1 });
-        toast.error("Continuation generation failed");
+        toast.error(`${sourceMode === "prequel" ? "Prequel" : "Continuation"} generation failed`);
       } finally {
         setIsGenerating(false);
         setCurrentStep(null);
       }
     },
-    [sourceClipId, continuationAction, error?.retryCount, validation]
+    [sourceClipId, sourceMode, continuationAction, prequelAction, error?.retryCount, validation]
   );
 
   const handleUnifiedSubmit = useCallback(
     async (text: string, imageIds: string[]) => {
       const imgIds = imageIds.length > 0 ? imageIds : undefined;
       if (sourceClipId && !lastGeneration) {
-        // Continuation mode: first submission generates continuation (no images)
-        await handleContinuationGenerate(text);
+        // Source clip mode: first submission generates continuation/prequel (no images)
+        await handleSourceClipGenerate(text);
       } else if (!lastGeneration) {
         await handleGenerate(text, imgIds);
       } else if (text.toLowerCase().startsWith("start over:")) {
@@ -332,7 +334,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
         await handleRefine(text);
       }
     },
-    [sourceClipId, lastGeneration, handleGenerate, handleContinuationGenerate, handleRefine, validation]
+    [sourceClipId, lastGeneration, handleGenerate, handleSourceClipGenerate, handleRefine, validation]
   );
 
   const handleRetry = useCallback(() => {
@@ -541,7 +543,9 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
   }, [generate, generateVariationsAction, validation]);
 
   const promptPlaceholder = sourceClipId
-    ? "Describe what should happen next (or press Enter for automatic continuation)..."
+    ? sourceMode === "prequel"
+      ? "Describe what should happen before this scene (or press Enter for automatic prequel)..."
+      : "Describe what should happen next (or press Enter for automatic continuation)..."
     : selectedTemplate
       ? "Describe how you'd like to customize this template..."
       : undefined; // Let InputBar choose based on hasExistingCode
@@ -592,7 +596,7 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, initialPrompt }
                 ? {
                     id: sourceClipId,
                     name: sourceClipData.name,
-                    type: "continuation",
+                    type: sourceMode,
                   }
                 : undefined
             }
@@ -779,10 +783,11 @@ interface CreatePageClientProps {
   selectedTemplate: Template | null;
   clipId?: string;
   sourceClipId?: string;
+  sourceMode?: "continuation" | "prequel";
   initialPrompt?: string;
 }
 
-export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, initialPrompt }: CreatePageClientProps) {
+export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, sourceMode, initialPrompt }: CreatePageClientProps) {
   return (
     <div className="flex-1 flex flex-col">
       <AuthLoading>
@@ -798,7 +803,7 @@ export function CreatePageClient({ selectedTemplate, clipId, sourceClipId, initi
       </Unauthenticated>
 
       <Authenticated>
-        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} initialPrompt={initialPrompt} />
+        <CreateContent selectedTemplate={selectedTemplate} clipId={clipId} sourceClipId={sourceClipId} sourceMode={sourceMode} initialPrompt={initialPrompt} />
       </Authenticated>
     </div>
   );
