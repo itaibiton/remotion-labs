@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -121,10 +121,16 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
 
   // Watch for URL param changes to reset view when navigating to plain /create
   const searchParams = useSearchParams();
+  const prevSearchParamsRef = useRef<string | null>(null);
   useEffect(() => {
-    const hasParams = searchParams.has("clipId") || searchParams.has("sourceClipId") || searchParams.has("prompt");
-    // Reset view when URL params are cleared (e.g., clicking sidebar Create link)
-    if (!hasParams && lastGeneration && !clipId && !sourceClipId) {
+    const currentParams = searchParams.toString();
+
+    // Only reset when URL params actually changed to empty (not on initial mount or state changes)
+    const paramsCleared = prevSearchParamsRef.current !== null &&
+                          prevSearchParamsRef.current !== "" &&
+                          currentParams === "";
+
+    if (paramsCleared && !clipId && !sourceClipId) {
       setLastGeneration(null);
       setLastPrompt("");
       setEditedCode(null);
@@ -134,7 +140,9 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
       setSavedClipId(null);
       setError(null);
     }
-  }, [searchParams, clipId, sourceClipId, lastGeneration]);
+
+    prevSearchParamsRef.current = currentParams;
+  }, [searchParams, clipId, sourceClipId]);
 
   // Load clip from URL param (when opening from library)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
