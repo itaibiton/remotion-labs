@@ -628,21 +628,16 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
           </div>
         )}
 
-        {/* Generating state - skeleton for source clip generation */}
+        {/* Generating state - inline skeleton for source clip generation */}
         {isSourceClipGenerating && (
           <div className="w-full mb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Preview skeleton */}
-              <div className="aspect-video bg-muted rounded-lg animate-pulse flex items-center justify-center">
-                <div className="text-center">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {sourceMode === "prequel" ? "Generating prequel..." : "Generating continuation..."}
-                  </p>
-                </div>
+            <div className="p-6 bg-muted/50 rounded-lg border border-dashed flex items-center justify-center">
+              <div className="text-center py-8">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  {sourceMode === "prequel" ? "Generating prequel..." : "Generating continuation..."}
+                </p>
               </div>
-              {/* Code skeleton */}
-              <div className="h-[300px] bg-muted rounded-lg animate-pulse" />
             </div>
           </div>
         )}
@@ -764,8 +759,8 @@ function CreateContent({ selectedTemplate, clipId, sourceClipId, sourceMode = "c
           </div>
         )}
 
-        {/* Generation Feed - shown when no generation is selected */}
-        {!isGenerating && !lastGeneration && (
+        {/* Generation Feed - shown when no generation is selected (visible during source clip generation) */}
+        {!showFullLoader && !lastGeneration && (
           <div className="w-full">
             <GenerationFeed
               onSelectGeneration={handleSelectGeneration}
