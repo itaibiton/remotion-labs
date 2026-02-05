@@ -288,7 +288,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
                 {/* Main preview - responsive container that fits all aspect ratios */}
                 {/* Portrait/Square: center horizontally, fill height */}
                 {/* Landscape: fill width, center vertically */}
-                <div className={`flex-1 min-h-0 p-6 overflow-hidden flex ${
+                <div className={`flex-1 min-h-0 p-6 pb-8 overflow-hidden flex ${
                   generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
                     ? "items-center justify-center"
                     : "flex-col justify-center"
