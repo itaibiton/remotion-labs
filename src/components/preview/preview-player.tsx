@@ -125,12 +125,9 @@ const PreviewPlayerInner = forwardRef<PlayerRef, PreviewPlayerProps>(
           aspectRatio: `${preset.width} / ${preset.height}`,
         };
 
-    // For constrained landscape, we need the wrapper to take full width so video can expand
-    // For portrait and square, center the narrower/equal video horizontally and constrain height
+    // For constrained mode, center the video both horizontally and vertically
     const wrapperClassName = constrained
-      ? isPortrait || isSquare
-        ? "flex flex-col items-center justify-center h-full w-full gap-4"
-        : "flex flex-col items-center w-full h-full gap-4"
+      ? "flex flex-col items-center justify-center h-full w-full gap-4"
       : "w-full space-y-4";
 
     return (
