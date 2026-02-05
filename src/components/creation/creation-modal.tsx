@@ -21,7 +21,6 @@ interface CreationModalProps {
 export function CreationModal({ generationId }: CreationModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(true);
 
   // Mutations and actions for detail panel
   const removeGeneration = useMutation(api.generations.remove);
@@ -52,21 +51,9 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const allGenerations = useQuery(api.generations.list, {});
 
   const handleClose = useCallback(() => {
-    // Close the dialog first, then navigate
-    // This ensures proper animation and state cleanup
-    setIsOpen(false);
-  }, []);
-
-  // Navigate after dialog closes
-  useEffect(() => {
-    if (!isOpen) {
-      // Small delay to allow close animation
-      const timer = setTimeout(() => {
-        router.push("/create");
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, router]);
+    // Navigate immediately - the component will unmount naturally
+    router.push("/create");
+  }, [router]);
 
   // Arrow key navigation between creations
   useEffect(() => {
@@ -239,7 +226,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
   }, [generationId]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         ref={modalRef}
         className="!max-w-[95vw] !w-[1200px] max-h-[90vh] h-[85vh] p-0 gap-0 overflow-hidden"
@@ -251,15 +238,15 @@ export function CreationModal({ generationId }: CreationModalProps) {
           </DialogTitle>
         </VisuallyHidden>
 
-        {/* Loading state - hide when closing to prevent flash */}
-        {isOpen && generation === undefined && (
+        {/* Loading state */}
+        {generation === undefined && (
           <div className="flex items-center justify-center h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         )}
 
         {/* Not found state */}
-        {isOpen && generation === null && (
+        {generation === null && (
           <div className="flex items-center justify-center h-[60vh]">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -268,8 +255,8 @@ export function CreationModal({ generationId }: CreationModalProps) {
           </div>
         )}
 
-        {/* Main content - hide when closing to prevent flash */}
-        {isOpen && generation && (
+        {/* Main content */}
+        {generation && (
           <div className="flex flex-col h-full">
             {/* Edit bar at top */}
             <div className="px-6 py-3 border-b shrink-0">
