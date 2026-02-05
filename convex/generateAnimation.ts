@@ -1102,6 +1102,166 @@ export const refine = action({
 });
 
 // ============================================================================
+// Refinement with Persistence Action
+// ============================================================================
+
+/**
+ * Refine existing Remotion animation code and persist the result to the database.
+ * Creates a new generation linked to the parent via parentGenerationId.
+ * Follows the pending-then-complete pattern (like generatePrequel).
+ */
+export const refineAndPersist = action({
+  args: {
+    parentGenerationId: v.id("generations"),
+    refinementPrompt: v.string(),
+    conversationHistory: v.array(
+      v.object({
+        role: v.union(v.literal("user"), v.literal("assistant")),
+        content: v.string(),
+      })
+    ),
+  },
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
+    id: Id<"generations">;
+    rawCode: string;
+    code: string;
+    durationInFrames: number;
+    fps: number;
+  }> => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("You must be logged in to refine animations");
+    }
+
+    // Fetch the parent generation's data
+    const parentGeneration = await ctx.runQuery(internal.generations.getInternal, {
+      id: args.parentGenerationId,
+    });
+    if (!parentGeneration) {
+      throw new Error("Parent generation not found");
+    }
+    if (!parentGeneration.rawCode) {
+      throw new Error("Parent generation has no code to refine");
+    }
+
+    // Create Anthropic client
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY not configured.");
+    }
+
+    const client = new Anthropic({ apiKey });
+
+    // 1. Insert pending row — appears instantly in feed via Convex reactivity
+    const createdAt = Date.now();
+    const generationId = await ctx.runMutation(
+      internal.generations.createPending,
+      {
+        userId: identity.tokenIdentifier,
+        prompt: parentGeneration.prompt, // Keep original prompt for context
+        createdAt,
+        aspectRatio: parentGeneration.aspectRatio,
+        durationInSeconds: parentGeneration.durationInSeconds,
+        parentGenerationId: args.parentGenerationId,
+        refinementPrompt: args.refinementPrompt,
+      }
+    );
+
+    try {
+      // Build messages array: conversation history + new refinement request
+      // Cap history at last 10 exchanges (20 messages) to prevent token overflow
+      const maxHistoryMessages = 20;
+      const trimmedHistory = args.conversationHistory.slice(-maxHistoryMessages);
+
+      const messages: Array<{ role: "user" | "assistant"; content: string }> = [
+        ...trimmedHistory,
+        {
+          role: "user" as const,
+          content: `Current Remotion code:\n\n${parentGeneration.rawCode}\n\nPlease modify it: ${args.refinementPrompt}`,
+        },
+      ];
+
+      // Call Claude API with refinement system prompt (with retry and model fallback)
+      const response = await withRetry((model) =>
+        client.messages.create({
+          model,
+          max_tokens: 4096,
+          system: REFINEMENT_SYSTEM_PROMPT,
+          messages,
+        })
+      );
+
+      // Extract text content
+      const textContent = response.content.find((block) => block.type === "text");
+      if (!textContent || textContent.type !== "text") {
+        throw new Error("Failed to refine animation: No response from AI.");
+      }
+
+      // Clean code (same logic as refine action)
+      let rawCode = textContent.text.trim();
+      if (rawCode.startsWith("```")) {
+        rawCode = rawCode
+          .replace(/^```(?:jsx|tsx|javascript|typescript)?\s*\n?/, "")
+          .replace(/\n?```\s*$/, "")
+          .trim();
+      }
+
+      // Extract metadata
+      const durationMatch = rawCode.match(/\/\/\s*DURATION:\s*(\d+)/);
+      const fpsMatch = rawCode.match(/\/\/\s*FPS:\s*(\d+)/);
+      const rawDuration = durationMatch ? parseInt(durationMatch[1]) : 90;
+      const durationInFrames = Math.min(Math.max(rawDuration, 30), 600);
+      const fps = fpsMatch ? Math.min(Math.max(parseInt(fpsMatch[1]), 15), 60) : 30;
+
+      // Validate the refined code
+      const validation = validateRemotionCode(rawCode);
+      if (!validation.valid) {
+        throw new Error(
+          `Refined code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
+        );
+      }
+
+      // Transform JSX to JavaScript
+      const transformed = transformJSX(rawCode);
+      if (!transformed.success || !transformed.code) {
+        throw new Error(transformed.error || "Code transformation failed");
+      }
+
+      // 2. Patch pending → success
+      await ctx.runMutation(internal.generations.complete, {
+        id: generationId,
+        status: "success" as const,
+        code: transformed.code,
+        rawCode,
+        durationInFrames,
+        fps,
+      });
+
+      return {
+        id: generationId,
+        rawCode,
+        code: transformed.code,
+        durationInFrames,
+        fps,
+      };
+    } catch (e) {
+      // 3. Patch pending → failed
+      const errorMessage = e instanceof Error ? e.message : "Refinement failed";
+      await ctx.runMutation(internal.generations.complete, {
+        id: generationId,
+        status: "failed" as const,
+        errorMessage,
+      });
+      throw e;
+    }
+  },
+});
+
+// ============================================================================
 // Continuation Generation Action
 // ============================================================================
 
