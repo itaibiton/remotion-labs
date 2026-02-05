@@ -54,10 +54,10 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const handleClose = useCallback(() => {
     if (isClosing) return;
     setIsClosing(true);
-    // Short delay for close animation, then navigate
+    // Wait for dialog close animation (200ms) to complete before navigating
     setTimeout(() => {
       router.push("/create");
-    }, 100);
+    }, 220);
   }, [router, isClosing]);
 
   // Arrow key navigation between creations
