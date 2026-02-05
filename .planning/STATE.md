@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 29 of TBD (Schema Refinement Persistence)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-05 -- Completed 29-01-PLAN.md
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-02-05 -- Completed 29-02-PLAN.md
 
-Progress: ████░░░░░░░░░░░░░░░░░░░░░░ 50% (1/2 plans in phase 29)
+Progress: ████████░░░░░░░░░░░░░░░░░░ 100% (2/2 plans in phase 29)
 
 ## Milestone History
 
@@ -60,6 +60,9 @@ v0.5.0 decisions:
 - Phase 29-01: Self-referential parentGenerationId enables unlimited chain depth
 - Phase 29-01: by_parent index for O(1) child lookups
 - Phase 29-01: getRefinementChain returns root-to-current order for UI display
+- Phase 29-02: refineAndPersist follows generatePrequel pattern (pending-then-complete)
+- Phase 29-02: UI navigates to new generation immediately after refinement success
+- Phase 29-02: Removed local refinedCode state - relies on database state via navigation
 
 ### Pending Todos
 
@@ -76,10 +79,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 29-01-PLAN.md (Schema Refinement Persistence)
+Stopped at: Completed 29-02-PLAN.md (Schema Refinement Persistence)
 Resume file: None
 
-Next step: Execute 29-02-PLAN.md (Wire refinement persistence into generate action)
+Next step: Phase 30 - Refinement Stack UI
 
 ---
-*State updated: 2026-02-05 -- Completed plan 29-01*
+*State updated: 2026-02-05 -- Completed plan 29-02*
