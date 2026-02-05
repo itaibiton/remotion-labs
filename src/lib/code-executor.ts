@@ -40,13 +40,74 @@ import {
   Series,
   Loop,
   Freeze,
+  useDelayRender,
+  delayRender,
+  continueRender,
 } from "remotion";
+
+// 3D support - required for 3D animations
+import { ThreeCanvas } from "@remotion/three";
+import { extend } from "@react-three/fiber";
+import * as THREE from "three";
+import * as THREE_STDLIB from "three-stdlib";
+
+// Mapbox removed - we don't use maps that require API keys
+// Use alternative visual approaches for map-like animations instead
+
+// Extend THREE with custom geometries from three-stdlib
+// Available geometries: RoundedBoxGeometry, ConvexGeometry, ParametricGeometry, etc.
+extend(THREE_STDLIB);
+
+// Create a simple StarGeometry helper since it's not in three-stdlib
+// This allows generated code to use THREE.StarGeometry
+class StarGeometry extends THREE.BufferGeometry {
+  constructor(innerRadius = 0.4, outerRadius = 0.8, points = 5) {
+    super();
+    const vertices: number[] = [];
+    const indices: number[] = [];
+    
+    // Center vertex
+    vertices.push(0, 0, 0);
+    
+    // Create star points
+    for (let i = 0; i < points * 2; i++) {
+      const angle = (i * Math.PI) / points;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      vertices.push(
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius,
+        0
+      );
+    }
+    
+    // Create faces
+    for (let i = 1; i <= points * 2; i++) {
+      const next = i === points * 2 ? 1 : i + 1;
+      indices.push(0, i, next);
+    }
+    
+    this.setIndex(indices);
+    this.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    this.computeVertexNormals();
+  }
+}
+
+// Extend THREE with StarGeometry
+extend({ StarGeometry });
+
+// Mapbox removed - not available
+const mapboxgl = undefined;
+const MapConstructor = undefined;
+const turf = undefined;
 
 /**
  * Maximum number of operations allowed per execution context.
  * This prevents infinite loops and excessive computation.
+ *
+ * Set to 100,000 to allow particle effects, starfields, and complex
+ * animations while still catching runaway loops.
  */
-const MAX_OPERATIONS = 10000;
+const MAX_OPERATIONS = 100000;
 
 /**
  * Creates an operation counter for execution limiting.
@@ -132,16 +193,35 @@ function createExecutionScope() {
   const safeInterpolate: typeof interpolate = (...args) => {
     counter.check();
     const [, inputRange, outputRange] = args;
-    if (
-      Array.isArray(inputRange) &&
-      Array.isArray(outputRange) &&
-      inputRange.length !== outputRange.length
-    ) {
-      // Truncate to the shorter length instead of crashing
-      const len = Math.min(inputRange.length, outputRange.length);
-      args[1] = inputRange.slice(0, len);
-      args[2] = outputRange.slice(0, len);
+    
+    if (Array.isArray(inputRange) && Array.isArray(outputRange)) {
+      // Validate inputRange is strictly monotonically increasing
+      if (inputRange.length > 1) {
+        for (let i = 1; i < inputRange.length; i++) {
+          if (inputRange[i] <= inputRange[i - 1]) {
+            // Fix invalid range by making it strictly increasing
+            const min = Math.min(...inputRange);
+            const max = Math.max(...inputRange);
+            if (min === max) {
+              // All values are the same - create a simple increasing range
+              args[1] = inputRange.map((_, idx) => idx);
+            } else {
+              const step = (max - min) / (inputRange.length - 1);
+              args[1] = inputRange.map((_, idx) => min + step * idx);
+            }
+            break;
+          }
+        }
+      }
+      
+      // Handle mismatched array lengths
+      if (args[1].length !== outputRange.length) {
+        const len = Math.min(args[1].length, outputRange.length);
+        args[1] = args[1].slice(0, len);
+        args[2] = outputRange.slice(0, len);
+      }
     }
+    
     return interpolate(...args);
   };
 
@@ -189,6 +269,36 @@ function createExecutionScope() {
     Series,
     Loop,
     Freeze,
+
+    // Remotion utilities
+    useDelayRender,
+    delayRender,
+    continueRender,
+
+    // 3D support (packages are installed)
+    // @remotion/three, three-stdlib, @react-three/drei are now available
+    // Mapbox removed - use alternative visual approaches for map-like animations
+    ThreeCanvas,
+    
+    // React Three Fiber utilities
+    extend,
+    THREE,
+    
+    // Common R3F primitives (available as JSX components)
+    // Box, Sphere, Plane, etc. are available via @react-three/fiber
+    // Custom geometries from three-stdlib are extended into THREE namespace
+
+    // Environment variables (read-only access to process.env)
+    process: {
+      env: typeof process !== "undefined" ? process.env : {},
+    },
+
+    // Deprecated/removed APIs - set to undefined to prevent ReferenceErrors
+    // Old generated code may reference these; returning undefined allows error
+    // boundaries to catch "Cannot read property of undefined" instead of crashing
+    mapboxgl: undefined,
+    MapConstructor: undefined,
+    turf: undefined,
   };
 
   return { scope, counter };

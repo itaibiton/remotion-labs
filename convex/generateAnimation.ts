@@ -74,38 +74,192 @@ async function withRetry<T>(
 }
 
 /**
+ * Remotion Best Practices from Official Remotion Skills
+ * Source: https://github.com/remotion-dev/skills
+ *
+ * Restructured for clarity with prioritized critical rules at top.
+ */
+const REMOTION_BEST_PRACTICES = `
+<critical_rules>
+## CRITICAL: These rules MUST be followed or the video will not render
+
+1. ALL animations MUST use useCurrentFrame() - CSS animations/Tailwind animate classes are FORBIDDEN
+2. interpolate() inputRange MUST be strictly increasing: [0, 30, 60] ✓ | [0, 60, 30] ✗
+3. ALWAYS add extrapolation to interpolate:
+   interpolate(frame, [0, 30], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+4. Use random('seed-string') instead of Math.random() for deterministic renders
+5. NO CSS transitions, NO Tailwind animation classes - they don't render in video
+6. NO import/require statements - APIs are pre-injected as globals
+</critical_rules>
+
+<spring_presets>
+## Spring Configurations (choose based on desired feel)
+
+| Preset | Config | Use For |
+|--------|--------|---------|
+| Smooth | { damping: 200 } | Subtle reveals, professional motion (DEFAULT) |
+| Snappy | { damping: 20, stiffness: 200 } | UI elements, quick responses |
+| Bouncy | { damping: 8 } | Playful, energetic animations |
+| Heavy | { damping: 15, stiffness: 80, mass: 2 } | Slow, weighted motion |
+
+Default to SMOOTH (damping: 200) unless the user requests bouncy/playful.
+</spring_presets>
+
+<timing_patterns>
+## Animation Timing (in seconds, multiply by fps for frames)
+
+- Fade in: 0.3-0.5s (9-15 frames at 30fps)
+- Slide/move: 0.4-0.8s (12-24 frames)
+- Scale: 0.3-0.6s (9-18 frames)
+- Stagger delay: 0.1-0.2s between elements (3-6 frames)
+- Hold/pause: 1-2s for readability
+</timing_patterns>
+
+<structure>
+## Code Structure Pattern
+
+const MyComposition = () => {
+  const frame = useCurrentFrame();
+  const { fps, width, height } = useVideoConfig();
+
+  // 1. Define all animations upfront with extrapolation
+  const fadeIn = interpolate(frame, [0, 15], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const slideUp = spring({
+    frame,
+    fps,
+    config: { damping: 200 }, // Smooth, no bounce
+  });
+
+  // 2. Return JSX with animations applied
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
+      <div style={{ opacity: fadeIn, transform: \`translateY(\${(1 - slideUp) * 50}px)\` }}>
+        Content here
+      </div>
+    </AbsoluteFill>
+  );
+};
+</structure>
+
+<sequencing>
+## Sequencing
+
+- Use <Sequence from={frame} durationInFrames={frames}> to delay when elements appear
+- ALWAYS premount any <Video> or <OffthreadVideo> components: <Sequence from={-30} durationInFrames={120}>
+- Use <Series> when elements should play one after another without overlap
+- Inside a Sequence, useCurrentFrame() returns the local frame (starting from 0)
+</sequencing>
+
+<maps_and_3d>
+## Maps & Geographic Animations
+
+CRITICAL: NEVER use Mapbox, Google Maps, or any map API. Create stylized visuals instead.
+
+Techniques for map-like animations:
+1. SVG paths for routes between locations
+2. Circles/markers for cities with pulsing animations
+3. Gradient backgrounds representing land/water
+4. Dashed lines with animated stroke-dashoffset for travel paths
+5. Scale transforms for zoom effects, translate for panning
+
+Example - Animated Route Map:
+\`\`\`jsx
+const points = [
+  { x: 0.2, y: 0.6, label: 'Start' },
+  { x: 0.5, y: 0.3, label: 'Mid' },
+  { x: 0.8, y: 0.5, label: 'End' },
+];
+const progress = interpolate(frame, [0, 60], [0, 1], { extrapolateRight: 'clamp' });
+
+// Draw path
+<svg style={{ position: 'absolute', width: '100%', height: '100%' }}>
+  <path
+    d={\`M \${points[0].x * width} \${points[0].y * height} Q \${points[1].x * width} \${points[1].y * height} \${points[2].x * width} \${points[2].y * height}\`}
+    stroke="#ffd700"
+    strokeWidth={3}
+    fill="none"
+    strokeDasharray="1000"
+    strokeDashoffset={1000 * (1 - progress)}
+  />
+</svg>
+
+// Animated marker
+{points.map((p, i) => {
+  const appear = interpolate(frame, [i * 15, i * 15 + 10], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return (
+    <div key={i} style={{
+      position: 'absolute',
+      left: p.x * width,
+      top: p.y * height,
+      transform: \`translate(-50%, -50%) scale(\${appear})\`,
+      width: 20, height: 20,
+      borderRadius: '50%',
+      background: '#ff6b6b',
+      border: '3px solid white',
+    }} />
+  );
+})}
+\`\`\`
+
+## 3D (React Three Fiber)
+- Wrap in <ThreeCanvas width={width} height={height}>
+- MUST include lighting (ambientLight, directionalLight)
+- Animate with useCurrentFrame() - NEVER use useFrame()
+- Primitives: <Box>, <Sphere>, <Plane>, <Cone>, <Cylinder>, <Torus>
+</maps_and_3d>
+
+<forbidden>
+## FORBIDDEN (will break rendering)
+
+- import/require statements (APIs are pre-injected as globals)
+- CSS transitions or animations
+- Tailwind animate-* classes
+- Math.random() (use random('seed') instead)
+- setTimeout, setInterval, fetch, document, window
+- eval, Function constructor
+- useFrame() from react-three/fiber (use useCurrentFrame instead)
+</forbidden>
+`;
+
+/**
  * System prompt for Claude to generate full Remotion JSX code
  * Outputs complete, self-contained Remotion compositions
+ * Restructured for clarity with critical rules prioritized.
  */
-const SYSTEM_PROMPT = `You are a Remotion animation code generator. You create complete, self-contained Remotion compositions.
+const SYSTEM_PROMPT = `You are a Remotion video code generator. Output ONLY valid JSX code - no markdown, no explanations.
 
-IMPORTANT: Output ONLY valid JSX code. No markdown, no explanations, no code blocks.
+${REMOTION_BEST_PRACTICES}
 
-Your output must:
-1. Define a component named "MyComposition"
-2. Use only these APIs (already available, don't write import statements):
-   - React, useState, useEffect, useMemo, useCallback
-   - AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, random
-   - Audio, Img, staticFile, Video, OffthreadVideo
-   - Composition, Still, Series, Loop, Freeze
-
-3. Set duration and fps via comments at the top:
+<output_format>
+Your output MUST:
+1. Start with duration/fps comments:
    // DURATION: 90
    // FPS: 30
 
-4. Create visually interesting animations using Remotion's features
+2. Define a component named "MyComposition"
 
-ALLOWED PATTERNS:
-- interpolate(frame, [0, 30], [0, 1]) for smooth transitions
-- spring({ frame, fps, config: { damping: 10 } }) for physics-based motion
-- useCurrentFrame() to get current frame
-- useVideoConfig() for { fps, durationInFrames, width, height }
-- <AbsoluteFill> for full-screen containers
-- <Sequence from={30}> for timed sequences
-- Inline styles with transform, opacity, scale
-- random(seed) for deterministic randomness (use a string seed like random('my-seed'))
+3. Use ONLY these pre-injected globals (no imports):
+   - React, useState, useEffect, useMemo, useCallback, useRef
+   - AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, random
+   - Audio, Img, Video, OffthreadVideo, staticFile
+   - Series, Loop, Freeze
+   - ThreeCanvas, THREE (if 3D packages installed)
+</output_format>
 
-EXAMPLE OUTPUT:
+<quality_guidelines>
+- Start simple, add complexity only if needed
+- Use modern color palettes (gradients, subtle tones)
+- Apply proper visual hierarchy
+- Use spring({ damping: 200 }) for smooth, professional motion
+- Stagger related elements by 5-10 frames
+- Default to Inter or system fonts
+</quality_guidelines>
+
+<example>
 // DURATION: 90
 // FPS: 30
 
@@ -113,40 +267,118 @@ const MyComposition = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const opacity = interpolate(frame, [0, 30], [0, 1], {
+  const opacity = interpolate(frame, [0, 15], [0, 1], {
+    extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   const scale = spring({
     frame,
     fps,
-    config: { damping: 10, stiffness: 100 },
+    config: { damping: 200 },
   });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: '#1a1a2e' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
+    <AbsoluteFill style={{
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <h1 style={{
+        color: '#fff',
+        fontSize: 80,
+        fontFamily: 'Inter, sans-serif',
         opacity,
         transform: \`scale(\${scale})\`,
       }}>
-        <h1 style={{ color: '#eee', fontSize: 80 }}>Hello World</h1>
-      </div>
+        Hello World
+      </h1>
     </AbsoluteFill>
   );
 };
+</example>
 
-FORBIDDEN:
-- import/require statements (APIs are pre-injected)
-- eval, Function, setTimeout, setInterval
-- fetch, XMLHttpRequest, WebSocket
-- document, window, process
-- while(true) or infinite loops
+<example_map>
+// DURATION: 120
+// FPS: 30
 
-Now generate a Remotion composition based on the user's request.`;
+const MyComposition = () => {
+  const frame = useCurrentFrame();
+  const { fps, width, height } = useVideoConfig();
+
+  // Location points (normalized 0-1)
+  const locations = [
+    { x: 0.2, y: 0.6, name: 'Los Angeles' },
+    { x: 0.8, y: 0.35, name: 'New York' },
+  ];
+
+  // Animate the route path drawing
+  const pathProgress = interpolate(frame, [15, 75], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+
+  // Traveling dot position
+  const dotX = interpolate(pathProgress, [0, 1], [locations[0].x, locations[1].x]);
+  const dotY = interpolate(pathProgress, [0, 1], [locations[0].y, locations[1].y]);
+
+  // Marker animations
+  const marker1 = spring({ frame, fps, config: { damping: 200 } });
+  const marker2 = spring({ frame: frame - 60, fps, config: { damping: 200 } });
+
+  return (
+    <AbsoluteFill style={{
+      background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    }}>
+      {/* Stylized continent shapes */}
+      <div style={{
+        position: 'absolute', left: '10%', top: '30%', width: '35%', height: '45%',
+        background: 'rgba(255,255,255,0.05)', borderRadius: '40% 60% 70% 30%',
+      }} />
+
+      {/* Route path */}
+      <svg style={{ position: 'absolute', width: '100%', height: '100%' }}>
+        <path
+          d={\`M \${locations[0].x * width} \${locations[0].y * height} Q \${width * 0.5} \${height * 0.15} \${locations[1].x * width} \${locations[1].y * height}\`}
+          stroke="#ffd700"
+          strokeWidth={3}
+          fill="none"
+          strokeDasharray="1200"
+          strokeDashoffset={1200 * (1 - pathProgress)}
+          opacity={0.8}
+        />
+        {/* Traveling dot */}
+        <circle cx={dotX * width} cy={dotY * height - pathProgress * 80} r={8} fill="#ffd700" />
+      </svg>
+
+      {/* Location markers */}
+      {locations.map((loc, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          left: loc.x * width,
+          top: loc.y * height,
+          transform: \`translate(-50%, -50%) scale(\${i === 0 ? marker1 : marker2})\`,
+        }}>
+          <div style={{
+            width: 16, height: 16, borderRadius: '50%',
+            background: '#ff6b6b', border: '3px solid white',
+            boxShadow: '0 0 20px rgba(255,107,107,0.5)',
+          }} />
+          <div style={{
+            position: 'absolute', top: 24, left: '50%',
+            transform: 'translateX(-50%)', whiteSpace: 'nowrap',
+            color: 'white', fontSize: 14, fontFamily: 'Inter, sans-serif',
+          }}>{loc.name}</div>
+        </div>
+      ))}
+    </AbsoluteFill>
+  );
+};
+</example_map>
+
+Generate high-quality Remotion code following these patterns.`;
 
 // ============================================================================
 // Aspect Ratio → Dimensions Map
@@ -242,7 +474,7 @@ type ASTNode = acorn.Node & {
 
 interface ValidationResult {
   valid: boolean;
-  errors: Array<{ line: number; column: number; message: string }>;
+  errors: Array<{ line: number; column: number; message: string; suggestion?: string }>;
 }
 
 /**
@@ -286,14 +518,15 @@ function walkNode(node: ASTNode, errors: ValidationResult["errors"]): void {
     case "ImportDeclaration": {
       const source = node.source?.value;
       if (typeof source === "string" && !isImportAllowed(source)) {
-        addError(errors, node, "Code contains unsafe patterns");
+        addError(errors, node, `Unsafe import: "${source}"`);
       }
       break;
     }
     case "Identifier": {
       const name = node.name;
-      if (typeof name === "string" && BLOCKED_PATTERNS.has(name)) {
-        addError(errors, node, "Code contains unsafe patterns");
+      // Allow 'process' identifier - it will be validated in MemberExpression for process.env access
+      if (typeof name === "string" && BLOCKED_PATTERNS.has(name) && name !== "process") {
+        addError(errors, node, `Unsafe identifier: "${name}"`);
       }
       break;
     }
@@ -305,7 +538,7 @@ function walkNode(node: ASTNode, errors: ValidationResult["errors"]): void {
           callee.name === "eval" ||
           callee.name === "Function")
       ) {
-        addError(errors, node, "Code contains unsafe patterns");
+        addError(errors, node, `Unsafe function call: "${callee.name}"`);
       }
       break;
     }
@@ -314,13 +547,20 @@ function walkNode(node: ASTNode, errors: ValidationResult["errors"]): void {
         node.object?.type === "Identifier" ? node.object.name : null;
       const propertyName =
         node.property?.type === "Identifier" ? node.property.name : null;
+      
+      // Allow process.env access (read-only environment variables)
+      if (objectName === "process" && propertyName === "env") {
+        // This is allowed - skip validation
+        break;
+      }
+      
       if (objectName && BLOCKED_PATTERNS.has(objectName) && propertyName) {
-        addError(errors, node, "Code contains unsafe patterns");
+        addError(errors, node, `Unsafe property access: "${objectName}.${propertyName}"`);
       }
       if (objectName && propertyName) {
         for (const [blockedObj, blockedProp] of BLOCKED_MEMBER_PATTERNS) {
           if (objectName === blockedObj && propertyName === blockedProp) {
-            addError(errors, node, "Code contains unsafe patterns");
+            addError(errors, node, `Unsafe property access: "${objectName}.${propertyName}"`);
             break;
           }
         }
@@ -330,12 +570,12 @@ function walkNode(node: ASTNode, errors: ValidationResult["errors"]): void {
     case "NewExpression": {
       const callee = node.callee;
       if (callee?.type === "Identifier" && BLOCKED_PATTERNS.has(callee.name)) {
-        addError(errors, node, "Code contains unsafe patterns");
+        addError(errors, node, `Unsafe constructor: "${callee.name}"`);
       }
       break;
     }
     case "ImportExpression": {
-      addError(errors, node, "Code contains unsafe patterns");
+      addError(errors, node, "Unsafe dynamic import expression");
       break;
     }
   }
@@ -399,6 +639,10 @@ function transformJSX(jsxCode: string): TransformResult {
 
 const REFINEMENT_SYSTEM_PROMPT = `You are a Remotion animation code modifier. You receive existing Remotion code and a user request to modify it.
 
+CRITICAL: Follow Remotion best practices when modifying code. Use the Remotion skill knowledge to ensure optimal code patterns.
+
+${REMOTION_BEST_PRACTICES}
+
 IMPORTANT: Output ONLY the complete modified code. No markdown, no explanations, no code blocks.
 
 Your output must:
@@ -411,9 +655,24 @@ Your output must:
    - Audio, Img, staticFile, Video, OffthreadVideo
    - Composition, Still, Series, Loop, Freeze
 
-FORBIDDEN: import/require statements, eval, Function, fetch, document, window, process
+5. Follow Remotion best practices:
+   - Use AbsoluteFill for full-screen containers
+   - Use interpolate with proper extrapolation options
+   - Use spring() for physics-based animations
+   - Use Sequence for timed sequences
+   - Use random() with string seeds (never Math.random())
+   - Prefer useVideoConfig() over hardcoded values
 
-Respond ONLY with the complete modified code. No explanations before or after.`;
+FORBIDDEN (violates Remotion best practices and security): import/require statements, eval, Function, fetch, document, window, process, Math.random()
+
+CRITICAL QUALITY REQUIREMENTS:
+- Maintain or improve showcase-quality visual design
+- Use modern color palettes, typography, and spacing
+- Add visual polish: shadows, glows, gradients, subtle effects
+- Ensure smooth, professional animation timing
+- Layer elements for depth and visual interest
+
+Respond ONLY with the complete modified code following Remotion best practices. No explanations before or after.`;
 
 // ============================================================================
 // Continuation System Prompt
@@ -421,6 +680,10 @@ Respond ONLY with the complete modified code. No explanations before or after.`;
 
 const CONTINUATION_SYSTEM_PROMPT = `You are a Remotion animation code generator specializing in scene continuations.
 You create compositions that start EXACTLY where a previous composition ended.
+
+CRITICAL: Follow Remotion best practices. Use the Remotion skill knowledge to ensure optimal code patterns and smooth transitions.
+
+${REMOTION_BEST_PRACTICES}
 
 You will receive the PREVIOUS SCENE's complete Remotion code. Your job:
 
@@ -453,7 +716,7 @@ STEP 3 - GENERATE a new composition where:
 - Then animate FROM those starting values to new values based on the user's prompt
 - If no specific user prompt, create a natural, visually interesting continuation
 
-CRITICAL RULES:
+CRITICAL RULES (following Remotion best practices):
 - Component must be named "MyComposition"
 - Do NOT use import statements (APIs are pre-injected)
 - Output ONLY valid JSX code. No markdown, no explanations, no code blocks
@@ -461,7 +724,14 @@ CRITICAL RULES:
   AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring,
   Sequence, Easing, random, Audio, Img, staticFile, Video, OffthreadVideo,
   Composition, Still, Series, Loop, Freeze
-- FORBIDDEN: import/require, eval, Function, setTimeout, setInterval, fetch, XMLHttpRequest, WebSocket, document, window, process
+- Follow Remotion best practices:
+  - Use AbsoluteFill for full-screen containers
+  - Use interpolate with proper extrapolation (extrapolateLeft, extrapolateRight, clamp)
+  - Use spring() for physics-based animations with appropriate config
+  - Use Sequence for timed sequences
+  - Use random() with string seeds (never Math.random())
+  - Use useVideoConfig() for dimensions and timing
+- FORBIDDEN (violates Remotion best practices and security): import/require, eval, Function, setTimeout, setInterval, fetch, XMLHttpRequest, WebSocket, document, window, process, Math.random()
 - Use FPS 30. Duration between 60-180 frames.
 
 EXAMPLE:
@@ -500,7 +770,7 @@ const MyComposition = () => {
   );
 };
 
-Now generate a continuation based on the user's request.`;
+Now generate a continuation following Remotion best practices based on the user's request.`;
 
 // ============================================================================
 // Prequel System Prompt
@@ -508,6 +778,10 @@ Now generate a continuation based on the user's request.`;
 
 const PREQUEL_SYSTEM_PROMPT = `You are a Remotion animation code generator specializing in scene prequels.
 You create compositions whose LAST FRAME matches EXACTLY what appears at the FIRST FRAME (frame 0) of a target composition.
+
+CRITICAL: Follow Remotion best practices. Use the Remotion skill knowledge to ensure optimal code patterns and smooth transitions.
+
+${REMOTION_BEST_PRACTICES}
 
 You will receive the TARGET SCENE's complete Remotion code. Your job:
 
@@ -543,7 +817,7 @@ STEP 3 - GENERATE a new composition where:
 - If a user prompt is provided, incorporate it into how the prequel builds up to the start state
 - If no specific user prompt, create a natural, visually interesting lead-in
 
-CRITICAL RULES:
+CRITICAL RULES (following Remotion best practices):
 - Component must be named "MyComposition"
 - Do NOT use import statements (APIs are pre-injected)
 - Output ONLY valid JSX code. No markdown, no explanations, no code blocks
@@ -551,7 +825,14 @@ CRITICAL RULES:
   AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring,
   Sequence, Easing, random, Audio, Img, staticFile, Video, OffthreadVideo,
   Composition, Still, Series, Loop, Freeze
-- FORBIDDEN: import/require, eval, Function, setTimeout, setInterval, fetch, XMLHttpRequest, WebSocket, document, window, process
+- Follow Remotion best practices:
+  - Use AbsoluteFill for full-screen containers
+  - Use interpolate with proper extrapolation (extrapolateLeft, extrapolateRight, clamp)
+  - Use spring() for physics-based animations with appropriate config
+  - Use Sequence for timed sequences
+  - Use random() with string seeds (never Math.random())
+  - Use useVideoConfig() for dimensions and timing
+- FORBIDDEN (violates Remotion best practices and security): import/require, eval, Function, setTimeout, setInterval, fetch, XMLHttpRequest, WebSocket, document, window, process, Math.random()
 - Use FPS 30. Duration between 60-180 frames.
 
 EXAMPLE:
@@ -582,7 +863,7 @@ const MyComposition = () => {
   );
 };
 
-Now generate a prequel based on the user's request.`;
+Now generate a prequel following Remotion best practices based on the user's request.`;
 
 // ============================================================================
 // Image Content Block Builder
@@ -711,9 +992,23 @@ async function generateSingleVariation(
   // Validate the code
   const validation = validateRemotionCode(code);
   if (!validation.valid) {
-    throw new Error(
-      `Code validation failed: ${validation.errors[0]?.message || "Invalid code"}`
-    );
+    const firstError = validation.errors[0];
+    const errorMessage = firstError?.message || "Invalid code";
+
+    // Provide actionable error messages based on common issues
+    let actionableHint = "";
+    if (errorMessage.includes("Unsafe") || errorMessage.includes("import") || errorMessage.includes("require")) {
+      actionableHint = " Remember: No imports allowed - APIs are pre-injected as globals. " +
+        "No setTimeout/setInterval, no fetch/document/window, no Math.random() (use random('seed') instead).";
+    } else if (errorMessage.includes("syntax")) {
+      actionableHint = " Check for unclosed braces, missing parentheses, or malformed JSX.";
+    }
+
+    const errorDetails = firstError
+      ? `Line ${firstError.line}, Column ${firstError.column}: ${errorMessage}${actionableHint}`
+      : `Invalid code.${actionableHint}`;
+
+    throw new Error(`Code validation failed: ${errorDetails}`);
   }
 
   // Transform JSX to JavaScript
@@ -915,9 +1210,9 @@ export const generateVariations = action({
       `- Use // DURATION: ${targetFrames} and // FPS: ${targetFps} in your output\n` +
       `- Design your layout for ${aspectRatio} aspect ratio`;
 
-    // Generate batchId and set temperature for variation diversity
+    // Generate batchId and set temperature for consistent, correct code
     const batchId = crypto.randomUUID();
-    const temperature = 0.9;
+    const temperature = 0.3; // Low temperature for deterministic, correct code
 
     // Capture consistent timestamp before starting parallel calls
     const createdAt = Date.now();

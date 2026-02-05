@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component, type ReactNode, type ErrorInfo } from "react";
 import Link from "next/link";
 import { Thumbnail } from "@remotion/player";
 import { DynamicCode } from "@/remotion/compositions/DynamicCode";
@@ -11,6 +11,42 @@ import {
 import { AlertCircle, Loader2, Save, FastForward, Rewind, RotateCcw, Trash2, Sparkles, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+/**
+ * Error boundary to catch runtime errors from generated code rendering.
+ * Shows a fallback UI instead of crashing the entire feed.
+ */
+interface ThumbnailErrorBoundaryProps {
+  children: ReactNode;
+  fallback: ReactNode;
+}
+
+interface ThumbnailErrorBoundaryState {
+  hasError: boolean;
+  errorMessage?: string;
+}
+
+class ThumbnailErrorBoundary extends Component<ThumbnailErrorBoundaryProps, ThumbnailErrorBoundaryState> {
+  constructor(props: ThumbnailErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ThumbnailErrorBoundaryState {
+    return { hasError: true, errorMessage: error.message };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.warn("[ThumbnailErrorBoundary] Caught error in generated code:", error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 interface GenerationRowProps {
   generation: {
@@ -87,20 +123,29 @@ export function GenerationRow({ generation, onSave, onDelete, onRerun, onExtendN
           <AlertCircle className="h-8 w-8 text-red-400" />
         </div>
       ) : isMounted && generation.code ? (
-        <Thumbnail
-          component={DynamicCode}
-          inputProps={{
-            code: generation.code,
-            durationInFrames,
-            fps,
-          }}
-          compositionWidth={preset.width}
-          compositionHeight={preset.height}
-          frameToDisplay={frameToDisplay}
-          durationInFrames={durationInFrames}
-          fps={fps}
-          style={{ width: "100%", height: "100%" }}
-        />
+        <ThumbnailErrorBoundary
+          fallback={
+            <div className="w-full h-full bg-amber-950/50 flex flex-col items-center justify-center gap-2">
+              <AlertCircle className="h-6 w-6 text-amber-400" />
+              <span className="text-xs text-amber-300 px-2 text-center">Code error</span>
+            </div>
+          }
+        >
+          <Thumbnail
+            component={DynamicCode}
+            inputProps={{
+              code: generation.code,
+              durationInFrames,
+              fps,
+            }}
+            compositionWidth={preset.width}
+            compositionHeight={preset.height}
+            frameToDisplay={frameToDisplay}
+            durationInFrames={durationInFrames}
+            fps={fps}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </ThumbnailErrorBoundary>
       ) : (
         <div className="w-full h-full bg-muted animate-pulse" />
       )}
