@@ -35,16 +35,10 @@ export function CreationFullscreenModal({
   const saveClip = useMutation(api.clips.save);
   const generate = useAction(api.generateAnimation.generate);
   const prequelAction = useAction(api.generateAnimation.generatePrequel);
-  const refineAction = useAction(api.generateAnimation.refine);
+  const refineAndPersistAction = useAction(api.generateAnimation.refineAndPersist);
 
   // Local state for refinement
   const [isRefining, setIsRefining] = useState(false);
-  const [refinedCode, setRefinedCode] = useState<{
-    rawCode: string;
-    code: string;
-    durationInFrames: number;
-    fps: number;
-  } | null>(null);
 
   const generation = useQuery(api.generations.get, {
     id: generationId as Id<"generations">,
@@ -227,35 +221,31 @@ export function CreationFullscreenModal({
     }
   }, [generation, saveClip, prequelAction]);
 
-  // Refinement handler
+  // Refinement handler - creates new generation and navigates to it
   const handleRefine = useCallback(
     async (prompt: string) => {
-      if (!generation?.rawCode) {
-        toast.error("Cannot refine: no code to refine");
+      if (!generation?._id) {
+        toast.error("Cannot refine: no generation selected");
         return;
       }
       setIsRefining(true);
       try {
-        const result = await refineAction({
-          currentCode: generation.rawCode,
+        const result = await refineAndPersistAction({
+          parentGenerationId: generation._id,
           refinementPrompt: prompt,
           conversationHistory: [],
         });
-        setRefinedCode(result);
-        toast.success("Animation refined!");
+        toast.success("Refinement created!");
+        // Navigate to the new generation
+        router.replace(`/create/${result.id}`);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Refinement failed");
       } finally {
         setIsRefining(false);
       }
     },
-    [generation, refineAction]
+    [generation, refineAndPersistAction, router]
   );
-
-  // Reset refinedCode when navigating to different generation
-  useEffect(() => {
-    setRefinedCode(null);
-  }, [generationId]);
 
   // Get aspect ratio preset for sizing
   const aspectRatioKey = (generation?.aspectRatio ?? "16:9") as AspectRatioKey;
@@ -383,13 +373,9 @@ export function CreationFullscreenModal({
                   <div className="w-full h-full flex items-center justify-center pointer-events-auto">
                     <PreviewPlayer
                       ref={playerRef}
-                      code={refinedCode?.code ?? generation.code}
-                      durationInFrames={
-                        refinedCode?.durationInFrames ??
-                        generation.durationInFrames ??
-                        90
-                      }
-                      fps={refinedCode?.fps ?? generation.fps ?? 30}
+                      code={generation.code}
+                      durationInFrames={generation.durationInFrames ?? 90}
+                      fps={generation.fps ?? 30}
                       aspectRatio={generation.aspectRatio ?? "16:9"}
                       showControls={false}
                       constrained
@@ -402,12 +388,8 @@ export function CreationFullscreenModal({
               {generation.code && !isPending && !isFailed && (
                 <VideoControls
                   playerRef={playerRef}
-                  durationInFrames={
-                    refinedCode?.durationInFrames ??
-                    generation.durationInFrames ??
-                    90
-                  }
-                  fps={refinedCode?.fps ?? generation.fps ?? 30}
+                  durationInFrames={generation.durationInFrames ?? 90}
+                  fps={generation.fps ?? 30}
                   containerRef={containerRef}
                 />
               )}
