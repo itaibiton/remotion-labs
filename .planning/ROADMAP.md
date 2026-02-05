@@ -488,7 +488,10 @@ Plans:
   2. Clicking outside the modal (on the backdrop) closes it and returns to the feed
   3. Left/right arrow keys navigate to the previous/next creation in the feed
   4. Navigation wraps or stops at feed boundaries (first/last creation)
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 25-01-PLAN.md -- Create stub components and verify modal shell behaviors
 
 ### Phase 26: Modal Content Layout
 **Goal**: Modal displays preview player, details panel, and edit textarea for inline refinement
@@ -553,7 +556,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 22. Per-Clip Actions | v0.3.0 | 2/2 | Complete | 2026-02-03 |
 | 23. Finalization | v0.3.0 | 1/1 | Complete | 2026-02-04 |
 | 24. Route Infrastructure | v0.4.0 | 1/1 | Complete | 2026-02-04 |
-| 25. Modal Shell & Navigation | v0.4.0 | 0/TBD | Not started | - |
+| 25. Modal Shell & Navigation | v0.4.0 | 0/1 | Planned | - |
 | 26. Modal Content Layout | v0.4.0 | 0/TBD | Not started | - |
 | 27. Schema & Variation Threading | v0.4.0 | 0/TBD | Not started | - |
 | 28. Variation Stack UI | v0.4.0 | 0/TBD | Not started | - |
