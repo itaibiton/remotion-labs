@@ -21,6 +21,7 @@ interface CreationModalProps {
 export function CreationModal({ generationId }: CreationModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Mutations and actions for detail panel
   const removeGeneration = useMutation(api.generations.remove);
@@ -51,9 +52,13 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const allGenerations = useQuery(api.generations.list, {});
 
   const handleClose = useCallback(() => {
-    // Navigate immediately - the component will unmount naturally
-    router.push("/create");
-  }, [router]);
+    if (isClosing) return;
+    setIsClosing(true);
+    // Short delay for close animation, then navigate
+    setTimeout(() => {
+      router.push("/create");
+    }, 100);
+  }, [router, isClosing]);
 
   // Arrow key navigation between creations
   useEffect(() => {
@@ -226,7 +231,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
   }, [generationId]);
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={!isClosing} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         ref={modalRef}
         className="!max-w-[95vw] !w-[1200px] max-h-[90vh] h-[85vh] p-0 gap-0 overflow-hidden"
