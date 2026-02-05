@@ -5,11 +5,19 @@ import { Player, type PlayerRef } from "@remotion/player";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DynamicCode, type DynamicCodeProps } from "@/remotion/compositions/DynamicCode";
+import {
+  ASPECT_RATIO_PRESETS,
+  type AspectRatioKey,
+} from "@/lib/aspect-ratios";
 
 // Loading placeholder for Player
-function LoadingPlaceholder() {
+function LoadingPlaceholder({ aspectRatio = "16:9" }: { aspectRatio?: string }) {
+  const preset = ASPECT_RATIO_PRESETS[aspectRatio as AspectRatioKey] ?? ASPECT_RATIO_PRESETS["16:9"];
   return (
-    <div className="aspect-video bg-black rounded-lg animate-pulse" />
+    <div
+      className="w-full bg-black rounded-lg animate-pulse"
+      style={{ aspectRatio: `${preset.width} / ${preset.height}` }}
+    />
   );
 }
 
@@ -17,11 +25,16 @@ interface PreviewPlayerProps {
   code: string;
   durationInFrames: number;
   fps: number;
+  aspectRatio?: string;
+  /** When true, the player will fit within its parent container respecting max-height */
+  constrained?: boolean;
 }
 
-function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps) {
+function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9", constrained = false }: PreviewPlayerProps) {
   const playerRef = useRef<PlayerRef>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+
+  const preset = ASPECT_RATIO_PRESETS[aspectRatio as AspectRatioKey] ?? ASPECT_RATIO_PRESETS["16:9"];
 
   // Memoize inputProps to prevent unnecessary re-renders
   const inputProps: DynamicCodeProps = useMemo(
@@ -78,10 +91,26 @@ function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps)
     player.play();
   }, []);
 
+  // Container styles depend on constrained mode
+  // When constrained, the player fits within parent bounds using max-width/max-height
+  const containerStyle = constrained
+    ? {
+        width: "100%",
+        maxWidth: "800px",
+        maxHeight: "calc(100% - 56px)", // Leave room for controls (56px = gap + button height)
+        aspectRatio: `${preset.width} / ${preset.height}`,
+      }
+    : {
+        aspectRatio: `${preset.width} / ${preset.height}`,
+      };
+
   return (
-    <div className="w-full space-y-4">
-      {/* Player container */}
-      <div className="rounded-lg overflow-hidden shadow-lg border">
+    <div className={constrained ? "flex flex-col items-center h-full gap-4" : "w-full space-y-4"}>
+      {/* Player container with aspect ratio */}
+      <div
+        className={`rounded-lg overflow-hidden shadow-lg border bg-black ${constrained ? "" : "w-full"}`}
+        style={containerStyle}
+      >
         <Player
           ref={playerRef}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,9 +118,9 @@ function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps)
           inputProps={inputProps}
           durationInFrames={durationInFrames}
           fps={fps}
-          compositionWidth={1920}
-          compositionHeight={1080}
-          style={{ width: "100%" }}
+          compositionWidth={preset.width}
+          compositionHeight={preset.height}
+          style={{ width: "100%", height: "100%" }}
           controls={false}
           loop={true}
           autoPlay={true}
@@ -99,7 +128,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps)
       </div>
 
       {/* Custom controls */}
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2 shrink-0">
         <Button
           variant="outline"
           size="icon"
@@ -126,7 +155,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps }: PreviewPlayerProps)
 }
 
 // Wrapper that prevents SSR (Remotion uses browser APIs)
-export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProps) {
+export function PreviewPlayer({ code, durationInFrames, fps, aspectRatio = "16:9", constrained = false }: PreviewPlayerProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -134,13 +163,17 @@ export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProp
   }, []);
 
   if (!isMounted) {
-    return <LoadingPlaceholder />;
+    return <LoadingPlaceholder aspectRatio={aspectRatio} />;
   }
 
   // Validate required props before rendering Player
   if (!code || typeof durationInFrames !== "number" || typeof fps !== "number") {
+    const preset = ASPECT_RATIO_PRESETS[aspectRatio as AspectRatioKey] ?? ASPECT_RATIO_PRESETS["16:9"];
     return (
-      <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+      <div
+        className="w-full bg-black rounded-lg flex items-center justify-center"
+        style={{ aspectRatio: `${preset.width} / ${preset.height}` }}
+      >
         <p className="text-red-400 text-sm">Invalid animation data</p>
       </div>
     );
@@ -151,6 +184,8 @@ export function PreviewPlayer({ code, durationInFrames, fps }: PreviewPlayerProp
       code={code}
       durationInFrames={durationInFrames}
       fps={fps}
+      aspectRatio={aspectRatio}
+      constrained={constrained}
     />
   );
 }

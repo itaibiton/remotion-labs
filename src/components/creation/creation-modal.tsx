@@ -141,28 +141,34 @@ export function CreationModal({ generationId }: CreationModalProps) {
             <div className="flex flex-1 min-h-0 overflow-hidden">
               {/* Left side: Preview + Variations */}
               <div className="flex-1 overflow-y-auto p-6 flex flex-col">
-                {/* Main preview - constrained to leave room for controls */}
-                <div className="flex-1 min-h-0 flex items-start justify-center">
+                {/* Main preview - responsive container that fits all aspect ratios */}
+                <div className="flex-1 min-h-0 flex items-center justify-center">
                   {isPending ? (
                     <div
-                      className="w-full max-w-[800px] bg-muted animate-pulse flex items-center justify-center rounded-lg"
+                      className="bg-muted animate-pulse flex items-center justify-center rounded-lg"
                       style={{
                         aspectRatio: (generation.aspectRatio ?? "16:9").replace(
                           ":",
                           " / "
                         ),
+                        width: "100%",
+                        maxWidth: "800px",
+                        maxHeight: "100%",
                       }}
                     >
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                   ) : isFailed ? (
                     <div
-                      className="w-full max-w-[800px] bg-red-950/20 flex items-center justify-center rounded-lg border border-red-500/20"
+                      className="bg-red-950/20 flex items-center justify-center rounded-lg border border-red-500/20"
                       style={{
                         aspectRatio: (generation.aspectRatio ?? "16:9").replace(
                           ":",
                           " / "
                         ),
+                        width: "100%",
+                        maxWidth: "800px",
+                        maxHeight: "100%",
                       }}
                     >
                       <div className="text-center">
@@ -178,14 +184,13 @@ export function CreationModal({ generationId }: CreationModalProps) {
                       </div>
                     </div>
                   ) : generation.code ? (
-                    <div className="w-full max-w-[800px]">
-                      <PreviewPlayer
-                        code={generation.code}
-                        durationInFrames={generation.durationInFrames ?? 90}
-                        fps={generation.fps ?? 30}
-                        aspectRatio={generation.aspectRatio ?? "16:9"}
-                      />
-                    </div>
+                    <PreviewPlayer
+                      code={generation.code}
+                      durationInFrames={generation.durationInFrames ?? 90}
+                      fps={generation.fps ?? 30}
+                      aspectRatio={generation.aspectRatio ?? "16:9"}
+                      constrained
+                    />
                   ) : null}
                 </div>
 
