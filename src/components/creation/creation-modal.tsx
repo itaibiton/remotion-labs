@@ -238,8 +238,13 @@ export function CreationModal({ generationId }: CreationModalProps) {
     setRefinedCode(null);
   }, [generationId]);
 
+  // Instantly unmount when closing to prevent any flash
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         ref={modalRef}
         className="!max-w-[95vw] !w-[1200px] max-h-[90vh] h-[85vh] p-0 gap-0 overflow-hidden"
@@ -251,15 +256,15 @@ export function CreationModal({ generationId }: CreationModalProps) {
           </DialogTitle>
         </VisuallyHidden>
 
-        {/* Loading state - only show when dialog is open */}
-        {isOpen && generation === undefined && (
+        {/* Loading state */}
+        {generation === undefined && (
           <div className="flex items-center justify-center h-[60vh]">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         )}
 
         {/* Not found state */}
-        {isOpen && generation === null && (
+        {generation === null && (
           <div className="flex items-center justify-center h-[60vh]">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -269,7 +274,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
         )}
 
         {/* Main content */}
-        {isOpen && generation && (
+        {generation && (
           <div className="flex flex-col h-full">
             {/* Edit bar at top */}
             <div className="px-6 py-3 border-b shrink-0">
