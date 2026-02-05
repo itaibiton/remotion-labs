@@ -28,6 +28,16 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const saveClip = useMutation(api.clips.save);
   const generate = useAction(api.generateAnimation.generate);
   const prequelAction = useAction(api.generateAnimation.generatePrequel);
+  const refineAction = useAction(api.generateAnimation.refine);
+
+  // Local state for refinement
+  const [isRefining, setIsRefining] = useState(false);
+  const [refinedCode, setRefinedCode] = useState<{
+    rawCode: string;
+    code: string;
+    durationInFrames: number;
+    fps: number;
+  } | null>(null);
 
   const generation = useQuery(api.generations.get, {
     id: generationId as Id<"generations">,
@@ -201,6 +211,33 @@ export function CreationModal({ generationId }: CreationModalProps) {
     }
   }, [generation, saveClip, prequelAction]);
 
+  // Refinement handler for edit bar
+  const handleRefine = useCallback(async (prompt: string) => {
+    if (!generation?.rawCode) {
+      toast.error("Cannot refine: no code to refine");
+      return;
+    }
+    setIsRefining(true);
+    try {
+      const result = await refineAction({
+        currentCode: generation.rawCode,
+        refinementPrompt: prompt,
+        conversationHistory: [],
+      });
+      setRefinedCode(result);
+      toast.success("Animation refined!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Refinement failed");
+    } finally {
+      setIsRefining(false);
+    }
+  }, [generation, refineAction]);
+
+  // Reset refinedCode when navigating to different generation
+  useEffect(() => {
+    setRefinedCode(null);
+  }, [generationId]);
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
@@ -239,6 +276,8 @@ export function CreationModal({ generationId }: CreationModalProps) {
               <CreationEditBar
                 generationId={generationId}
                 initialPrompt={generation.prompt}
+                onRefine={handleRefine}
+                isRefining={isRefining}
               />
             </div>
 
@@ -312,9 +351,9 @@ export function CreationModal({ generationId }: CreationModalProps) {
                     </div>
                   ) : generation.code ? (
                     <PreviewPlayer
-                      code={generation.code}
-                      durationInFrames={generation.durationInFrames ?? 90}
-                      fps={generation.fps ?? 30}
+                      code={refinedCode?.code ?? generation.code}
+                      durationInFrames={refinedCode?.durationInFrames ?? generation.durationInFrames ?? 90}
+                      fps={refinedCode?.fps ?? generation.fps ?? 30}
                       aspectRatio={generation.aspectRatio ?? "16:9"}
                       constrained
                     />
