@@ -40,7 +40,9 @@ v0.4.0 decisions:
 - Phase 24: Pending/failed generations render as div (non-navigable)
 - Phase 24: Feed page uses Link navigation (removed Dialog preview)
 - Phase 25: Controlled Dialog state with delayed navigation for reliable close
-- Phase 25: Modal sizing 1200px x 85vh with 800px max video preview
+- Phase 25: Portrait (9:16) videos: height 100%, width auto
+- Phase 25: Landscape (16:9) videos: width 100%, height auto
+- Phase 25: Square (1:1) videos: treated like portrait (constrained by height)
 
 Research findings to consider:
 - Use `@modal` slot at (app)/ level with `(.)create/[id]` intercepting route
@@ -68,7 +70,7 @@ Last session: 2026-02-05
 Stopped at: Completed 25-01-PLAN.md (Modal Shell & Navigation)
 Resume file: None
 
-Next step: `/gsd:execute-phase 26` (Detail Panel UI)
+Next step: `/gsd:plan-phase 26` (Modal Content Layout)
 
 ---
 *State updated: 2026-02-05 -- Phase 25 complete*

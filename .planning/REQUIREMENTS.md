@@ -207,9 +207,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EDIT-02 | Phase 23 | Complete |
 | NAV-01 | Phase 24 | Complete |
 | NAV-02 | Phase 24 | Complete |
-| NAV-03 | Phase 25 | Pending |
-| NAV-04 | Phase 25 | Pending |
-| NAV-05 | Phase 25 | Pending |
+| NAV-03 | Phase 25 | Complete |
+| NAV-04 | Phase 25 | Complete |
+| NAV-05 | Phase 25 | Complete |
 | UI-01 (v0.4) | Phase 26 | Pending |
 | UI-02 (v0.4) | Phase 26 | Pending |
 | UI-03 (v0.4) | Phase 26 | Pending |
@@ -222,7 +222,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 **Coverage:**
 - v0.2.0 requirements: 11/11 complete
 - v0.3.0 requirements: 12/12 complete
-- v0.4.0 requirements: 13/13 mapped (2 complete)
+- v0.4.0 requirements: 13/13 mapped (5 complete)
 - Mapped to phases: 13/13
 - Unmapped: 0
 
