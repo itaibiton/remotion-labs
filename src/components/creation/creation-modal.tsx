@@ -142,7 +142,13 @@ export function CreationModal({ generationId }: CreationModalProps) {
               {/* Left side: Preview + Variations */}
               <div className="flex-1 overflow-y-auto p-6 flex flex-col">
                 {/* Main preview - responsive container that fits all aspect ratios */}
-                <div className="flex-1 min-h-0 flex items-center justify-center">
+                {/* Portrait: center horizontally, fill height */}
+                {/* Landscape: fill width, center vertically */}
+                <div className={`flex-1 min-h-0 flex ${
+                  generation.aspectRatio === "9:16"
+                    ? "items-center justify-center"
+                    : "flex-col justify-center"
+                }`}>
                   {isPending ? (
                     <div
                       className="bg-muted animate-pulse flex items-center justify-center rounded-lg"

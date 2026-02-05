@@ -107,6 +107,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
         }
       : {
           width: "100%",
+          maxWidth: "100%",
           height: "auto",
           aspectRatio: `${preset.width} / ${preset.height}`,
         }
@@ -114,11 +115,22 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
         aspectRatio: `${preset.width} / ${preset.height}`,
       };
 
+  // For constrained landscape, we need the wrapper to take full width so video can expand
+  // Use items-start for landscape (video stays at top, width from w-full on child)
+  // Use items-center for portrait (centers the narrower video horizontally)
+  const wrapperClassName = constrained
+    ? isPortrait
+      ? "flex flex-col items-center h-full gap-4"
+      : "flex flex-col items-center w-full h-full gap-4"
+    : "w-full space-y-4";
+
   return (
-    <div className={constrained ? "flex flex-col items-center h-full gap-4" : "w-full space-y-4"}>
+    <div className={wrapperClassName}>
       {/* Player container with aspect ratio */}
       <div
-        className={`rounded-lg overflow-hidden shadow-lg border bg-black ${constrained ? "" : "w-full"}`}
+        className={`rounded-lg overflow-hidden shadow-lg border bg-black ${
+          constrained ? (isPortrait ? "" : "w-full") : "w-full"
+        }`}
         style={containerStyle}
       >
         <Player
