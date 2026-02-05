@@ -100,7 +100,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         ref={modalRef}
-        className="max-w-[95vw] w-[1400px] max-h-[90vh] h-auto p-0 gap-0 overflow-hidden"
+        className="!max-w-[95vw] !w-[1200px] max-h-[90vh] h-[85vh] p-0 gap-0 overflow-hidden"
         showCloseButton={true}
       >
         <VisuallyHidden>
@@ -128,9 +128,9 @@ export function CreationModal({ generationId }: CreationModalProps) {
 
         {/* Main content */}
         {generation && (
-          <div className="flex flex-col max-h-[90vh]">
+          <div className="flex flex-col h-full">
             {/* Edit bar at top */}
-            <div className="px-6 py-4 border-b shrink-0">
+            <div className="px-6 py-3 border-b shrink-0">
               <CreationEditBar
                 generationId={generationId}
                 initialPrompt={generation.prompt}
@@ -140,54 +140,58 @@ export function CreationModal({ generationId }: CreationModalProps) {
             {/* Content area */}
             <div className="flex flex-1 min-h-0 overflow-hidden">
               {/* Left side: Preview + Variations */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {/* Main preview */}
-                {isPending ? (
-                  <div
-                    className="w-full bg-muted animate-pulse flex items-center justify-center rounded-lg"
-                    style={{
-                      aspectRatio: (generation.aspectRatio ?? "16:9").replace(
-                        ":",
-                        " / "
-                      ),
-                    }}
-                  >
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : isFailed ? (
-                  <div
-                    className="w-full bg-red-950/20 flex items-center justify-center rounded-lg border border-red-500/20"
-                    style={{
-                      aspectRatio: (generation.aspectRatio ?? "16:9").replace(
-                        ":",
-                        " / "
-                      ),
-                    }}
-                  >
-                    <div className="text-center">
-                      <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
-                      <p className="text-red-400 font-medium">
-                        Generation Failed
-                      </p>
-                      {generation.errorMessage && (
-                        <p className="text-red-400/70 text-sm mt-1 max-w-md">
-                          {generation.errorMessage}
-                        </p>
-                      )}
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col">
+                {/* Main preview - constrained to leave room for controls */}
+                <div className="flex-1 min-h-0 flex items-start justify-center">
+                  {isPending ? (
+                    <div
+                      className="w-full max-w-[800px] bg-muted animate-pulse flex items-center justify-center rounded-lg"
+                      style={{
+                        aspectRatio: (generation.aspectRatio ?? "16:9").replace(
+                          ":",
+                          " / "
+                        ),
+                      }}
+                    >
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
-                  </div>
-                ) : generation.code ? (
-                  <PreviewPlayer
-                    code={generation.code}
-                    durationInFrames={generation.durationInFrames ?? 90}
-                    fps={generation.fps ?? 30}
-                    aspectRatio={generation.aspectRatio ?? "16:9"}
-                  />
-                ) : null}
+                  ) : isFailed ? (
+                    <div
+                      className="w-full max-w-[800px] bg-red-950/20 flex items-center justify-center rounded-lg border border-red-500/20"
+                      style={{
+                        aspectRatio: (generation.aspectRatio ?? "16:9").replace(
+                          ":",
+                          " / "
+                        ),
+                      }}
+                    >
+                      <div className="text-center">
+                        <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
+                        <p className="text-red-400 font-medium">
+                          Generation Failed
+                        </p>
+                        {generation.errorMessage && (
+                          <p className="text-red-400/70 text-sm mt-1 max-w-md">
+                            {generation.errorMessage}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : generation.code ? (
+                    <div className="w-full max-w-[800px]">
+                      <PreviewPlayer
+                        code={generation.code}
+                        durationInFrames={generation.durationInFrames ?? 90}
+                        fps={generation.fps ?? 30}
+                        aspectRatio={generation.aspectRatio ?? "16:9"}
+                      />
+                    </div>
+                  ) : null}
+                </div>
 
                 {/* Variation Stack */}
                 {variations && variations.length > 0 && (
-                  <div className="mt-6">
+                  <div className="mt-6 shrink-0">
                     <h3 className="text-sm font-medium mb-3">Variations</h3>
                     <VariationStack
                       variations={variations}
@@ -198,7 +202,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
               </div>
 
               {/* Right side: Details panel */}
-              <div className="w-80 xl:w-96 border-l bg-muted/30 overflow-y-auto shrink-0">
+              <div className="w-72 border-l bg-muted/30 overflow-y-auto shrink-0">
                 <CreationDetailPanel generation={generation} />
               </div>
             </div>
