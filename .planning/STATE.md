@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Release: v0.4.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.4.0 Creation Detail Modal Revamp -- Phase 24 Complete, Ready for Phase 25
+**Current focus:** v0.4.0 Creation Detail Modal Revamp -- Phase 25 Complete, Ready for Phase 26
 
 ## Current Position
 
-Phase: 24 of 28 (Route Infrastructure)
+Phase: 25 of 28 (Modal Shell & Navigation)
 Plan: 1 of 1 in current phase (COMPLETE)
 Status: Phase complete, VERIFIED
-Last activity: 2026-02-04 -- Phase 24 executed and verified (4/4 must-haves)
+Last activity: 2026-02-05 -- Phase 25 executed and verified (all behaviors working)
 
-Progress: ████████████████████░░░░ 86% (24/28 phases)
+Progress: █████████████████████░░░ 89% (25/28 phases)
 
 ## Milestone History
 
@@ -39,6 +39,8 @@ v0.4.0 decisions:
 - Phase 24: listByParent uses type assertion for parentGenerationId (not yet in schema)
 - Phase 24: Pending/failed generations render as div (non-navigable)
 - Phase 24: Feed page uses Link navigation (removed Dialog preview)
+- Phase 25: Controlled Dialog state with delayed navigation for reliable close
+- Phase 25: Modal sizing 1200px x 85vh with 800px max video preview
 
 Research findings to consider:
 - Use `@modal` slot at (app)/ level with `(.)create/[id]` intercepting route
@@ -57,16 +59,16 @@ None.
 - Claude API cost at scale with 4 variations (implement usage tracking)
 - Convex storage URL accessibility from Claude API servers (may need base64 fallback)
 - Timeline performance with many clips + trim/split interactions (needs profiling)
-- Modal state bugs reported in research -- won't reopen, persists after nav (test thoroughly)
-- **Phase 24:** Missing components (CreationDetailPanel, CreationEditBar, VariationStack) cause TypeScript errors until Phase 25-27 implement them
+- Modal state bugs reported in research -- won't reopen, persists after nav (RESOLVED Phase 25)
+- **Phase 25:** Stub components in place; full implementations needed in Phase 26-28
 
 ## Session Continuity
 
-Last session: 2026-02-04
-Stopped at: Completed 24-01-PLAN.md (Route Infrastructure)
+Last session: 2026-02-05
+Stopped at: Completed 25-01-PLAN.md (Modal Shell & Navigation)
 Resume file: None
 
-Next step: `/gsd:execute-phase 25` (Creation Modal UI)
+Next step: `/gsd:execute-phase 26` (Detail Panel UI)
 
 ---
-*State updated: 2026-02-04 -- Phase 24 complete*
+*State updated: 2026-02-05 -- Phase 25 complete*
