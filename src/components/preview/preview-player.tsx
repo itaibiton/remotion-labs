@@ -96,33 +96,28 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   const isSquare = preset.height === preset.width;
 
   // Container styles depend on constrained mode and aspect ratio
-  // For portrait (9:16): height-constrained, width auto
-  // For square (1:1): height-constrained (like portrait) since width=100% would overflow height
-  // For landscape (16:9): width is 100%, height auto from aspect ratio
-  const containerStyle = constrained
-    ? isPortrait || isSquare
-      ? {
-          height: "100%", // Fill available space
-          maxHeight: "calc(100% - 56px)", // Cap to leave room for controls
-          width: "auto",
-          aspectRatio: `${preset.width} / ${preset.height}`,
-        }
-      : {
-          width: "100%",
-          maxWidth: "100%",
-          height: "auto",
-          aspectRatio: `${preset.width} / ${preset.height}`,
-        }
-    : {
-        aspectRatio: `${preset.width} / ${preset.height}`,
-      };
+  const containerStyle: React.CSSProperties = {
+    aspectRatio: `${preset.width} / ${preset.height}`,
+  };
 
-  // For constrained landscape, we need the wrapper to take full width so video can expand
-  // For portrait and square, center the narrower/equal video horizontally
+  if (constrained) {
+    if (isPortrait || isSquare) {
+      // Portrait/Square: constrain by height, auto width
+      containerStyle.height = "100%";
+      containerStyle.width = "auto";
+    } else {
+      // Landscape: constrain by width, auto height
+      containerStyle.width = "100%";
+      containerStyle.height = "auto";
+    }
+  }
+
+  // Wrapper class for layout
+  // Portrait/Square in constrained: flex-1 to take space, min-h-0 to allow shrinking
   const wrapperClassName = constrained
     ? isPortrait || isSquare
-      ? "flex flex-col items-center h-full gap-4"
-      : "flex flex-col items-center w-full h-full gap-4"
+      ? "flex-1 min-h-0 flex flex-col items-center justify-center gap-4"
+      : "flex flex-col items-center w-full gap-4"
     : "w-full space-y-4";
 
   return (
