@@ -102,8 +102,9 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   const containerStyle = constrained
     ? isPortrait || isSquare
       ? {
-          height: "100%", // Fill available space
-          maxHeight: "calc(100% - 56px)", // Cap to leave room for controls
+          // Use viewport-based max-height since percentage-based doesn't work reliably in flex
+          // Modal is 85vh, minus edit bar (~60px), padding (~48px), controls (~56px) = ~164px
+          maxHeight: "calc(85vh - 200px)",
           width: "auto",
           aspectRatio: `${preset.width} / ${preset.height}`,
         }
@@ -121,8 +122,8 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   // For portrait and square, center the narrower/equal video horizontally
   const wrapperClassName = constrained
     ? isPortrait || isSquare
-      ? "flex flex-col items-center h-full gap-4"
-      : "flex flex-col items-center w-full h-full gap-4"
+      ? "flex flex-col items-center gap-4"
+      : "flex flex-col items-center w-full gap-4"
     : "w-full space-y-4";
 
   return (
