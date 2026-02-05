@@ -284,11 +284,9 @@ export function CreationModal({ generationId }: CreationModalProps) {
             {/* Content area */}
             <div className="flex flex-1 min-h-0 overflow-hidden">
               {/* Left side: Preview + Variations */}
-              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-hidden p-6 flex flex-col">
                 {/* Main preview - responsive container that fits all aspect ratios */}
-                {/* Portrait/Square: center horizontally, fill height */}
-                {/* Landscape: fill width, center vertically */}
-                <div className={`flex-1 min-h-0 p-6 pb-8 overflow-hidden flex ${
+                <div className={`flex-1 min-h-0 flex overflow-hidden ${
                   generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
                     ? "items-center justify-center"
                     : "flex-col justify-center"
@@ -360,10 +358,10 @@ export function CreationModal({ generationId }: CreationModalProps) {
                   ) : null}
                 </div>
 
-                {/* Variation Stack - only if variations exist, scrollable if needed */}
+                {/* Variation Stack */}
                 {variations && variations.length > 0 && (
-                  <div className="shrink-0 max-h-48 overflow-y-auto px-6 pb-6 border-t">
-                    <h3 className="text-sm font-medium mb-3 pt-4 sticky top-0 bg-background">Variations</h3>
+                  <div className="mt-6 shrink-0">
+                    <h3 className="text-sm font-medium mb-3">Variations</h3>
                     <VariationStack
                       variations={variations}
                       parentId={generationId}
