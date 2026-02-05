@@ -95,12 +95,13 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   const isPortrait = preset.height > preset.width;
 
   // Container styles depend on constrained mode and aspect ratio
-  // For portrait (9:16): maxHeight is the constraint to prevent overflow during hydration
+  // For portrait (9:16): height: 100% fills space, maxHeight caps it to prevent overflow
   // For landscape (16:9): width is 100%, height auto from aspect ratio
   const containerStyle = constrained
     ? isPortrait
       ? {
-          maxHeight: "calc(100% - 56px)", // Leave room for controls, prevents overflow flash
+          height: "100%", // Fill available space
+          maxHeight: "calc(100% - 56px)", // Cap to leave room for controls
           width: "auto",
           aspectRatio: `${preset.width} / ${preset.height}`,
         }

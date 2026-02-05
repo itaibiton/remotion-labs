@@ -79,8 +79,8 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
 
       {/* Main content - flex-1 with min-h-0 prevents overflow */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
-        {/* Preview area */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-6 flex flex-col">
+        {/* Preview area - overflow-hidden prevents scrollbar flash during hydration */}
+        <div className="flex-1 min-h-0 overflow-hidden p-6 flex flex-col">
           {/* Main preview - responsive container that fits all aspect ratios */}
           <div className={`flex-1 min-h-0 flex overflow-hidden ${
             isPortrait
@@ -94,6 +94,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
                   isPortrait
                     ? {
                         aspectRatio: "9 / 16",
+                        height: "100%",
                         maxHeight: "100%",
                         width: "auto",
                       }
@@ -116,6 +117,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
                   isPortrait
                     ? {
                         aspectRatio: "9 / 16",
+                        height: "100%",
                         maxHeight: "100%",
                         width: "auto",
                       }
