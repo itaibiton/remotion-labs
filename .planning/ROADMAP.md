@@ -477,7 +477,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 24-01-PLAN.md -- Wire feed navigation to Link-based routing and add listByParent query
+- [x] 24-01-PLAN.md -- Wire feed navigation to Link-based routing and add listByParent query
 
 ### Phase 25: Modal Shell & Navigation
 **Goal**: Modal container with dismiss behaviors and keyboard navigation between creations
@@ -491,7 +491,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 25-01-PLAN.md -- Create stub components and verify modal shell behaviors
+- [x] 25-01-PLAN.md -- Create stub components and verify modal shell behaviors
 
 ### Phase 26: Modal Content Layout
 **Goal**: Modal displays preview player, details panel, and edit textarea for inline refinement
@@ -502,7 +502,11 @@ Plans:
   2. Details panel on right shows prompt text, thumbnail, and metadata (aspect ratio, duration, FPS, timestamp)
   3. Details panel includes action buttons (save to library, delete, rerun, extend next/prev)
   4. Edit textarea at top of modal accepts refinement prompts for inline editing
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 26-01-PLAN.md -- Detail panel and edit bar component implementations
+- [ ] 26-02-PLAN.md -- Modal wiring with action handlers and refinement callback
 
 ### Phase 27: Schema & Variation Threading
 **Goal**: Generations can be linked into parent-child variation chains via parentGenerationId
@@ -557,7 +561,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 23. Finalization | v0.3.0 | 1/1 | Complete | 2026-02-04 |
 | 24. Route Infrastructure | v0.4.0 | 1/1 | Complete | 2026-02-04 |
 | 25. Modal Shell & Navigation | v0.4.0 | 1/1 | Complete | 2026-02-05 |
-| 26. Modal Content Layout | v0.4.0 | 0/TBD | Not started | - |
+| 26. Modal Content Layout | v0.4.0 | 0/2 | Not started | - |
 | 27. Schema & Variation Threading | v0.4.0 | 0/TBD | Not started | - |
 | 28. Variation Stack UI | v0.4.0 | 0/TBD | Not started | - |
 
@@ -569,4 +573,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 *v0.2.0 requirements: 11 mapped (complete)*
 *v0.3.0 requirements: 12 mapped across 6 phases (18-23) (complete)*
 *v0.4.0 requirements: 13 mapped across 5 phases (24-28)*
-*Updated: 2026-02-05 -- Phase 25 (Modal Shell & Navigation) complete.*
+*Updated: 2026-02-05 -- Phase 26 plans created (2 plans in 2 waves).*
