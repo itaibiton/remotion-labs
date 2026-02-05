@@ -45,11 +45,15 @@ export default defineSchema({
     referenceImageIds: v.optional(v.array(v.id("_storage"))),
     // v0.2 Phase 12: continuation tracking
     continuationType: v.optional(v.string()),
+    // v0.5 Phase 29: refinement chain tracking
+    parentGenerationId: v.optional(v.id("generations")),  // Self-reference for refinement chain
+    refinementPrompt: v.optional(v.string()),              // The instruction used to create this refinement
   })
     .index("by_user", ["userId"])
     .index("by_user_created", ["userId", "createdAt"])
     .index("by_batchId", ["batchId"])
-    .index("by_status_created", ["status", "createdAt"]),
+    .index("by_status_created", ["status", "createdAt"])
+    .index("by_parent", ["parentGenerationId"]),
 
   clips: defineTable({
     userId: v.string(),
