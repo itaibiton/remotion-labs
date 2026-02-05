@@ -27,7 +27,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
 
   if (generation === undefined) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -35,7 +35,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
 
   if (generation === null) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <div className="flex flex-col items-center justify-center h-full gap-4">
         <p className="text-muted-foreground">Generation not found</p>
         <Button asChild variant="outline">
           <Link href="/create">
@@ -52,7 +52,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
   const isPortrait = generation.aspectRatio === "9:16";
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-full max-h-screen overflow-hidden">
       {/* Header with back button */}
       <div className="shrink-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="flex items-center gap-4 px-6 py-4">
@@ -82,7 +82,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
         {/* Preview area */}
         <div className="flex-1 min-h-0 overflow-y-auto p-6 flex flex-col">
           {/* Main preview - responsive container that fits all aspect ratios */}
-          <div className={`flex-1 min-h-0 flex ${
+          <div className={`flex-1 min-h-0 flex overflow-hidden ${
             isPortrait
               ? "items-center justify-center"
               : "flex-col justify-center"
@@ -94,7 +94,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
                   isPortrait
                     ? {
                         aspectRatio: "9 / 16",
-                        height: "100%",
+                        maxHeight: "100%",
                         width: "auto",
                       }
                     : {
@@ -116,7 +116,7 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
                   isPortrait
                     ? {
                         aspectRatio: "9 / 16",
-                        height: "100%",
+                        maxHeight: "100%",
                         width: "auto",
                       }
                     : {
