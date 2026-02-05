@@ -4,18 +4,18 @@
 
 See: .planning/PROJECT.md (updated 2026-02-05)
 
-**Release: v0.4.0**
+**Release: v0.5.0**
 **Core value:** Users can go from a text prompt to a rendered, downloadable animated video without any coding or motion design knowledge.
-**Current focus:** v0.4.0 Creation Detail Modal Revamp -- COMPLETE
+**Current focus:** v0.5.0 Refinement History Stack
 
 ## Current Position
 
-Phase: 26 of 26 (Modal Content Layout) -- MILESTONE COMPLETE
-Plan: All plans complete
-Status: v0.4.0 milestone complete (Phases 27-28 deferred)
-Last activity: 2026-02-05 -- Implemented Midjourney-style fullscreen modal
+Phase: 29 of TBD (Refinement History Stack)
+Plan: Not yet planned
+Status: New milestone started, requirements gathered
+Last activity: 2026-02-05 -- Started v0.5.0 milestone
 
-Progress: ██████████████████████████ 100% (26/26 phases)
+Progress: ░░░░░░░░░░░░░░░░░░░░░░░░░░ 0% (new milestone)
 
 ## Milestone History
 
@@ -27,6 +27,7 @@ Progress: ███████████████████████�
 | v0.2.0 Create Page Overhaul | 5 | 13 | 11/11 | 2026-02-01 -> 2026-02-02 |
 | v0.3.0 Movie Editor Revamp | 6 | 10 | 12/12 | 2026-02-02 -> 2026-02-04 |
 | v0.4.0 Creation Detail Modal | 3 | 4 | 9/13 | 2026-02-04 -> 2026-02-05 |
+| v0.5.0 Refinement History Stack | TBD | TBD | 0/6 | 2026-02-05 -> TBD |
 | **Total (shipped)** | **26** | **60** | **72** | 2026-01-27 -> 2026-02-05 |
 
 ## Accumulated Context
@@ -50,6 +51,13 @@ v0.4.0 decisions:
 - Phase 26: Refinement input moved to detail panel (showRefinement prop)
 - **Deferred:** Phases 27-28 (variation threading/stack) -- current UX sufficient
 
+v0.5.0 decisions:
+- Refinements persist to database (new generation linked to parent via parentGenerationId)
+- Clicking stack version syncs main video player
+- Stack shows thumbnails with version numbers (V1, V2, V3)
+- Unlimited versions with scroll
+- Save button saves currently selected version only
+
 ### Pending Todos
 
 None.
@@ -65,10 +73,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v0.4.0 milestone complete
+Stopped at: v0.5.0 milestone started, requirements gathered
 Resume file: None
 
-Next step: Start new milestone or address backlog items
+Next step: Create roadmap for v0.5.0 Refinement History Stack
 
 ---
-*State updated: 2026-02-05 -- v0.4.0 complete, Phases 27-28 deferred*
+*State updated: 2026-02-05 -- v0.5.0 milestone started*

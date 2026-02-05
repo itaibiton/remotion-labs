@@ -1,6 +1,6 @@
 # RemotionLab
 
-**Release: v0.3.0**
+**Release: v0.5.0**
 
 ## What This Is
 
@@ -24,10 +24,15 @@ Clip library with save/open/delete, movie creation with horizontal timeline and 
 ### Milestone 4: Create Page Overhaul (Phases 13-17)
 Redesign the create page as a scrolling generation feed (Midjourney-style). Each prompt produces 1-4 variations displayed in a grid row. Generation settings panel for aspect ratio, duration, and FPS. Image/file upload for reference-based prompts. Per-creation actions: extend next (continuation), extend previous (prequel), save to library, delete, rerun. Input bar redesign with prompt textarea, upload button, and settings toggle. Create page IS the history — all past generations visible in a scrolling feed. Library remains separate for explicitly saved clips.
 
-## In Progress (v0.3.0)
+## Shipped (v0.4.0)
 
-### Milestone 5: Movie Editor Revamp (Phases 18+)
-Transform the movie page into a professional-grade video editor. Full-screen layout with preview on top and timeline at bottom. Pro timeline interactions: trim clip start/end with drag handles, split clips at playhead (blade tool), drag-to-reorder and resize. Per-clip actions directly on timeline blocks: generate next, generate previous, re-generate, and edit. Inline editing panel with preview player and code editor side-by-side for selected clips. Everything fits in viewport with minimal scrolling.
+### Milestone 6: Creation Detail Modal (Phases 24-26)
+Midjourney-style fullscreen modal for viewing generations. Full viewport coverage with centered video, custom video controls (play/pause, timeline scrubber, fullscreen), right panel with generation details and actions, refinement input inline. Arrow key navigation between generations. Responsive layout for mobile/tablet.
+
+## In Progress (v0.5.0)
+
+### Milestone 7: Refinement History Stack (Phases 29+)
+Transform refinement workflow into a visual history system. When user refines an animation, a new version stacks on top in the right panel. Thumbnails with version numbers (V1, V2, V3) displayed in a scrollable stack. Clicking a version updates the main video player. Refinements persist to database as linked generations. Save action saves the currently selected version only.
 
 ## Requirements
 
@@ -91,7 +96,24 @@ Transform the movie page into a professional-grade video editor. Full-screen lay
 - [x] INPUT-01: Input bar redesigned with prompt textarea, image upload button, and settings toggle
 - [x] PREQUEL-01: System can generate a prequel animation that ends at a clip's start state
 
-### Planned (Milestone 5 — Movie Editor Revamp)
+### Validated (Milestone 6 — Creation Detail Modal)
+
+- [x] **MODAL-01**: Fullscreen modal with centered video, dark backdrop, right detail panel
+- [x] **MODAL-02**: Custom video controls with play/pause, timeline scrubber, fullscreen toggle
+- [x] **MODAL-03**: Arrow key navigation between generations
+- [x] **MODAL-04**: Inline refinement input in detail panel
+- [x] **MODAL-05**: Responsive layout (stacked on mobile, side-by-side on desktop)
+
+### Planned (Milestone 7 — Refinement History Stack)
+
+- [ ] **REFINE-01**: Refinement creates new generation linked to parent (not session-only)
+- [ ] **REFINE-02**: Refinement versions display as thumbnail stack in right panel
+- [ ] **REFINE-03**: Each version shows thumbnail preview with version number (V1, V2, V3)
+- [ ] **REFINE-04**: Clicking a version in stack updates main video player to that version
+- [ ] **REFINE-05**: Stack is scrollable for unlimited refinement history
+- [ ] **REFINE-06**: Save action saves currently selected version only
+
+### Deferred (Milestone 5 — Movie Editor Revamp)
 
 - [ ] **TIMELINE-01**: User can trim clip start/end by dragging handles on timeline clip edges
 - [ ] **TIMELINE-02**: User can split a clip at the playhead position (blade tool)
@@ -162,7 +184,9 @@ Transform the movie page into a professional-grade video editor. Full-screen lay
 | Prequel generation (v0.2) | Generate animation that leads into a clip's start state, complementing continuation | Validated |
 | Image upload for prompt context (v0.2) | Reference images influence generation without requiring image rendering in output | Validated |
 | Pro timeline editor (v0.3) | Trim, split, resize, per-clip actions — transform movie page into professional editor | Planned |
-| Inline clip editing panel (v0.3) | Preview + code editor side-by-side on movie page, no navigation away | Planned |
+| Inline clip editing panel (v0.3) | Preview + code editor side-by-side on movie page, no navigation away | Deferred |
+| Midjourney-style fullscreen modal (v0.4) | Full viewport with centered video, custom controls, right detail panel | Validated |
+| Refinement history stack (v0.5) | Visual version history with thumbnails, click-to-sync player, database persistence | Planned |
 
 ---
-*Last updated: 2026-02-02 — v0.3.0 milestone started (Movie Editor Revamp)*
+*Last updated: 2026-02-05 — v0.5.0 milestone started (Refinement History Stack)*

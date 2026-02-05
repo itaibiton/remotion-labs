@@ -103,5 +103,63 @@
 
 **Last phase:** 12
 
+### v0.2.0 - Create Page Overhaul (2026-02-01 → 2026-02-02)
+
+**Goal:** Redesign the create page as a Midjourney-style scrolling generation feed with variations, settings, and per-creation actions.
+
+**Phases:**
+13. Generation Feed Architecture - Feed layout, variation grid rows
+14. Settings Panel - Aspect ratio, duration, FPS configuration
+15. Image Upload - Reference images for prompts
+16. Per-Creation Actions - Extend next/prev, save, delete, rerun
+17. Input Bar Redesign - Prompt textarea, upload button, settings toggle
+
+**Requirements delivered:** 11/11
+- FEED-01, FEED-02 (scrolling feed, variation rows)
+- VAR-01, VAR-02 (variation count, selection)
+- SET-01, SET-02 (aspect ratio, duration/FPS settings)
+- UPLOAD-01 (image upload)
+- ACT-01, ACT-02 (extend, save/delete/rerun actions)
+- INPUT-01 (input bar redesign)
+- PREQUEL-01 (prequel generation)
+
+**Last phase:** 17
+
+### v0.3.0 - Movie Editor Revamp (2026-02-02 → 2026-02-04)
+
+**Goal:** Transform the movie page into a professional-grade video editor with trim, split, resize, and inline editing.
+
+**Phases:**
+18-23. Pro timeline editor with trim handles, blade tool, resize, per-clip actions, inline editing panel
+
+**Requirements delivered:** 12/12
+- TIMELINE-01 through TIMELINE-04 (trim, split, resize, per-clip actions)
+- LAYOUT-01 (full-screen pro layout)
+- EDIT-01 (inline editing panel)
+
+**Status:** Deferred to focus on creation detail modal improvements
+
+**Last phase:** 23
+
+### v0.4.0 - Creation Detail Modal (2026-02-04 → 2026-02-05)
+
+**Goal:** Midjourney-style fullscreen modal for viewing and interacting with generations.
+
+**Phases:**
+24. Route Infrastructure - Parallel routes, modal routing
+25. Modal Base Layout - Fullscreen overlay, video centering, responsive layout
+26. Modal Content Layout - Custom video controls, detail panel, refinement input
+
+**Requirements delivered:** 9/13 (Phases 27-28 deferred)
+- MODAL-01 through MODAL-05 (fullscreen modal, controls, navigation, refinement, responsive)
+
+**Key decisions:**
+- Custom VideoControls with play/pause, timeline scrubber, fullscreen toggle
+- Midjourney-style fullscreen modal replacing Dialog-based approach
+- Refinement input moved inline to detail panel
+- Phases 27-28 (variation threading/stack) deferred — current UX sufficient
+
+**Last phase:** 26
+
 ---
 *Milestone history for RemotionLab*
