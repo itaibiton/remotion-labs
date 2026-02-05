@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 29 of TBD (Refinement History Stack)
-Plan: Not yet planned
-Status: New milestone started, requirements gathered
-Last activity: 2026-02-05 -- Started v0.5.0 milestone
+Phase: 29 of TBD (Schema Refinement Persistence)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-05 -- Completed 29-01-PLAN.md
 
-Progress: ░░░░░░░░░░░░░░░░░░░░░░░░░░ 0% (new milestone)
+Progress: ████░░░░░░░░░░░░░░░░░░░░░░ 50% (1/2 plans in phase 29)
 
 ## Milestone History
 
@@ -57,6 +57,9 @@ v0.5.0 decisions:
 - Stack shows thumbnails with version numbers (V1, V2, V3)
 - Unlimited versions with scroll
 - Save button saves currently selected version only
+- Phase 29-01: Self-referential parentGenerationId enables unlimited chain depth
+- Phase 29-01: by_parent index for O(1) child lookups
+- Phase 29-01: getRefinementChain returns root-to-current order for UI display
 
 ### Pending Todos
 
@@ -73,10 +76,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v0.5.0 milestone started, requirements gathered
+Stopped at: Completed 29-01-PLAN.md (Schema Refinement Persistence)
 Resume file: None
 
-Next step: Create roadmap for v0.5.0 Refinement History Stack
+Next step: Execute 29-02-PLAN.md (Wire refinement persistence into generate action)
 
 ---
-*State updated: 2026-02-05 -- v0.5.0 milestone started*
+*State updated: 2026-02-05 -- Completed plan 29-01*
