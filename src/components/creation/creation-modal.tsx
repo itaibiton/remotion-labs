@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { Id, Doc } from "../../../convex/_generated/dataModel";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { PreviewPlayer } from "@/components/preview/preview-player";
@@ -12,6 +12,7 @@ import { CreationDetailPanel } from "@/components/creation/creation-detail-panel
 import { CreationEditBar } from "@/components/creation/creation-edit-bar";
 import { VariationStack } from "@/components/creation/variation-stack";
 import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface CreationModalProps {
   generationId: string;
@@ -21,6 +22,12 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(true);
+
+  // Mutations and actions for detail panel
+  const removeGeneration = useMutation(api.generations.remove);
+  const saveClip = useMutation(api.clips.save);
+  const generate = useAction(api.generateAnimation.generate);
+  const prequelAction = useAction(api.generateAnimation.generatePrequel);
 
   const generation = useQuery(api.generations.get, {
     id: generationId as Id<"generations">,
@@ -95,6 +102,104 @@ export function CreationModal({ generationId }: CreationModalProps) {
 
   const isPending = generation?.status === "pending";
   const isFailed = generation?.status === "failed";
+
+  // Action handlers for detail panel
+  const handleSave = useCallback(async () => {
+    if (!generation?.code || !generation?.rawCode) {
+      toast.error("Cannot save: generation has no code");
+      return;
+    }
+    try {
+      await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved to clip library!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save clip");
+    }
+  }, [generation, saveClip]);
+
+  const handleDelete = useCallback(async () => {
+    if (!generation) return;
+    try {
+      await removeGeneration({ id: generation._id });
+      toast.success("Generation deleted");
+      handleClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete generation");
+    }
+  }, [generation, removeGeneration, handleClose]);
+
+  const handleRerun = useCallback(async () => {
+    if (!generation?.prompt) {
+      toast.error("Cannot rerun: no prompt found");
+      return;
+    }
+    try {
+      await generate({
+        prompt: generation.prompt,
+        aspectRatio: generation.aspectRatio ?? "16:9",
+        durationInSeconds: generation.durationInSeconds ?? 3,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Rerun started!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Rerun failed");
+    }
+  }, [generation, generate]);
+
+  const handleExtendNext = useCallback(async () => {
+    if (!generation?.code || !generation?.rawCode) {
+      toast.error("Cannot extend: generation has no code");
+      return;
+    }
+    try {
+      const clipId = await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved as clip -- opening continuation...");
+      handleClose();
+      // Use setTimeout to ensure modal closes before navigation
+      setTimeout(() => {
+        router.push(`/create?sourceClipId=${clipId}`);
+      }, 200);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to start continuation");
+    }
+  }, [generation, saveClip, router, handleClose]);
+
+  const handleExtendPrevious = useCallback(async () => {
+    if (!generation?.code || !generation?.rawCode) {
+      toast.error("Cannot extend: generation has no code");
+      return;
+    }
+    try {
+      const clipId = await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      await prequelAction({
+        sourceClipId: clipId as Id<"clips">,
+        prompt: undefined,
+        aspectRatio: generation.aspectRatio ?? "16:9",
+        durationInSeconds: generation.durationInSeconds ?? 3,
+      });
+      toast.success("Prequel generated!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Prequel generation failed");
+    }
+  }, [generation, saveClip, prequelAction]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -230,7 +335,14 @@ export function CreationModal({ generationId }: CreationModalProps) {
 
               {/* Right side: Details panel */}
               <div className="w-72 border-l bg-muted/30 overflow-y-auto shrink-0">
-                <CreationDetailPanel generation={generation} />
+                <CreationDetailPanel
+                  generation={generation}
+                  onSave={handleSave}
+                  onDelete={handleDelete}
+                  onRerun={handleRerun}
+                  onExtendNext={handleExtendNext}
+                  onExtendPrevious={handleExtendPrevious}
+                />
               </div>
             </div>
           </div>

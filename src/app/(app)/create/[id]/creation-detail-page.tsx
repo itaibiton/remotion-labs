@@ -1,6 +1,8 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
 import { PreviewPlayer } from "@/components/preview/preview-player";
@@ -10,12 +12,21 @@ import { VariationStack } from "@/components/creation/variation-stack";
 import { Loader2, ArrowLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface CreationDetailPageProps {
   generationId: string;
 }
 
 export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
+  const router = useRouter();
+
+  // Mutations and actions for detail panel
+  const removeGeneration = useMutation(api.generations.remove);
+  const saveClip = useMutation(api.clips.save);
+  const generate = useAction(api.generateAnimation.generate);
+  const prequelAction = useAction(api.generateAnimation.generatePrequel);
+
   const generation = useQuery(api.generations.get, {
     id: generationId as Id<"generations">,
   });
@@ -24,6 +35,100 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
   const variations = useQuery(api.generations.listByParent, {
     parentId: generationId as Id<"generations">,
   });
+
+  // Action handlers for detail panel
+  const handleSave = useCallback(async () => {
+    if (!generation?.code || !generation?.rawCode) {
+      toast.error("Cannot save: generation has no code");
+      return;
+    }
+    try {
+      await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved to clip library!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save clip");
+    }
+  }, [generation, saveClip]);
+
+  const handleDelete = useCallback(async () => {
+    if (!generation) return;
+    try {
+      await removeGeneration({ id: generation._id });
+      toast.success("Generation deleted");
+      router.push("/create");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete generation");
+    }
+  }, [generation, removeGeneration, router]);
+
+  const handleRerun = useCallback(async () => {
+    if (!generation?.prompt) {
+      toast.error("Cannot rerun: no prompt found");
+      return;
+    }
+    try {
+      await generate({
+        prompt: generation.prompt,
+        aspectRatio: generation.aspectRatio ?? "16:9",
+        durationInSeconds: generation.durationInSeconds ?? 3,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Rerun started!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Rerun failed");
+    }
+  }, [generation, generate]);
+
+  const handleExtendNext = useCallback(async () => {
+    if (!generation?.code || !generation?.rawCode) {
+      toast.error("Cannot extend: generation has no code");
+      return;
+    }
+    try {
+      const clipId = await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      toast.success("Saved as clip -- opening continuation...");
+      router.push(`/create?sourceClipId=${clipId}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to start continuation");
+    }
+  }, [generation, saveClip, router]);
+
+  const handleExtendPrevious = useCallback(async () => {
+    if (!generation?.code || !generation?.rawCode) {
+      toast.error("Cannot extend: generation has no code");
+      return;
+    }
+    try {
+      const clipId = await saveClip({
+        name: generation.prompt.slice(0, 50) || "Untitled",
+        code: generation.code,
+        rawCode: generation.rawCode,
+        durationInFrames: generation.durationInFrames ?? 90,
+        fps: generation.fps ?? 30,
+      });
+      await prequelAction({
+        sourceClipId: clipId as Id<"clips">,
+        prompt: undefined,
+        aspectRatio: generation.aspectRatio ?? "16:9",
+        durationInSeconds: generation.durationInSeconds ?? 3,
+      });
+      toast.success("Prequel generated!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Prequel generation failed");
+    }
+  }, [generation, saveClip, prequelAction]);
 
   if (generation === undefined) {
     return (
@@ -166,7 +271,14 @@ export function CreationDetailPage({ generationId }: CreationDetailPageProps) {
 
         {/* Details panel */}
         <div className="w-full lg:w-80 xl:w-96 shrink-0 border-t lg:border-t-0 lg:border-l bg-muted/30 overflow-y-auto">
-          <CreationDetailPanel generation={generation} />
+          <CreationDetailPanel
+            generation={generation}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onRerun={handleRerun}
+            onExtendNext={handleExtendNext}
+            onExtendPrevious={handleExtendPrevious}
+          />
         </div>
       </div>
     </div>
