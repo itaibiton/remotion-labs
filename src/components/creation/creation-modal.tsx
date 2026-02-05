@@ -142,10 +142,10 @@ export function CreationModal({ generationId }: CreationModalProps) {
               {/* Left side: Preview + Variations */}
               <div className="flex-1 overflow-y-auto p-6 flex flex-col">
                 {/* Main preview - responsive container that fits all aspect ratios */}
-                {/* Portrait: center horizontally, fill height */}
+                {/* Portrait/Square: center horizontally, fill height */}
                 {/* Landscape: fill width, center vertically */}
                 <div className={`flex-1 min-h-0 flex ${
-                  generation.aspectRatio === "9:16"
+                  generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
                     ? "items-center justify-center"
                     : "flex-col justify-center"
                 }`}>
@@ -153,11 +153,11 @@ export function CreationModal({ generationId }: CreationModalProps) {
                     <div
                       className="bg-muted animate-pulse flex items-center justify-center rounded-lg"
                       style={
-                        // Portrait (9:16): height is constraint, width auto
+                        // Portrait (9:16) and Square (1:1): height is constraint, width auto
                         // Landscape (16:9): width 100%, height auto from aspect ratio
-                        generation.aspectRatio === "9:16"
+                        generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
                           ? {
-                              aspectRatio: "9 / 16",
+                              aspectRatio: (generation.aspectRatio ?? "1:1").replace(":", " / "),
                               height: "100%",
                               width: "auto",
                             }
@@ -177,9 +177,9 @@ export function CreationModal({ generationId }: CreationModalProps) {
                     <div
                       className="bg-red-950/20 flex items-center justify-center rounded-lg border border-red-500/20"
                       style={
-                        generation.aspectRatio === "9:16"
+                        generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
                           ? {
-                              aspectRatio: "9 / 16",
+                              aspectRatio: (generation.aspectRatio ?? "1:1").replace(":", " / "),
                               height: "100%",
                               width: "auto",
                             }

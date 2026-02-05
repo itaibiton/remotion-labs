@@ -91,14 +91,16 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
     player.play();
   }, []);
 
-  // Determine if this is a portrait aspect ratio (height > width)
+  // Determine aspect ratio category for layout
   const isPortrait = preset.height > preset.width;
+  const isSquare = preset.height === preset.width;
 
   // Container styles depend on constrained mode and aspect ratio
-  // For portrait (9:16): height: 100% fills space, maxHeight caps it to prevent overflow
+  // For portrait (9:16): height-constrained, width auto
+  // For square (1:1): height-constrained (like portrait) since width=100% would overflow height
   // For landscape (16:9): width is 100%, height auto from aspect ratio
   const containerStyle = constrained
-    ? isPortrait
+    ? isPortrait || isSquare
       ? {
           height: "100%", // Fill available space
           maxHeight: "calc(100% - 56px)", // Cap to leave room for controls
@@ -116,10 +118,9 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
       };
 
   // For constrained landscape, we need the wrapper to take full width so video can expand
-  // Use items-start for landscape (video stays at top, width from w-full on child)
-  // Use items-center for portrait (centers the narrower video horizontally)
+  // For portrait and square, center the narrower/equal video horizontally
   const wrapperClassName = constrained
-    ? isPortrait
+    ? isPortrait || isSquare
       ? "flex flex-col items-center h-full gap-4"
       : "flex flex-col items-center w-full h-full gap-4"
     : "w-full space-y-4";
@@ -129,7 +130,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
       {/* Player container with aspect ratio */}
       <div
         className={`rounded-lg overflow-hidden shadow-lg border bg-black ${
-          constrained ? (isPortrait ? "" : "w-full") : "w-full"
+          constrained ? (isPortrait || isSquare ? "" : "w-full") : "w-full"
         }`}
         style={containerStyle}
       >
