@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -20,6 +20,7 @@ interface CreationModalProps {
 export function CreationModal({ generationId }: CreationModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(true);
 
   const generation = useQuery(api.generations.get, {
     id: generationId as Id<"generations">,
@@ -34,10 +35,21 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const allGenerations = useQuery(api.generations.list, {});
 
   const handleClose = useCallback(() => {
-    // Always navigate to /create instead of using router.back()
-    // This ensures consistent behavior regardless of navigation history
-    router.push("/create");
-  }, [router]);
+    // Close the dialog first, then navigate
+    // This ensures proper animation and state cleanup
+    setIsOpen(false);
+  }, []);
+
+  // Navigate after dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Small delay to allow close animation
+      const timer = setTimeout(() => {
+        router.push("/create");
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, router]);
 
   // Arrow key navigation between creations
   useEffect(() => {
@@ -85,13 +97,11 @@ export function CreationModal({ generationId }: CreationModalProps) {
   const isFailed = generation?.status === "failed";
 
   return (
-    <Dialog open onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         ref={modalRef}
         className="max-w-[95vw] w-[1400px] max-h-[90vh] h-auto p-0 gap-0 overflow-hidden"
         showCloseButton={true}
-        onPointerDownOutside={handleClose}
-        onEscapeKeyDown={handleClose}
       >
         <VisuallyHidden>
           <DialogTitle>
