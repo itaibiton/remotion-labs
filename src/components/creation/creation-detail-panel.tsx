@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, KeyboardEvent } from "react";
 import { Thumbnail } from "@remotion/player";
 import { DynamicCode } from "@/remotion/compositions/DynamicCode";
 import {
@@ -10,6 +10,7 @@ import {
 import { formatRelativeTime } from "@/lib/date-utils";
 import { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ import {
   RotateCcw,
   FastForward,
   Rewind,
+  Loader2,
 } from "lucide-react";
 
 type Generation = Doc<"generations">;
@@ -37,6 +39,12 @@ interface CreationDetailPanelProps {
   onRerun: () => void;
   onExtendNext: () => void;
   onExtendPrevious: () => void;
+  /** Whether to show refinement input at top of panel */
+  showRefinement?: boolean;
+  /** Called when user submits refinement prompt */
+  onRefine?: (prompt: string) => Promise<void>;
+  /** Whether refinement is in progress */
+  isRefining?: boolean;
 }
 
 export function CreationDetailPanel({
@@ -46,13 +54,33 @@ export function CreationDetailPanel({
   onRerun,
   onExtendNext,
   onExtendPrevious,
+  showRefinement = false,
+  onRefine,
+  isRefining = false,
 }: CreationDetailPanelProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [refinementPrompt, setRefinementPrompt] = useState("");
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleRefineSubmit = useCallback(async () => {
+    if (!refinementPrompt.trim() || isRefining || !onRefine) return;
+    await onRefine(refinementPrompt.trim());
+    setRefinementPrompt("");
+  }, [refinementPrompt, isRefining, onRefine]);
+
+  const handleRefineKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleRefineSubmit();
+      }
+    },
+    [handleRefineSubmit]
+  );
 
   const isSuccess = generation.status === "success";
   const hasCode = !!generation.code;
@@ -68,6 +96,36 @@ export function CreationDetailPanel({
 
   return (
     <div className="p-4 space-y-4">
+      {/* Refinement input section */}
+      {showRefinement && onRefine && (
+        <div className="pb-4 border-b">
+          <h4 className="text-xs font-medium uppercase text-muted-foreground mb-2">
+            Refine Animation
+          </h4>
+          <Textarea
+            value={refinementPrompt}
+            onChange={(e) => setRefinementPrompt(e.target.value)}
+            onKeyDown={handleRefineKeyDown}
+            placeholder="Describe changes..."
+            className="min-h-[60px] resize-none mb-2"
+            rows={2}
+            disabled={isRefining}
+          />
+          <Button
+            onClick={handleRefineSubmit}
+            disabled={!refinementPrompt.trim() || isRefining}
+            size="sm"
+            className="w-full"
+          >
+            {isRefining ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Refine"
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Prompt section */}
       <div className="space-y-2">
         <h4 className="text-xs font-medium uppercase text-muted-foreground">
