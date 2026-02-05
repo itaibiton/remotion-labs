@@ -102,9 +102,10 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   const containerStyle = constrained
     ? isPortrait || isSquare
       ? {
-          height: "100%", // Fill available space
-          maxHeight: "calc(100% - 56px)", // Cap to leave room for controls
+          height: "auto",
+          maxHeight: "calc(100% - 60px)", // Cap to leave room for controls
           width: "auto",
+          maxWidth: "100%",
           aspectRatio: `${preset.width} / ${preset.height}`,
         }
       : {
@@ -118,10 +119,10 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
       };
 
   // For constrained landscape, we need the wrapper to take full width so video can expand
-  // For portrait and square, center the narrower/equal video horizontally
+  // For portrait and square, center the narrower/equal video horizontally and constrain height
   const wrapperClassName = constrained
     ? isPortrait || isSquare
-      ? "flex flex-col items-center h-full gap-4"
+      ? "flex flex-col items-center justify-center h-full gap-4"
       : "flex flex-col items-center w-full h-full gap-4"
     : "w-full space-y-4";
 

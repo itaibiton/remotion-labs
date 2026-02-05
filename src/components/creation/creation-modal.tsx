@@ -276,13 +276,17 @@ export function CreationModal({ generationId }: CreationModalProps) {
             {/* Content area */}
             <div className="flex flex-1 min-h-0 overflow-hidden">
               {/* Left side: Preview + Variations */}
-              <div className="flex-1 overflow-y-auto p-6 flex flex-col">
+              <div className={`flex-1 p-6 flex flex-col ${
+                generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
+                  ? "overflow-hidden"
+                  : "overflow-y-auto"
+              }`}>
                 {/* Main preview - responsive container that fits all aspect ratios */}
-                {/* Portrait/Square: center horizontally, fill height */}
+                {/* Portrait/Square: center horizontally, constrain height to fit with controls */}
                 {/* Landscape: fill width, center vertically */}
                 <div className={`flex-1 min-h-0 flex ${
                   generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
-                    ? "items-center justify-center"
+                    ? "items-center justify-center max-h-full"
                     : "flex-col justify-center"
                 }`}>
                   {isPending ? (
