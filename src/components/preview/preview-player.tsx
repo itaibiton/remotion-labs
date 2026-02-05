@@ -96,7 +96,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
 
   // Container styles depend on constrained mode and aspect ratio
   // For portrait (9:16): height is the constraint, width is auto
-  // For landscape/square: width is the constraint, height is auto
+  // For landscape (16:9): width is 100%, height auto from aspect ratio
   const containerStyle = constrained
     ? isPortrait
       ? {
@@ -107,8 +107,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
         }
       : {
           width: "100%",
-          maxWidth: "800px",
-          maxHeight: "calc(100% - 56px)", // Leave room for controls (56px = gap + button height)
+          height: "auto",
           aspectRatio: `${preset.width} / ${preset.height}`,
         }
     : {

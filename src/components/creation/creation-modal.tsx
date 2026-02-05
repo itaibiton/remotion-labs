@@ -148,7 +148,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
                       className="bg-muted animate-pulse flex items-center justify-center rounded-lg"
                       style={
                         // Portrait (9:16): height is constraint, width auto
-                        // Landscape/square: width is constraint, height auto
+                        // Landscape (16:9): width 100%, height auto from aspect ratio
                         generation.aspectRatio === "9:16"
                           ? {
                               aspectRatio: "9 / 16",
@@ -161,8 +161,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
                                 " / "
                               ),
                               width: "100%",
-                              maxWidth: "800px",
-                              maxHeight: "100%",
+                              height: "auto",
                             }
                       }
                     >
@@ -184,8 +183,7 @@ export function CreationModal({ generationId }: CreationModalProps) {
                                 " / "
                               ),
                               width: "100%",
-                              maxWidth: "800px",
-                              maxHeight: "100%",
+                              height: "auto",
                             }
                       }
                     >
