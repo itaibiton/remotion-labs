@@ -23,6 +23,9 @@ export const createPending = internalMutation({
     durationInSeconds: v.optional(v.number()),
     referenceImageIds: v.optional(v.array(v.id("_storage"))),
     continuationType: v.optional(v.string()),
+    // v0.5 Phase 29: refinement chain tracking
+    parentGenerationId: v.optional(v.id("generations")),
+    refinementPrompt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("generations", {
@@ -37,6 +40,8 @@ export const createPending = internalMutation({
       durationInSeconds: args.durationInSeconds,
       referenceImageIds: args.referenceImageIds,
       continuationType: args.continuationType,
+      parentGenerationId: args.parentGenerationId,
+      refinementPrompt: args.refinementPrompt,
     });
   },
 });
@@ -129,6 +134,9 @@ export const store = internalMutation({
     referenceImageIds: v.optional(v.array(v.id("_storage"))),
     // v0.2 Phase 12: continuation tracking
     continuationType: v.optional(v.string()),
+    // v0.5 Phase 29: refinement chain tracking
+    parentGenerationId: v.optional(v.id("generations")),
+    refinementPrompt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const generationId = await ctx.db.insert("generations", {
@@ -148,6 +156,8 @@ export const store = internalMutation({
       durationInSeconds: args.durationInSeconds,
       referenceImageIds: args.referenceImageIds,
       continuationType: args.continuationType,
+      parentGenerationId: args.parentGenerationId,
+      refinementPrompt: args.refinementPrompt,
     });
     return generationId;
   },
