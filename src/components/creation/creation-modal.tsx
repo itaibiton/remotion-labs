@@ -146,30 +146,48 @@ export function CreationModal({ generationId }: CreationModalProps) {
                   {isPending ? (
                     <div
                       className="bg-muted animate-pulse flex items-center justify-center rounded-lg"
-                      style={{
-                        aspectRatio: (generation.aspectRatio ?? "16:9").replace(
-                          ":",
-                          " / "
-                        ),
-                        width: "100%",
-                        maxWidth: "800px",
-                        maxHeight: "100%",
-                      }}
+                      style={
+                        // Portrait (9:16): height is constraint, width auto
+                        // Landscape/square: width is constraint, height auto
+                        generation.aspectRatio === "9:16"
+                          ? {
+                              aspectRatio: "9 / 16",
+                              height: "100%",
+                              width: "auto",
+                            }
+                          : {
+                              aspectRatio: (generation.aspectRatio ?? "16:9").replace(
+                                ":",
+                                " / "
+                              ),
+                              width: "100%",
+                              maxWidth: "800px",
+                              maxHeight: "100%",
+                            }
+                      }
                     >
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                   ) : isFailed ? (
                     <div
                       className="bg-red-950/20 flex items-center justify-center rounded-lg border border-red-500/20"
-                      style={{
-                        aspectRatio: (generation.aspectRatio ?? "16:9").replace(
-                          ":",
-                          " / "
-                        ),
-                        width: "100%",
-                        maxWidth: "800px",
-                        maxHeight: "100%",
-                      }}
+                      style={
+                        generation.aspectRatio === "9:16"
+                          ? {
+                              aspectRatio: "9 / 16",
+                              height: "100%",
+                              width: "auto",
+                            }
+                          : {
+                              aspectRatio: (generation.aspectRatio ?? "16:9").replace(
+                                ":",
+                                " / "
+                              ),
+                              width: "100%",
+                              maxWidth: "800px",
+                              maxHeight: "100%",
+                            }
+                      }
                     >
                       <div className="text-center">
                         <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />

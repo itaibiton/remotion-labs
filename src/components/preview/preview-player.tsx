@@ -91,15 +91,26 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
     player.play();
   }, []);
 
-  // Container styles depend on constrained mode
-  // When constrained, the player fits within parent bounds using max-width/max-height
+  // Determine if this is a portrait aspect ratio (height > width)
+  const isPortrait = preset.height > preset.width;
+
+  // Container styles depend on constrained mode and aspect ratio
+  // For portrait (9:16): height is the constraint, width is auto
+  // For landscape/square: width is the constraint, height is auto
   const containerStyle = constrained
-    ? {
-        width: "100%",
-        maxWidth: "800px",
-        maxHeight: "calc(100% - 56px)", // Leave room for controls (56px = gap + button height)
-        aspectRatio: `${preset.width} / ${preset.height}`,
-      }
+    ? isPortrait
+      ? {
+          height: "100%",
+          maxHeight: "calc(100% - 56px)", // Leave room for controls
+          width: "auto",
+          aspectRatio: `${preset.width} / ${preset.height}`,
+        }
+      : {
+          width: "100%",
+          maxWidth: "800px",
+          maxHeight: "calc(100% - 56px)", // Leave room for controls (56px = gap + button height)
+          aspectRatio: `${preset.width} / ${preset.height}`,
+        }
     : {
         aspectRatio: `${preset.width} / ${preset.height}`,
       };
