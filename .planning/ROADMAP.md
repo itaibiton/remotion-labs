@@ -29,10 +29,14 @@ Transform refinement workflow into a visual history system where each refinement
   1. Submitting a refinement creates a new generation document with `parentGenerationId` pointing to the current generation
   2. New generation document includes `refinementPrompt` field storing the instruction used
   3. `listByParent` query fetches all children of a generation (for variation display)
-  4. `getRefinementChain` query returns ordered version history (original → V1 → V2 → ...)
+  4. `getRefinementChain` query returns ordered version history (original -> V1 -> V2 -> ...)
   5. Generations schema has `parentGenerationId` field with `by_parent` index
 
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 29-01-PLAN.md - Schema & query infrastructure (parentGenerationId, refinementPrompt, by_parent index, mutations, queries)
+- [ ] 29-02-PLAN.md - Refinement action & UI integration (refineAndPersist action, UI wiring)
 
 ---
 
@@ -64,7 +68,7 @@ Phases execute in numeric order: 29 -> 30
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 29. Schema & Refinement Persistence | v0.5.0 | TBD | Not Started | - |
+| 29. Schema & Refinement Persistence | v0.5.0 | 0/2 | Planned | - |
 | 30. Refinement Stack UI | v0.5.0 | TBD | Not Started | - |
 
 ---
