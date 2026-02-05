@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 // ============================================================================
@@ -236,6 +236,19 @@ export const listPublicPaginated = query({
 });
 
 /**
+ * Internal query to get a generation by ID.
+ * Used by actions that need to read generation data.
+ */
+export const getInternal = internalQuery({
+  args: {
+    id: v.id("generations"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+/**
  * Query to get a single generation by ID
  */
 export const get = query({
@@ -298,8 +311,6 @@ export const remove = mutation({
 /**
  * Query to list all variations (children) of a parent generation.
  * Returns generations that have the specified parentGenerationId.
- * Note: The parentGenerationId field will be added in Phase 27.
- * For now, returns empty array until schema is updated.
  */
 export const listByParent = query({
   args: {
@@ -311,17 +322,46 @@ export const listByParent = query({
       throw new Error("Must be logged in to view variations");
     }
 
-    // Filter by parentGenerationId (field added in Phase 27)
-    // For now, returns empty until schema is updated
-    // Using type assertion since field doesn't exist in schema yet
+    // Use proper index for efficient child lookups
     const generations = await ctx.db
       .query("generations")
-      .filter((q) =>
-        q.eq(q.field("parentGenerationId" as any), args.parentId)
-      )
-      .order("desc")
-      .take(20);
+      .withIndex("by_parent", (q) => q.eq("parentGenerationId", args.parentId))
+      .order("asc")  // Oldest refinement first (chronological)
+      .collect();
 
     return generations;
+  },
+});
+
+/**
+ * Query to get the full refinement chain for a generation.
+ * Walks up the parent chain to get version history.
+ * Returns array ordered from root (V1) to current, including the requested generation.
+ */
+export const getRefinementChain = query({
+  args: {
+    generationId: v.id("generations"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Must be logged in to view refinement chain");
+    }
+
+    const chain: Array<typeof generation> = [];
+    let generation = await ctx.db.get(args.generationId);
+
+    // Walk up the parent chain
+    while (generation) {
+      chain.unshift(generation); // Add to front (building root -> current order)
+
+      if (generation.parentGenerationId) {
+        generation = await ctx.db.get(generation.parentGenerationId);
+      } else {
+        break; // Reached the root
+      }
+    }
+
+    return chain;
   },
 });
