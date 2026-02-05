@@ -238,13 +238,8 @@ export function CreationModal({ generationId }: CreationModalProps) {
     setRefinedCode(null);
   }, [generationId]);
 
-  // Instantly unmount when closing to prevent any flash
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         ref={modalRef}
         className="!max-w-[95vw] !w-[1200px] max-h-[90vh] h-[85vh] p-0 gap-0 overflow-hidden"
