@@ -287,11 +287,11 @@ export function CreationModal({ generationId }: CreationModalProps) {
             </div>
 
             {/* Content area */}
-            <div className="flex flex-1 min-h-0 overflow-hidden">
+            <div className="flex flex-1 min-h-0 h-full overflow-hidden">
               {/* Left side: Preview + Variations */}
-              <div className="flex-1 min-h-0 overflow-hidden p-6 flex flex-col">
+              <div className="flex-1 min-h-0 h-full overflow-hidden p-6 flex flex-col">
                 {/* Main preview - responsive container that fits all aspect ratios */}
-                <div className={`flex-1 min-h-0 flex overflow-hidden ${
+                <div className={`flex-1 min-h-0 h-full flex overflow-hidden ${
                   generation.aspectRatio === "9:16" || generation.aspectRatio === "1:1"
                     ? "items-center justify-center"
                     : "flex-col justify-center"
