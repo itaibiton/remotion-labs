@@ -35,8 +35,8 @@ Transform refinement workflow into a visual history system where each refinement
 **Plans:** 2 plans
 
 Plans:
-- [ ] 29-01-PLAN.md - Schema & query infrastructure (parentGenerationId, refinementPrompt, by_parent index, mutations, queries)
-- [ ] 29-02-PLAN.md - Refinement action & UI integration (refineAndPersist action, UI wiring)
+- [x] 29-01-PLAN.md - Schema & query infrastructure (parentGenerationId, refinementPrompt, by_parent index, mutations, queries)
+- [x] 29-02-PLAN.md - Refinement action & UI integration (refineAndPersist action, UI wiring)
 
 ---
 
@@ -68,7 +68,7 @@ Phases execute in numeric order: 29 -> 30
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 29. Schema & Refinement Persistence | v0.5.0 | 0/2 | Planned | - |
+| 29. Schema & Refinement Persistence | v0.5.0 | 2/2 | Complete | 2026-02-05 |
 | 30. Refinement Stack UI | v0.5.0 | TBD | Not Started | - |
 
 ---

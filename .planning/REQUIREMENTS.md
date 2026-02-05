@@ -110,6 +110,22 @@
 
 </details>
 
+## v0.5.0 Requirements -- Refinement History Stack
+
+Requirements for the Refinement History Stack milestone. Each maps to roadmap phases 29-30.
+
+### Refinement Persistence
+
+- [x] **REFINE-01**: Refinement creates new generation linked to parent (persisted)
+
+### Refinement Stack UI
+
+- [ ] **REFINE-02**: Refinement versions display as thumbnail stack in right panel
+- [ ] **REFINE-03**: Each version shows thumbnail preview with version number (V1, V2, V3)
+- [ ] **REFINE-04**: Clicking version in stack updates main video player
+- [ ] **REFINE-05**: Stack is scrollable for unlimited refinement history
+- [ ] **REFINE-06**: Save action saves currently selected version only
+
 ## v0.4.0 Requirements -- Creation Detail Modal Revamp
 
 Requirements for the Creation Detail Modal Revamp milestone. Each maps to roadmap phases 24-28.
@@ -218,14 +234,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VAR-02 (v0.4) | Phase 28 | Pending |
 | VAR-03 (v0.4) | Phase 28 | Pending |
 | VAR-04 (v0.4) | Phase 28 | Pending |
+| REFINE-01 | Phase 29 | Complete |
+| REFINE-02 | Phase 30 | Pending |
+| REFINE-03 | Phase 30 | Pending |
+| REFINE-04 | Phase 30 | Pending |
+| REFINE-05 | Phase 30 | Pending |
+| REFINE-06 | Phase 30 | Pending |
 
 **Coverage:**
 - v0.2.0 requirements: 11/11 complete
 - v0.3.0 requirements: 12/12 complete
 - v0.4.0 requirements: 13/13 mapped (5 complete)
-- Mapped to phases: 13/13
+- v0.5.0 requirements: 6/6 mapped (1 complete)
+- Mapped to phases: 19/19
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-04 -- Phase 24 complete (NAV-01, NAV-02).*
+*Last updated: 2026-02-05 -- Phase 29 complete (REFINE-01).*
