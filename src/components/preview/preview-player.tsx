@@ -102,10 +102,8 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   const containerStyle = constrained
     ? isPortrait || isSquare
       ? {
-          height: "auto",
-          maxHeight: "calc(100% - 60px)", // Cap to leave room for controls
+          height: "min(100%, 55vh)",
           width: "auto",
-          maxWidth: "100%",
           aspectRatio: `${preset.width} / ${preset.height}`,
         }
       : {
@@ -122,7 +120,7 @@ function PreviewPlayerInner({ code, durationInFrames, fps, aspectRatio = "16:9",
   // For portrait and square, center the narrower/equal video horizontally and constrain height
   const wrapperClassName = constrained
     ? isPortrait || isSquare
-      ? "flex flex-col items-center justify-center h-full gap-4"
+      ? "flex flex-col items-center justify-center h-full w-full gap-4"
       : "flex flex-col items-center w-full h-full gap-4"
     : "w-full space-y-4";
 
